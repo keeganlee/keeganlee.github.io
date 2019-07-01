@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>Keegan小钢</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="分享钢哥人生路上的点点滴滴">
+<meta name="keywords" content="个人成长 全栈 区块链">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Keegan小钢">
+<meta property="og:url" content="https://keeganlee.me/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="分享钢哥人生路上的点点滴滴">
+<meta property="og:locale" content="default">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Keegan小钢">
+<meta name="twitter:description" content="分享钢哥人生路上的点点滴滴">
+  
+    <link rel="alternate" href="/atom.xml" title="Keegan小钢" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Keegan小钢</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">钢哥的个人博客</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://keeganlee.me"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-编程强迫症" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/post/default/20190630/" class="article-date">
+  <time datetime="2019-06-30T08:24:27.000Z" itemprop="datePublished">2019-06-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/post/default/20190630/">编程强迫症</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>正文</p>
+<p><img src="qrcode_keegan.jpg" alt></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://keeganlee.me/post/default/20190630/" data-id="cjxjs26190000s0uj8ki5k7n2" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Blockchain/漫谈区块链共识机制" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/post/blockchain/20180425/" class="article-date">
+  <time datetime="2018-04-25T08:00:00.000Z" itemprop="datePublished">2018-04-25</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/blockchain/">blockchain</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/post/blockchain/20180425/">漫谈区块链共识机制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180425"><strong>http://keeganlee.me/post/blockchain/20180425</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-04-25</p>
+<hr>
+<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
+<hr>
+<p>共识机制是区块链的一个核心特征，是保证区块链系统在分布式架构下的一致性方案。目前主流的也有好多种共识算法：POW、POS、DPOS、RCP、PBFT、DBFT 等等。网上已经充斥了很多对这些共识算法的简单介绍，但基本流于表面而缺少深入的讲解，从而读者们也很难理解到这些共识机制背后的核心原理。而本文将以深入浅出的方式讲解区块链共识机制，但由于篇幅有限，因此，只会讲解最重要的两种区块链的共识机制，即比特币和以太坊的共识机制。</p>
+<h2 id="比特币共识机制"><a href="#比特币共识机制" class="headerlink" title="比特币共识机制"></a>比特币共识机制</h2><p>比特币是区块链的第一个应用，也是第一个实现了共识机制的，因此，要理解区块链共识机制，自然也要先从比特币共识机制开始。另外，虽然很多文章都提到比特币的共识机制为 <strong>POW（Proof of Work，工作量证明）</strong>，但实际上，POW 只是整个比特币共识机制中的一部分，虽然是核心的那部分，但却不是全部。其实，比特币的分布式共识是由网络节点的 4 种独立过程相互作用而达成的：</p>
+<ul>
+<li><strong>每个全节点基于一份长长的判断标准清单对每个交易进行独立验证</strong></li>
+<li><strong>每个挖矿节点独立将多个交易打包进新区块，通过完成 POW 算法的验算</strong></li>
+<li><strong>每个节点独立验证新区块并组装进区块链</strong></li>
+<li><strong>每个节点独立选择最长链，即在 POW 机制下累计工作量最多的那条链</strong></li>
+</ul>
+<p>先说第一种过程，对交易的独立验证。每个节点收到每一个交易之后，都会先根据一份很长的判断标准清单对该交易进行有效性校验，包括但不限于校验交易的语法和数据结构是否正确、输入和输出是否为空、输入总额是否小于输出总额、每一个输入所引用的输出是否已经被消费，等等。如果该交易通过所有验证，则可以说明该交易是有效的，那么，该节点就会将该交易放入本地的<strong>交易池</strong>（或称<strong>内存池</strong>），并将该交易广播给其他相临的节点。如果没通过验证，则会废弃该交易，也不会将其广播出去。其他节点接收到该交易后，也各自做同样的独立校验，校验为交易有效之后，同样也放入各节点自己的<strong>交易池</strong>，并继续广播给其他节点。所以，理论上来说，无效的交易一开始就会被废弃，而有效的交易最终会到达整个网络所有节点，并被每个全节点所保存，即全网达成了“该交易有效”的共识。</p>
+<p>接着，再来聊聊第二种过程，了解有效的交易是如何被打包进区块的。经过一段时间后，一般是 10 分钟左右，每个节点的交易池里会收集到很多有效但还未确认的交易，这些交易会组装成一颗 <strong>Merkle Tree</strong>。关于 <strong>Merkle Tree</strong> 的结构，我们在之前的文章<a href="https://xiaozhuanlan.com/topic/2394807516" target="_blank" rel="noopener">《014|从微观到宏观理解区块链》</a>已经讲过，这里就不赘述了。不过，组装进 <strong>Merkle Tree</strong> 的第一笔交易是比较特殊的，这是一笔<strong>创币交易</strong>，也叫 <strong>Coinbase 交易</strong>，新的比特币就是从该笔交易产生的。这笔交易是由节点自己创建的，并将挖矿奖励支付到矿工自己的地址，挖矿奖励包括新创建的比特币和打包进该区块所有交易的手续费总额。组装好 <strong>Merkle Tree</strong> 之后，就得到 <strong>Merkle Root</strong>，再结合区块头的其他 5 个字段——<strong>Version、Pre Block、Times、Difficulty、Nonce</strong>，总共 6 个字段合在一起经过<strong>两次 SHA256 计算</strong>得到区块哈希值。一个有效的区块要求其哈希值必须小于 Difficulty 难度值，写作本文时的难度要求哈希值至少已经有 18 个 0 开头。挖矿其实就是通过修改参数的值而不断计算区块哈希值，直到计算出符合难度要求的哈希值。一般是通过修改 Nonce 值来计算区块哈希值，其他 5 个字段基本是不变的。而由于哈希函数的特性，难度值越大，理论上计算出符合要求的哈希值所需的计算量就越大。举个简单例子，比如你扔三个骰子，如果难度要求总和小于18，那是非常容易达到的，基本扔个一两次就能满足要求了；而如果加大难度，要求总和小于9，那从概率上来说相对就没那么容易了，可能要扔个十几次甚至几十次才能达到；而如果要求总和等于 3，那只能扔出三个 1 才行，这谁都知道要达到的概率是很低的，也许扔个一两百次才可能出现。因此，从统计学来说，一定的难度值可以推算出概率上对应所需的计算次数，也就是“工作量”，所以，只要你达到了难度要求，也就间接证明你付出了对应的工作量，这就是<strong>工作量证明</strong>。</p>
+<p>当某个节点计算出符合难度要求的区块哈希时，即说明该矿工挖矿成功了，该节点就会将此区块组装到本地的区块链，同时也将此区块广播给其他节点。然后，就进入第三种过程了。当其他节点收到此区块时，也会各自独立验证该区块是否有效。和独立验证交易一样，也存在一份验证标准清单，包括但不限于校验引用的上一个区块是否是否正确、难度值是否符合标准、区块哈希是否真的符合难度要求、Coinbase 交易中的挖矿奖励是否多于应得的、整个区块的每笔交易是否都是有效的，等等。其中，难度值是有标准的计算公式的，每个节点都会根据标准公式独立计算实际的难度值，所以，矿工如果不按照标准而自己设置一个较低的难度，在其他节点是无法通过的。同样，挖矿奖励也是有标准公式的，所以，如果矿工给自己奖励过多的比特币，在其他节点也是同样无法通过的。每个节点验证该区块为有效之后，也会各自将该区块组装进它们本地的区块链，并继续将该区块广播给其他节点。</p>
+<p>由于所有节点同时在挖同一个区块，就有可能会出现多个节点同时挖出了同个区块，并都将各自挖到的区块广播到其他节点。假设有两个节点同时挖出了新区块，分别为区块 N1 和 N2，它们的上一个区块都是 P。有些节点会先收到 N1，它们会将 N1 先组装进它们本地的区块链，也称为主链。但之后不久，这些节点也会收到 N2，这时候，它们会将 N2 放入备选链。而其他节点则先收到 N2 再收到 N1，则 N2 在它们的主链上，而 N1 在它们的备选链上。这时候，整个区块链暂时就分成了两个分叉，而要打破这种局面，就要看下一个生成的区块是基于 N1 还是 N2 了。如果下一个区块是基于 N1，自然，N1 的这条链就变成了最长链，也是累计工作量最多的链。那么，那些将 N2 链设为主链的节点就会根据实际情况自己选择将 N1 链改为主链，而 N2 将成为<strong>孤块</strong>而被废弃。</p>
+<p>以上就是比特币共识机制的核心内容了，说白了其实就是根据一些所有节点都认可的标准对每个交易和区块的创建和校验进行独立验证，当大多数节点都认可并写入自己的区块链的时候，就自动形成了分布式共识。所有区块链基本都是这个逻辑，不同区块链主要在于制定的标准不同，比特币主要就是基于 POW 机制，这种机制实现简单，但它会造成大量的能源浪费，由于所有节点同时竞争挖矿同一个区块，而基本只有一个节点能胜出，那其他未胜出的节点所消耗的算力能源就白费了。另外，每次交易确认（即出块时间）大概 10 分钟，一笔交易一般要有 6 次确认才算安全，那基本就要 1 个小时了，这共识达成的时间太长了。</p>
+<h2 id="以太坊共识机制"><a href="#以太坊共识机制" class="headerlink" title="以太坊共识机制"></a>以太坊共识机制</h2><p>以太坊的共识机制也是基于 POW 的，但与比特币相比，主要有两点不同：一是挖矿时间控制在 10 ~ 19 秒之间，出块时间比比特币快了很多；二是对于<strong>孤块</strong>也有挖矿奖励。在比特币中，<strong>孤块</strong>（即上文的 N2 区块）是会被丢弃的，挖出了孤块的矿工是得不到任何奖励的。但在以太坊中，孤块是能被打包进区块里的，如果后续的区块将前面产生的孤块也打包进区块里，那这个孤块就变成了<strong>叔块</strong>，那么，挖到这个叔块的矿工就能得到奖励，而将叔块打包进区块的矿工也能得到额外的奖励，但每个区块最多只能包含两个叔块，而且也不能包含太久的孤块，最多只支持到 7 层的祖先孤块。由于以太坊的出块时间短很多，那自然更容易出现临时分叉而产生孤块，而且这么短的时间内，每个区块也很难能够在全网充分传播，那对于网速慢的矿工来说，就非常吃亏了。所以，为了平衡各方利益，以太坊才设计了叔块机制。写作本文时，叔块率在 16.9% 左右。</p>
+<p>不过，以太坊正在计划从 POW 机制切换为 <strong>POS（Proof of Stack，权益证明）</strong>机制，其新的共识机制名为 <strong>Casper</strong>，其存在两个不同实现的版本，分别是：</p>
+<ul>
+<li>Casper the Friendly Finality Gadget（FFG）</li>
+<li>Casper the Friendly GHOST: Correct-by-Construction（CBC）</li>
+</ul>
+<p>Casper FFG 是由 Vitalik 主导的，侧重于通过逐步迭代实现，慢慢过渡到 POS 机制。而 Casper CBC 则是由 Vlad Zamfir 主导的，不同于传统的协议设计方式，即先定义完整的协议，CBC 协议在开始阶段只是部分确定的，其余部分协议以证明能够满足所需/必需属性的方式得到。不过，也只是两种不同的方法，关于 POS 的核心理念还是一致的。相对来说，FFG 比较容易理解，也很大可能是即将第一个部署到以太坊的 Casper 版本，所以下面的篇幅主要讲解 FFG。</p>
+<p>FFG 版本的 Casper 是一种混合 POW / POS 的共识机制，该机制下的每次出块依然还是采用 POW 挖矿机制，但每 100 个区块会增加一个 POS <strong>检查点（checkpoint）</strong>，通过<strong>验证人（validator）</strong>来评估区块的最终有效性。创世区块是一个检查点，区块高度为 100 的倍数的区块也是检查点，将这些检查点连起来就组成了一条<strong>检查点链（checkpoint chain）</strong>。检查点一般会有两种状态：<strong>justified</strong> 和 <strong>finalized</strong>，<strong>finalized</strong> 则表示已经确定为最终有效的，该状态的检查点至少已经存在一个子检查点，<strong>justified</strong> 则表示该检查点是已经被证明合理的，<strong>finalized</strong> 的检查点一定是 <strong>justified</strong> 的，但反过来则不一定。而一个检查点是否有效，是通过多个验证人投票得出的结果。下面，我们就来简单聊聊这个过程。</p>
+<p>首先，要成为验证人，是需要投入<strong>保证金</strong>的，即抵押一定量的以太币作为权益证明，才有资格成为验证人。投入保证金是通过广播一条 <strong>deposit</strong> 消息进行操作的，只要这条消息是有效的并被打包进区块中，那就能加入<strong>验证人集合（validator set）</strong>，成为其中一个验证人。另外，如果要退出<strong>验证人集合</strong>，则可以再广播一条 <strong>withdraw</strong> 消息。不过，需要注意，一旦退出后，该验证人的公钥将被永久禁止再次加入验证人集合。</p>
+<p>接着，成为验证人之后，就可以开始投票选举检查点了，通过广播一条 <strong>vote</strong> 消息到网络中。vote 消息主要包含五个信息：两个检查点 <strong>s</strong> 和 <strong>t</strong>，以及这两个检查点的高度 <strong>h(s)</strong> 和 <strong>h(t)</strong>，以及验证人的公钥 <strong>ν</strong>。要求 s 必须是 t 的祖先，一般来说，t 就是最新的检查点，而 s 是上一个已经确定为最终有效的检查点。另外，还要求验证人的公钥 v 必须在验证人集合中找得到，否则都认为该投票是无效的。当超过 2/3 的验证人（实际上是 2/3 的总保证金）都投给了 (s, t) 这对检查点时，那 s 就是 <strong>finalized</strong> 的，t 则是 <strong>justified</strong> 的。而且，那些投注了 (s, t) 的验证人还会得到货币奖励，得到的奖励是和抵押的保证金成比例的，就是说抵押的保证金越多，得到的奖励越多。这个奖励也可以理解为抵押保证金的利息。</p>
+<p>另外，Casper 设置了两条戒律：</p>
+<ol>
+<li>验证人不能发布两个 h(t) 相同的投票，即如果存在两个投票：&lt;ν, s1, t1, h(s1), h(t1)&gt; 和 &lt;ν,s2,t2,h(s2),h(t2)&gt;，那么 h(t1) = h(t2) 是不允许的；</li>
+<li>如果 h(s1) &lt; h(s2) &lt; h(t2) &lt; h(t1)，则第一个投票的跨度已经涵盖了第二个投票，这也是不允许的。</li>
+</ol>
+<p>如果验证人违反了上面的戒律，则会对验证人进行惩罚，没收他抵押的保证金。</p>
+<p>最后，Casper 对分叉链的选择不同于 POW 机制下选择累计工作量最多的那条链，Casper 对分叉链选择的规则就是选择 justified 检查点高度最大的链，原文是：</p>
+<ul>
+<li><strong>FOLLOW THE CHAIN CONTAINING THE JUSTIFIED CHECKPOINT OF THE GREATEST HEIGHT.</strong></li>
+</ul>
+<p>很明显，以太坊的共识机制和比特币相比复杂得多，主要在于两点引起的：一是大大缩短了出块时间，二是引入了 POS 机制。在 POW 机制下将出块时间缩短到十几秒，虽然加快了性能，但其实减低了安全性，因为会引入很多其他问题，比如新区块难以在这么短的时间内扩散到全网，比如分叉链出现的概率更大，为了解决这些问题，就需要设计更多共识协议来提高安全性。引入 POS 机制变成 POW + POS 的混合机制，那这种复杂度不是 1 + 1 = 2 这么简单的。</p>
+<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>EOS 的共识机制是怎样的？其安全性和性能又如何呢？</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/blockchain/20180425/qrcode_keegan.jpg">
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://keeganlee.me/post/blockchain/20180425/" data-id="cjxjs262g0001s0ujbrai420z" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/区块链/">区块链</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Blockchain/详解区块链P2P网络" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/post/blockchain/20180313/" class="article-date">
+  <time datetime="2018-03-13T08:48:12.000Z" itemprop="datePublished">2018-03-13</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/blockchain/">blockchain</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/post/blockchain/20180313/">详解区块链P2P网络</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180313"><strong>http://keeganlee.me/post/blockchain/20180313</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-03-13</p>
+<hr>
+<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
+<hr>
+<p>根据前一篇文章《<a href="http://keeganlee.me/post/blockchain/20180224">从微观到宏观理解区块链</a>》我们已经了解到，微观上，区块链本质就是一种<strong>不可篡改且可追踪溯源的哈希链条</strong>；宏观上，还具备了另外三个基本特征：<strong>分布式存储、P2P 网络和共识机制</strong>。分布式存储无非就是网络上大部分节点都保存了整条区块链，这容易理解也不复杂，所以就没必要再展开细讲了。但区块链的 P2P 网络和共识机制相对则复杂得多，因此我将用两篇文章分别展开讲讲这两部分内容，本篇文章就先来了解区块链的 P2P 网络。</p>
+<h2 id="P2P-网络"><a href="#P2P-网络" class="headerlink" title="P2P 网络"></a>P2P 网络</h2><p>由于大部分人对 P2P 网络了解甚少，因此有必要先聊聊 P2P 网络的一些基本原理。这个章节的内容主要来自<strong>《P2P对等网络原理与应用》</strong>这本书，这本书较为系统地介绍了 P2P 的理论基础，非常适合希望全面掌握 P2P 知识的初级读者，建议大伙都可以看看。</p>
+<p>P2P 网络不同于传统的<strong>客户端/服务端(client/server,C/S)结构</strong>，P2P 网络中的每个节点都可以既是客户端也是服务端，因此也不适合使用 HTTP 协议进行节点之间的通信，一般都是直接使用 Socket 进行网络编程。</p>
+<p>P2P 主要存在四种不同的网络模型，也代表着 P2P 技术的四个发展阶段：<strong>集中式、纯分布式、混合式和结构化模型</strong>。不过需要指出的是，这里所说的网络模型主要是指路由查询结构，即不同节点之间如何建立连接通道，两个节点之间一旦建立连接，具体传输什么数据则是两个节点之间的事情了。</p>
+<p>最简单的路由方式就是<strong>集中式</strong>，即存在一个中心节点保存了其他所有节点的索引信息，索引信息一般包括节点 IP 地址、端口、节点资源等。集中式路由的优点就是结构简单、实现容易。但缺点也很明显，由于中心节点需要存储所有节点的路由信息，当节点规模扩展时，就很容易出现性能瓶颈；而且也存在单点故障问题。</p>
+<img src="/post/blockchain/20180313/2018-03-06-22-25-08.jpg">
+
+<p>那第二种路由结构则是<strong>纯分布式</strong>的，移除了中心节点，在 P2P 节点之间建立随机网络，就是在一个新加入节点和 P2P 网络中的某个节点间随机建立连接通道，从而形成一个随机拓扑结构。新节点加入该网络的实现方法也有很多种，最简单的就是随机选择一个已经存在的节点并建立邻居关系。像比特币的话，则是使用 DNS 的方式来查询其他节点，DNS 一般是硬编码到代码里的，这些 DNS 服务器就会提供比特币节点的 IP 地址列表，从而新节点就可以找到其他节点建立连接通道。新节点与邻居节点建立连接后，还需要进行全网广播，让整个网络知道该节点的存在。全网广播的方式就是，该节点首先向邻居节点广播，邻居节点收到广播消息后，再继续向自己的邻居节点广播，以此类推，从而广播到整个网络。这种广播方法也称为<strong>泛洪机制</strong>。纯分布式结构不存在集中式结构的单点性能瓶颈问题和单点故障问题，具有较好的可扩展性，但泛洪机制引入了新的问题，主要是可控性差的问题，包括两个较大的问题，一是容易形成泛洪循环，比如节点 A 发出的消息经过节点 B 到 节点 C，节点 C 再广播到节点 A，这就形成了一个循环；另一个棘手问题则是响应消息风暴问题，如果节点 A 想请求的资源被很多节点所拥有，那么在很短时间内，会出现大量节点同时向节点 A 发送响应消息，这就可能会让节点 A 瞬间瘫痪。</p>
+<img src="/post/blockchain/20180313/2018-03-07-10-54-06.jpg">
+
+<p>再来看看第三种路由结构：<strong>混合式</strong>。混合式其实就是混合了集中式和分布式结构，如下图所示，网络中存在多个<strong>超级节点</strong>组成分布式网络，而每个超级节点则有多个<strong>普通节点</strong>与它组成局部的集中式网络。一个新的普通节点加入，则先选择一个超级节点进行通信，该超级节点再推送其他超级节点列表给新加入节点，加入节点再根据列表中的超级节点状态决定选择哪个具体的超级节点作为父节点。这种结构的泛洪广播就只是发生在超级节点之间，就可以避免大规模泛洪存在的问题。在实际应用中，混合式结构是相对灵活并且比较有效的组网架构，实现难度也相对较小，因此目前较多系统基于混合式结构进行开发实现。其实，比特币网络如今也是这种结构，后面再细说。</p>
+<img src="/post/blockchain/20180313/2018-03-06-22-27-23.jpg">
+
+<p>最后一种网络则是<strong>结构化 P2P 网络</strong>，它也是一种分布式网络结构，但与纯分布式结构不同。纯分布式网络就是一个随机网络，而结构化网络则将所有节点按照某种结构进行有序组织，比如形成一个环状网络或树状网络。而结构化网络的具体实现上，普遍都是基于 <strong>DHT(Distributed Hash Table，分布式哈希表) *<em>算法思想。DHT 只是提出一种网络模型，并不涉及具体实现，主要想解决如何在分布式环境下快速而又准确地路由、定位数据的问题。具体的实现方案有 Chord、Pastry、CAN、Kademlia 等算法，其中 *</em>Kademlia</strong> 也是以太坊网络的实现算法，很多常用的 P2P 应用如 BitTorrent、电驴等也是使用 Kademlia。因为篇幅有限，就不展开讲这些算法的具体原理了。目前，我们主要理解 DHT 的核心思想即可。</p>
+<p>在 P2P 网络中，可以抽象出两种空间：<strong>资源空间</strong>和<strong>节点空间</strong>。资源空间就是所有节点保存的资源集合，节点空间就是所有节点的集合。对所有资源和节点分别进行编号，如把资源名称或内容用 Hash 函数变成一个数值（这也是 DHT 常用的一种方法），这样，每个资源就有对应的一个 ID，每个节点也有一个 ID，资源 ID 和节点 ID 之间建立起一种映射关系，比如，将资源 n 的所有索引信息存放到节点 n 上，那要搜索资源 n 时，只要找到节点 n 即可，从而就可以避免泛洪广播，能更快速而又准确地路由和定位数据。当然，在实际应用中，资源 ID 和节点 ID 之间是无法做到一一对应的，但因为 ID 都是数字，就存在大小关系或偏序关系等，基于这些关系就能建立两者的映射关系。这就是 DHT 的核心思想。DHT 算法在资源编号和节点编号上就是使用了分布式哈希表，使得资源空间和节点空间的编号有唯一性、均匀分布式等较好的性质，能够适合结构化分布式网络的要求。</p>
+<p>综上，这就是 P2P 网络的一点理论基础，不同的区块链可能会使用不一样的网络模型，但基本原理是一样的。后面分别讲解下最有代表性的两个区块链的网络：比特币网络和以太坊网络。</p>
+<h2 id="比特币网络"><a href="#比特币网络" class="headerlink" title="比特币网络"></a>比特币网络</h2><p>首先，比特币网络中的节点主要有四大功能：<strong>钱包、挖矿、区块链数据库、网络路由</strong>。每个节点都会具备路由功能，但其他功能不一定都具备，不同类型的节点可能只包含部分功能，一般只有<strong>比特币核心(bitcoin core)</strong>节点才会包含所有四大功能。</p>
+<img src="/post/blockchain/20180313/2018-03-09-16-35-26.jpg">
+
+<p>所有节点都会参与校验和广播交易及区块信息，且会发现和维持与其他节点的连接。有些节点会包含完整的区块链数据库，包括所有交易数据，这种节点也称为<strong>全节点(Full Node)</strong>。另外一些节点只存储了区块链数据库的一部分，一般只存储区块头而不存储交易数据，它们会通过“<strong>简化交易验证(SPV)</strong>”的方式完成交易校验，这样的节点也称为 <strong>SPV节点</strong>或<strong>轻节点(Lightweight Node)</strong>。钱包一般是 PC 或手机客户端的功能，用户通过钱包查看自己的账户金额、管理钱包地址和私钥、发起交易等。除了比特币核心钱包是全节点之外，大部分钱包都是<strong>轻节点</strong>。挖矿节点则通过解决<strong>工作量证明(PoW)</strong>算法问题，与其他挖矿节点相互竞争创建新区块。有些挖矿节点同时也是<strong>全节点</strong>，即也存储了完整的区块链数据库，这种节点一般都是<strong>独立矿工(Solo Miner)</strong>。还有一些挖矿节点不是独立挖矿的，而是和其他节点一起连接到<strong>矿池</strong>，参与集体挖矿，这种节点一般也称为<strong>矿池矿工(Pool Miner)</strong>。这会形成一个局部的集中式矿池网络，中心节点是一个<strong>矿池服务器</strong>，其他挖矿节点全部连接到矿池服务器。<strong>矿池矿工</strong>和<strong>矿池服务器</strong>之间的通信也不是采用标准的<strong>比特币协议</strong>，而是使用<strong>矿池挖矿协议</strong>，而矿池服务器作为一个<strong>全节点</strong>再与其他比特币节点使用主网络的<strong>比特币协议</strong>进行通信。</p>
+<p>在整个比特币网络中，除了不同节点间使用<strong>比特币协议</strong>作为通信协议的主网络，也存在很多扩展网络，包括上面提到的<strong>矿池网络</strong>。不同的矿池网络可能还会使用不同的矿池挖矿协议，目前主流的具体矿池协议应该是 <strong>Stratum协议</strong>，该协议除了支持挖矿节点，也支持<strong>瘦客户端钱包</strong>。一个包含了比特币协议主网络各种节点和 Stratum 网络，以及其他矿池网络的扩展比特币网络大概如下图所示：</p>
+<img src="/post/blockchain/20180313/bitcoin-network.jpeg">
+
+<p>另外，挖矿这块还有特殊需求。我们知道，矿工创建新区块后，是需要广播给全网所有节点的，当全网都接受了该区块，给矿工的挖矿奖励才算是有效的，这之后才好开始下一个区块 Hash 的计算。所以矿工必须最大限度缩短新区块的广播和下一个区块 Hash 计算之间的时间。如果矿工之间传播区块只采用上图所示的比特币协议网络，那无疑会有很高的网络延迟，所以，需要一个专门的传播网络用来加快新区块在矿工之间的同步传播，这个专门网络也叫<strong>比特币传播网络</strong>或<strong>比特币中继网络(Bitcoin Relay Network)</strong>。</p>
+<h2 id="以太坊网络"><a href="#以太坊网络" class="headerlink" title="以太坊网络"></a>以太坊网络</h2><p>和比特币一样，以太坊的节点也具备<strong>钱包、挖矿、区块链数据库、网络路由</strong>四大功能，也同样存在很多不同类型的节点，除了主网络之外也同样存在很多扩展网络。但与比特币不同的，比特币主网的 P2P 网络是无结构的，但以太坊的 P2P 网络是有结构的。前面我们已经提过，以太坊的 P2P 网络主要采用了 <strong>Kademlia(简称 Kad)</strong> 算法实现，Kad 是一种<strong>分布式哈希表(DHT)</strong>技术，使用该技术，可以实现在分布式环境下快速而又准确地路由、定位数据的问题。所以，下面主要讲解下以太坊的 Kad 网络。</p>
+<p>在 Kad 网络中，每个节点都具有一个唯一的节点 ID。另外，也会计算不同节点之间的距离，但这个距离不是物理上的距离，而是逻辑上的距离，是通过对两个节点 ID 进行 <strong>异或(符号为^)</strong> 计算得到的，即 A、B 两节点之间的距离的计算公式为：<strong>D(A,B) = A.ID^B.ID</strong>。异或有一个重要的性质：假设 a、b、c 为任意三个数，如果 a^b = a^c 成立，那就一定 b = c。因此，如果给定一个结点 a 和距离 L，那就有且仅有一个结点 b, 会使得 D(a,b) = L。通过这种方式，就能有效度量 Kad 网络中不同节点之间的逻辑距离。</p>
+<p>在异或距离度量的基础上，Kad 还可以将整个网络拓扑组织成如下图所示的一个<strong>二叉前缀树</strong>，每个 NodeID 会映射到二叉树上的某个叶子。</p>
+<img src="/post/blockchain/20180313/2018-03-13-12-31-47.png">
+
+<p>映射规则主要是：</p>
+<ol>
+<li>将 NodeID 以二进制形式表示，然后从高到低对每一位的 0 或 1 依次处理；</li>
+<li>二进制的第 n 位就对应了二叉树的第 n 层；</li>
+<li>如果该位是 0，进入左子树，是 1 则进入右子树（反过来也可以）；</li>
+<li>全部位都处理完后，这个 NodeID 就对应了二叉树上的某个叶子。</li>
+</ol>
+<p>在这种二叉树结构下，对每个节点来说，离它越近的节点异或距离也是越近的。接着，可以按照离自己异或距离的远近，对整颗二叉树进行拆分。拆分规则是：从根节点开始，将不包括自己的那颗子树拆分出来，然后在包含自己的子树中，把不包括自己的下一层子树再拆分出来，以此类推，直到只剩下自己。以上图的 110 节点为例，从根节点开始，由于 110 节点在右子树，所以将左边的整颗子树拆分出来，即包含 000、001、010 这三个节点的这颗子树；接着，到第二层子树，将不包含 110 节点的左子树再拆分出来，即包含 100 和 101 这两个节点的子树；最后，再将 111 拆分出来。这样，就将 110 节点之外的整个二叉树拆分出了三颗子树。</p>
+<p>完成子树拆分后，只要知道每个子树里面的其中一个节点，就可以进行递归路由实现整颗二叉树所有节点的遍历。但在实际场景下，由于节点是动态变化的，所以一般不会只知道每个子树的一个节点，而是需要知道多个节点。因此，Kad 中有一个叫 <strong>K-桶(K-bucket)</strong>的概念，每个桶会记录每颗子树里所知道的多个节点。其实，一个<strong>K-桶</strong>就是一张<strong>路由表</strong>，如果拆分出来有 m 颗子树，那对应节点就需要维护 m 个路由表。每个节点都会各自维护自己的 m 个 K-桶，每个 K-桶里记录的节点信息一般会包括 NodeID、IP、Endpoint、与 Target 节点（即维护该 K-桶的节点）的异或距离等信息。以太坊中，每个节点维护的 K-桶数量为 256 个，这 256 个 K-桶会根据与 Target 节点的异或距离进行排序，每个 K-桶保存的节点数量上限是 16。</p>
+<p>在以太坊的 Kad 网络中，节点之间的通信是基于 UDP 的，另外设置了 4 个主要的通信协议：</p>
+<ol>
+<li><strong>Ping</strong>：用于探测一个节点是否在线</li>
+<li><strong>Pong</strong>：用于响应 Ping 命令</li>
+<li><strong>FindNode</strong>：用于查找与 Target 节点异或距离最近的其他节点</li>
+<li><strong>Neighbours</strong>：用于响应 FindNode 命令，会返回一或多个节点</li>
+</ol>
+<p>通过以上 4 个命令，就可以实现新节点的加入、K-桶的刷新等机制。具体的实现流程就不细讲了，留给大伙自己去思考。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>不同结构的 P2P 网络，会有不同的优点和缺点。比特币网络的结构明显容易理解，实现起来也相对容易得多，而以太坊网络引入了异或距离、二叉前缀树、K-桶等，结构上复杂不少，但在节点路由上的确会比比特币快很多。另外，不管是比特币还是以太坊，其实都只是一种或多种协议的集合，不同节点其实可以用不同的具体实现，比如，比特币就有用 C++ 实现的 Bitcoin Core，还有用 Java 实现的 BitcoinJ；以太坊也有用 Go 语言实现的 go-ethereum，也有用 C++ 实现的 go-ethereum，还有用 Java 实现的 Ethereum(J)。</p>
+<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>在以太坊的 Kad 网络中，新节点的加入和 K-桶的刷新流程是怎样的？比特币的新节点加入流程又是怎样的？哈希表有哪些实现方式？</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/blockchain/20180313/qrcode_keegan.jpg">
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://keeganlee.me/post/blockchain/20180313/" data-id="cjxjs262h0002s0ujk12eqp7s" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/区块链/">区块链</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Blockchain/从微观到宏观理解区块链" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/post/blockchain/20180224/" class="article-date">
+  <time datetime="2018-02-23T16:09:49.000Z" itemprop="datePublished">2018-02-24</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/blockchain/">blockchain</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/post/blockchain/20180224/">从微观到宏观理解区块链</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180224"><strong>http://keeganlee.me/post/blockchain/20180224</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-02-24</p>
+<hr>
+<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
+<hr>
+<p>最近区块链异常火爆，而且就只是在这一两个月内的事情，无疑，今年应该会成为区块链爆发元年，相应地，对区块链技术人员的需求将会大幅度增加，为了让大家早日入门区块链开发领域，以取得先发优势，从而在这场区块链革命浪潮中立于不败之地，因此，我决定提前编写系列文章，跟大家聊聊区块链技术。</p>
+<h2 id="微观区块链"><a href="#微观区块链" class="headerlink" title="微观区块链"></a>微观区块链</h2><p>相信不少人都听到说<strong>区块链</strong>是分布式账本、分布式数据库、去中心化的等等，有了一些大概的认知，但也只是一些碎片化的认知，还无法形成体系，所以也还不能理解区块链的本质。下面，我将从微观到宏观简单讲解区块链，力求让大伙更容易理解区块链的真正本质。</p>
+<p>那么，从微观上理解区块链，就要从理解区块链最底层的数据结构开始。<strong>区块链(Blockchain)</strong>，简单来说就是按时间顺序将数据区块通过哈希指针的方式连接起来的一个链表。<strong>哈希指针</strong>是区块链里最常用的数据结构，其实就是一串数据的<strong>哈希值</strong>，我们知道，一串数据的哈希值就是这串数据的<strong>指纹/摘要</strong>，因此就可以用这个哈希值来指向这串数据，如下图：</p>
+<img src="/post/blockchain/20180224/2018-02-07-12-50-00.jpg">
+<p>区块链里的每一个区块都有对应本区块的哈希指针，而除了创世区块（即第一个区块）之外，其他每个区块都存储了前一个区块的哈希指针，从而形成如下所示的一个链条，即区块链：</p>
+<img src="/post/blockchain/20180224/blockchain.png">
+<p>这样的数据结构可以保证数据无法篡改，因为一旦篡改了任何区块的数据，对应的哈希指针就会出错，因此一旦有恶意篡改就能校验到。数据的无法篡改也是区块链本质上最核心的一个特性。</p>
+<p>接着，再来看看区块链的基本单元——<strong>区块(block)</strong>，以比特币为例，每个区块的数据结构大致如下：</p>
+<img src="/post/blockchain/20180224/block.png">
+<p>其中，<strong>Tx0 ~ Tx3</strong> 表示每一笔交易数据，<strong>Hash0</strong> 则是 <strong>Tx0</strong> 这笔交易数据的哈希指针，<strong>Hash01</strong> 则是 <strong>Hash0 + Hash1</strong> 的哈希指针，这样层层叠加上去，得到最后的 <strong>Root Hash</strong>。从图中也可以看出，从Hash0 到 Root Hash 是一个三层的二叉树，由于这颗树的所有节点都是 Hash 值，所以也称为 Hash Tree，但更专业的名称叫 <strong>Merkle Tree</strong>。不过 Merkle Tree 不一定是二叉树，也可以是多叉树。Merkle Tree 的叶子节点（即Hash0 ~ Hash3）是数据块的 Hash 值，而非叶子节点的 value 则是根据下面的叶子节点的 Hash 值串联起来后再计算 Hash 得出的。通过 Merkle Tree 结构，底层的每一笔交易也都无法篡改，一旦篡改，Root Hash 就会不一致。</p>
+<p>另外，该结构也简化了支付校验，比如，我们要校验 Tx3 这笔交易的有效性，那只要校验从 Tx3 到  Root Hash 的分支 Hash 值即可，如下图所示，计算 Tx3 的 Hash值得到 Hash3，再结合 Hash2，计算出 Hash23，再拼上 Hash01 计算出 Merkle Root，只要计算出来的 Merkle Root 和实际存储的 Root Hash 一致，则表明该该笔交易是有效的。</p>
+<img src="/post/blockchain/20180224/2018-02-20-23-20-02.jpg">
+<p>Root Hash 会保存在区块头里，区块头里一般会保存有以下信息：</p>
+<ul>
+<li><strong>Version</strong>：版本号</li>
+<li><strong>Prev Block</strong>：上一个区块的 Hash 值</li>
+<li><strong>Merkle Root</strong>：即上面所说的 Merkle Tree 的 Root Hash</li>
+<li><strong>Time</strong>：区块的时间</li>
+<li><strong>Difficulty</strong>：区块难度</li>
+<li><strong>Nonce</strong>：随机数</li>
+</ul>
+<p>这是比特币的一个区块：<a href="https://btc.com/0000000000000000005b8d4d2508c14f6ea5cbbb3f1104566612dfb29d281b7a" target="_blank" rel="noopener">https://btc.com/0000000000000000005b8d4d2508c14f6ea5cbbb3f1104566612dfb29d281b7a</a>。比特币的每一笔交易，可以有多个输入和多个输出。比如说，我们要做一笔转账，从 A 转 3.3 个 BTC 到 B，假设 A 的钱包地址上原本有 10 个 BTC。那这笔转账，会有一个输入，即 A 的地址有 10 个 BTC，交易完成后变成两个输出，一个是 B 的地址增加 3.3 个 BTC，一个是 A 的地址变成 6.7 个 BTC。这样子，每一个地址的所有交易其实都是可以追溯的，每一个比特币的转账记录也是可以追溯的。</p>
+<p>不过，以太坊的区块结构则复杂得多，每个区块并非只有一颗 Merkle Tree，而是有三颗 Merkle Tree，除了<strong>交易树</strong>，还有<strong>状态树</strong>和<strong>收据树</strong>。另外，使用的 Merkle Tree 也是复杂得多，叫 <strong>Merkle Patricia Tree</strong>。详细结构就不展开了，感兴趣的读者自行去搜索了解即可。</p>
+<p>简而言之，从微观上来说，区块链就是一种哈希链条，其核心本质特征是<strong>不可篡改且可追踪溯源</strong>。</p>
+<h2 id="宏观区块链"><a href="#宏观区块链" class="headerlink" title="宏观区块链"></a>宏观区块链</h2><p>如果只是从微观上理解区块链，那就像井底之蛙，是看不到区块链即将改变世界的未来的。毕竟，从微观上来看的话，要实现不可篡改且可追踪溯源的特性，并不一定需要使用区块链技术。所以，还要看懂区块链宏观上的本质，才能预见到区块链真实的未来。</p>
+<p>当然，宏观上来说，区块链的本质是什么，不同人会有不同观点，不少人认为其本质特征是<strong>去中心化的</strong>，另一帮人认为其本质就是<strong>分布式数据库/分布式公共账本</strong>，而在我看来，其核心本质就是一种<strong>自信任的新一代互联网基础协议</strong>。下面我将逐步剖析我的观点。</p>
+<p>首先，宏观上的区块链就是一种基础协议，而不是指代具体的技术。作为一种基础协议，有几个基本特征是必备的，那就是<strong>分布式存储、P2P 网络和共识机制</strong>，当然，还有微观层面的<strong>不可篡改且可追踪溯源</strong>，如果不具备这几个特征，哪怕只缺了一个，都不能称为区块链。</p>
+<p>先来聊聊第一个基本特征——<strong>分布式存储</strong>。前面我们已经了解到，区块链最底层的数据结构就是一种哈希链条，是用来存储数据的，当然，采用哪种具体的数据库来存储区块链数据则是由各区块链的开发团队自己决定的，比如，比特币和以太坊就选择了 LevelDB。分布式存储，就是说，区块链数据的存储是分布式的，也因此很多人将区块链称为分布式数据库，但区块链的分布式存储与传统的分步式存储有所不同。传统的分布式存储是将数据分散存储到多个服务器上，每个存储服务器上的数据只是全量数据的一部分。但区块链的分布式存储，每个数据节点存储的都是全量数据。不过，区块链的节点可分为<strong>全节点</strong>和<strong>轻节点</strong>，全节点存储了整条区块链的所有数据，包括所有区块头和所有交易数据，而轻节点则只存储了整条链的所有区块头。那如果要在轻节点查询某笔交易的有效性，就需要转去全节点查询了，那节点之间如何通信呢？这就涉及到第二个基本特征——<strong>P2P 网络</strong>。另外，既然是分布式存储，那就还要解决数据一致性的问题，就这涉及到第三个基本特征——<strong>共识机制</strong>。</p>
+<p><strong>P2P 网络</strong>，即<strong>对等网络</strong>，也称<strong>点对点网络</strong>或<strong>端对端网络</strong>，是区块链系统中不同节点之间通信的方式，也是一种分布式的网络结构。通过 P2P 网络，不同节点之间可以直接交互，而且彼此连接的每个节点都处于对等的地位。每个节点既充当服务器，为其他节点提供服务，同时也享用其他节点提供的服务。那么，既然每个节点的地位都是对等的，那不同节点之间出现分歧时，要如何达成一致共识呢？这也是<strong>共识机制</strong>所解决的问题。</p>
+<p><strong>共识机制</strong>是区块链的一个核心特征，是保证区块链系统在分布式架构下的一致性方案。要理解共识机制，我们先来了解下交易写入区块链的简要过程。首先，当你在某个节点发起一笔交易时，比如从地址 A 转 0.1 个 BTC 到地址 B，该节点接收到交易信息后就对其进行校验，如果地址 A 上的未消费 BTC 的余额大于 0.1 个则可认为该笔交易是合法的，那就会将这笔交易信息放入本节点的 pending 池（待写入区块的交易池），并将这笔交易信息<strong>广播</strong>给其他已建立连接的节点，其他节点接收到交易信息后也做同样的校验并广播，当其中某个节点获得记账权时则可将它<strong>当前的区块（包含上面那笔交易）</strong>写入本节点存储的区块链中并将这个区块广播出去，其他大部分节点校验了此区块为有效，也同样写入它们自己存储的区块链中，这样，你的这笔交易就算真正写入到区块链中了。那如果你同时向 B 和 C 地址分别转 0.1 个 BTC，但你的地址 A 的未消费 BTC 余额只有 0.1 个的情况下，假设有些节点可能只接收到转给 B 的交易，而有些节点则只接收到转到 C 的交易，这些节点分别校验通过并写入了它们的 pending 池，但最终只有其中一笔交易能被写入区块链，取决于哪个节点先获得记账权并被其他大部分节点所接受，而另一笔交易就算已经被那些将其写入了 pending 池的节点所接受，其他节点再次校验后也不会通过。所以，一笔交易是否合法，以及一个新增区块是否有效，不是由某一个节点说了算，而是需要经过多数节点的最终一致共识。</p>
+<p>根据区块链的这几个基本特征，明显可以看出，区块链的确是<strong>分布式</strong>的：<strong>分布式存储、分布式网络、分布式共识</strong>。分布式的确是一个重要的特征，但分布式只是一种手段，而不是目的。区块链之所以能被称为革命性的技术，是因为它改变了传统的信任机制。传统的信任机制是怎样的呢？其实就是有一个中间机构为信任背书，比如银行、淘宝、滴滴等，我们通过信任这些中间机构和其他人进行交易。而区块链则没有中间机构这一层了，用户之间直接点对点交易，区块链的数据结构、分布式存储特性和共识机制结合在一起，保证了数据是可靠且不可篡改的，从而实现了一个不需要中间机构的<strong>自信任系统</strong>。也由于没有了中间机构，所以也可以说区块链是<strong>去中心化</strong>的，但这里更准确的说法可能是<strong>去中介化</strong>。但<strong>去中介化</strong>和<strong>分布式</strong>一样，只是手段，而不是目的，核心目的还是构建一个<strong>自信任系统</strong>。</p>
+<p>那自信任系统相比有中间机构的信任机制有什么好处呢？我们就举个跨境支付的栗子就明白了。传统的交易支付都要经过银行体系，要经过开户行、对手行、清算组织、境外银行等多个机构和非常繁冗的处理流程。而且，整个过程中每一个机构都有自己的账务系统，彼此之间需要建立代理关系，每笔交易都需要在本银行记账，与交易对手进行清算和对账等，导致整个过程花费时间较长、使用成本较高。而有了区块链，交易双方就可以实现点对点支付，而无需这么多中间机构，从而<strong>简化流程、提高效率</strong>。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，总结一下，我分别从微观和宏观两个层面简单聊了下区块链，微观上，其实就是区块链最底层的数据结构，本质就是一种<strong>不可篡改且可追踪溯源的哈希链条</strong>；宏观上，区块链还具备了另外三个基本特征：<strong>分布式存储、P2P 网络和共识机制</strong>，从这几个基本特征可以看出，区块链是<strong>分布式</strong>的，但分布式只是手段，而不是目的，区块链的核心目的是构建一个<strong>自信任系统</strong>，相比依赖中间机构的信任机制，可以<strong>简化流程、提高效率</strong>，这才是区块链之所以能被称为革命性技术的本质原因。</p>
+<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>智能合约为区块链带来了什么？区块链是否必须有数字代币？公有链、联盟链、私有链本质上有什么区别？</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/blockchain/20180224/qrcode_keegan.jpg">
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://keeganlee.me/post/blockchain/20180224/" data-id="cjxjs262m0005s0ujr7e87now" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/区块链/">区块链</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/blockchain/">blockchain</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/区块链/">区块链</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/区块链/" style="font-size: 10px;">区块链</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/post/default/20190630/">编程强迫症</a>
+          </li>
+        
+          <li>
+            <a href="/post/blockchain/20180425/">漫谈区块链共识机制</a>
+          </li>
+        
+          <li>
+            <a href="/post/blockchain/20180313/">详解区块链P2P网络</a>
+          </li>
+        
+          <li>
+            <a href="/post/blockchain/20180224/">从微观到宏观理解区块链</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 Keegan小钢<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
