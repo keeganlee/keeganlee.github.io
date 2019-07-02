@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/architecture/20160120微信订阅号：keeganlee_me写于2016-01-20  App架构设计经验谈:接口的设计App架构设计经验谈:技术选型App架构设计经验谈:数据层的设计App架构设计经验谈:业务层的设计App架构设计经验谈:展示层的设计  一个App，从根">
+<meta name="keywords" content="架构">
+<meta property="og:type" content="article">
+<meta property="og:title" content="App架构设计经验谈:数据层的设计">
+<meta property="og:url" content="https://keeganlee.me/post/architecture/20160120/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/architecture/20160120微信订阅号：keeganlee_me写于2016-01-20  App架构设计经验谈:接口的设计App架构设计经验谈:技术选型App架构设计经验谈:数据层的设计App架构设计经验谈:业务层的设计App架构设计经验谈:展示层的设计  一个App，从根">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/architecture/20160120/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-07-02T02:14:51.501Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="App架构设计经验谈:数据层的设计">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/architecture/20160120微信订阅号：keeganlee_me写于2016-01-20  App架构设计经验谈:接口的设计App架构设计经验谈:技术选型App架构设计经验谈:数据层的设计App架构设计经验谈:业务层的设计App架构设计经验谈:展示层的设计  一个App，从根">
+<meta name="twitter:image" content="https://keeganlee.me/post/architecture/20160120/qrcode_keegan.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/architecture/20160120/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>App架构设计经验谈:数据层的设计 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160120/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">App架构设计经验谈:数据层的设计
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-01-20 17:05:00" itemprop="dateCreated datePublished" datetime="2016-01-20T17:05:00+08:00">2016-01-20</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 10:14:51" itemprop="dateModified" datetime="2019-07-02T10:14:51+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160120"><strong>http://keeganlee.me/post/architecture/20160120</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-01-20</p>
+<hr>
+<p><a href="http://keeganlee.me/post/architecture/20160107">App架构设计经验谈:接口的设计</a><br><a href="http://keeganlee.me/post/architecture/20160114">App架构设计经验谈:技术选型</a><br><a href="http://keeganlee.me/post/architecture/20160120">App架构设计经验谈:数据层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160214">App架构设计经验谈:业务层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160222">App架构设计经验谈:展示层的设计</a></p>
+<hr>
+<p>一个App，从根本上来说，就是对数据的处理，包括数据从哪里来、数据如何组织、数据怎么展示，从职责上划分就是：数据管理、数据加工、数据展示。相对应的也就有了三层架构：数据层、业务层、展示层。本文就先讲讲数据层的设计。</p>
+<p>数据层，是三层架构中的最底层，负责数据的管理。它主要的任务就是：</p>
+<ol>
+<li>调用网络API，获取数据；</li>
+<li>将数据缓存到本地；</li>
+<li>将数据交付给上一层。</li>
+</ol>
+<p>根据这三个任务，数据层可以再拆分为三层：网络层、本地数据层、交付层。</p>
+<h2 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h2><p>网络层主要就是对网络API的封装。关于API的设计，该系列的第一篇文章<a href="http://keeganlee.me/post/architecture/20160107">接口的设计</a>已经讲过一些。关于如何封装，可以参考Android项目重构之路系列的<a href="http://keeganlee.me/post/android/20150605">架构篇</a>和<a href="http://keeganlee.me/post/android/20150629">实现篇</a>，其中接口层和本文的网络层是一样的。</p>
+<p>还有一些在前面的文章中没有提及到的，在此做一些补充。</p>
+<p>首先是不同网络状态的处理。当网络不可用时，则不应该再去调用API；当网络可用，但不是WIFI时，有些比较耗流量的操作也应该禁止，比如上传和下载大文件；当网络状态不同时，还可以采用不同的网络策略，比如，当网络为WIFI时，当前API可以返回更多更全面的数据，还可以预先加载相关联的其他API。</p>
+<p>其次，为了节省流量，接口的设计上可以对数据进行简化。例如，对于一些列表类的接口，可以这么设计：只返回更新的部分，比如，上一次请求返回了10条按时间排序的数据，第一条数据为最新的，id为101，当发起下一次请求时，将101的id作为参数调用API，API查到该id，发现该id之后又新增了两条数据，API则只返回新增的这两条数据。</p>
+<p>另外，为了保证程序的健壮性，调用API时，对入参的合法性检查也是很有必要的。而且，也应该定义好本地的错误码和错误信息，保证每个错误都能正常解析。</p>
+<h2 id="本地数据层"><a href="#本地数据层" class="headerlink" title="本地数据层"></a>本地数据层</h2><p>本地数据层主要就是做缓存处理，这需要设计好一套缓存策略。设计缓存策略时，有几个问题需要考虑清楚：</p>
+<ol>
+<li>哪些需要缓存？哪些不需要缓存？</li>
+<li>缓存在哪里？数据库？文件？还是内存？</li>
+<li>缓存时间多长？</li>
+</ol>
+<blockquote>
+<p>哪些需要缓存？</p>
+</blockquote>
+<p>将所有数据都缓存是不明智的，不同的数据应该有不同的缓存策略，比如一个电商App，首页的商品列表数据应该缓存，而且缓存时间应该比较长，而每个商品的详情数据就没必要缓存或缓存时间很短。对于一份数据需不需要缓存，判断标准可以是：用户查看该数据的频率高不高？首页商品列表是用户每次启动都会看到的，而每个商品的详情用户最多只看几次。</p>
+<blockquote>
+<p>缓存在哪里？</p>
+</blockquote>
+<p>从内存读取数据是最快的，但内存非常有限。因此，内存一般只用来缓存使用频率非常高的数据。</p>
+<p>文件缓存主要就是图片、音频、视频了。</p>
+<p>数据库可以保存大量数据，主要就是用于保存商品列表、聊天记录之类的关系型数据。</p>
+<p>然而，不管缓存在哪里，都需要限定好缓存的容量，要定期清理，不然会越积越多。</p>
+<blockquote>
+<p>缓存时间多长？</p>
+</blockquote>
+<p>首先，每份缓存数据都应该设置一个缓存的有效时间，有效期的起始时间以最后一次被调用的时间为准，当该数据长时间没有再被调用到时，就应该从缓存中清理掉。</p>
+<p>缓存的有效时间应该设多长呢？可以短至一分钟，长至一星期甚至一个月，具体因数据而异。一般内存的缓存时间不宜太长，程序退出基本就要全部清理了。文件缓存可以设置保留一天或一个星期，可以每隔一天清理一次。数据库缓存再久一些也无所谓，但最好还是不要超过一个月。</p>
+<h2 id="交付层"><a href="#交付层" class="headerlink" title="交付层"></a>交付层</h2><p>交付层其实就是一个向上层开放的交互接口层，是上层向数据层获取数据的入口。上层向数据层请求数据，它是不关心数据层的数据是从缓存获取还是从网络获取的，它只关心结果，数据层能给到它想要的数据结果就OK了。因此，交付层主要就是定义一堆开放的接口或协议。</p>
+<p>如果接口或协议非常多，那么，将接口或协议按照模块划分也是有必要的。比如微信，按模块划分有：IM、公众号、朋友圈、钱包、购物、游戏等等。模块之间应该尽量相对独立、松耦合。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>数据层如果再扩展，还可以再加入日志管理，这里就不再展开讲了。上面内容讲得也比较乱，有哪里讲得不好的地方欢迎吐槽。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/architecture/20160120/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/架构/" rel="tag"># 架构</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/architecture/20160114/" rel="next" title="App架构设计经验谈:技术选型">
+                <i class="fa fa-chevron-left"></i> App架构设计经验谈:技术选型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/architecture/20160214/" rel="prev" title="App架构设计经验谈:业务层的设计">
+                App架构设计经验谈:业务层的设计 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络层"><span class="nav-number">1.</span> <span class="nav-text">网络层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#本地数据层"><span class="nav-number">2.</span> <span class="nav-text">本地数据层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交付层"><span class="nav-number">3.</span> <span class="nav-text">交付层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">4.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
