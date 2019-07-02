@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/reading/20160705微信订阅号：keeganlee_me写于2016-07-05  读《图解密码技术》(一):密码读《图解密码技术》(二):认证读《图解密码技术》(三):密钥、随机数和应用技术  前一篇文章总结了密码部分的内容，包括一次性密码本、对称密码、公钥密码、混合密码系统">
+<meta name="keywords" content="读书笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读《图解密码技术》(二):认证">
+<meta property="og:url" content="https://keeganlee.me/post/reading/20160705/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/reading/20160705微信订阅号：keeganlee_me写于2016-07-05  读《图解密码技术》(一):密码读《图解密码技术》(二):认证读《图解密码技术》(三):密钥、随机数和应用技术  前一篇文章总结了密码部分的内容，包括一次性密码本、对称密码、公钥密码、混合密码系统">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/17-51-46.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/21-27-07.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/21-30-51.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/21-39-08.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/21-55-03.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/23-48-57.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/18-16-52.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/22-31-41.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/22-29-08.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/12-28-14.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/12-34-17.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/10-22-29.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/10-54-39.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/10-59-23.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/reading/20160705/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-07-02T03:59:22.720Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="读《图解密码技术》(二):认证">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/reading/20160705微信订阅号：keeganlee_me写于2016-07-05  读《图解密码技术》(一):密码读《图解密码技术》(二):认证读《图解密码技术》(三):密钥、随机数和应用技术  前一篇文章总结了密码部分的内容，包括一次性密码本、对称密码、公钥密码、混合密码系统">
+<meta name="twitter:image" content="https://keeganlee.me/post/reading/20160705/17-51-46.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/reading/20160705/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>读《图解密码技术》(二):认证 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/reading/20160705/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">读《图解密码技术》(二):认证
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-07-05 13:30:00" itemprop="dateCreated datePublished" datetime="2016-07-05T13:30:00+08:00">2016-07-05</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 11:59:22" itemprop="dateModified" datetime="2019-07-02T11:59:22+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/reading/" itemprop="url" rel="index"><span itemprop="name">reading</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/reading/20160705"><strong>http://keeganlee.me/post/reading/20160705</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-07-05</p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">读《图解密码技术》(一):密码</a><br><a href="http://keeganlee.me/post/reading/20160705">读《图解密码技术》(二):认证</a><br><a href="http://keeganlee.me/post/reading/20160722">读《图解密码技术》(三):密钥、随机数和应用技术</a></p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">前一篇文章</a>总结了密码部分的内容，包括一次性密码本、对称密码、公钥密码、混合密码系统等。这些密码在一定程度上能够保证消息的机密性，即可以防止被窃听导致秘密泄露。但却无法防御信息被篡改，也无法确定消息的来源是否就是真实的发送者而不是来自伪装者，也防止不了发送者事后否认自己先前做过的行为。关于这些问题，在本文总结的密码技术中就可以找到解决方案。</p>
+<p>本文是关于《图解密码技术》第二部分的内容总结，包括单向散列函数、消息认证码、数字签名、证书。</p>
+<h2 id="单向散列函数"><a href="#单向散列函数" class="headerlink" title="单向散列函数"></a>单向散列函数</h2><p>使用单向散列函数可以获取消息的“指纹”，通过对比“指纹”，就能够知道两条消息是否一致。这种一致性，也称为完整性，可以识别出消息是否被篡改。</p>
+<p><strong>单向散列函数</strong>(one-way hash function)有一个输入和一个输出，其中输入称为<strong>消息</strong>(message)，输出称为<strong>散列值</strong>(hash value)。散列值也称为<strong>消息摘要</strong>(message digest)或者<strong>指纹</strong>(fingerprint)。单向散列函数可以根据消息的内容计算出散列值，而散列值就可以用来检查消息的完整性。</p>
+<blockquote>
+<h3 id="单向散列函数的性质"><a href="#单向散列函数的性质" class="headerlink" title="单向散列函数的性质"></a>单向散列函数的性质</h3></blockquote>
+<ul>
+<li><strong>根据任意长度的消息计算出固定长度的散列值</strong><br>首先，单向散列函数的输入必须能够是任意长度的消息。其次，无论输入多长的消息，必须都能够生成很短的散列值。如果消息越长生成的散列值也越长的话就不好用了，而且为了方便使用，散列值的长度最好是短且固定的。不管消息是1比特，还是100M，甚至是100G，单向散列函数都会计算出固定长度的散列值。比如，SHA-1计算出的散列值固定为160比特（20字节）。</li>
+<li><strong>能够快速计算出散列值</strong><br>计算散列值所花费的时间必须要短。尽管消息越长，计算散列值的时间也会越长，但如果不能在现实的时间内完成计算就没有意义了。</li>
+<li><strong>具备单向性</strong><br>单向散列函数必须具备单向性。单向性是指无法通过散列值反算出消息的性质。就如同将玻璃砸得粉碎很容易，但却无法将碎片还原成完整的玻璃一样，根据消息计算出散列值很容易，但根据散列值却无法反算出消息。</li>
+<li><strong>消息不同散列值也不同</strong><br>为了能够确认完整性，消息中哪怕只有 1 比特的改变，也必须有很高的概率产生不同的散列值。为什么说有很高的概率呢？这是因为消息很长，而散列值很短，那就肯定会存在不同消息产生相同散列值的情况，这种情况称为<strong>碰撞</strong>(collision)。因此，单向散列函数没法完全避免碰撞，只能减低碰撞发生的概率。而且，更重要的是，要避免被人为地发现碰撞。难以发现碰撞的性质称为<strong>抗碰撞性</strong>(collision resistance)。单向散列函数必须具备抗碰撞性。另外，抗碰撞性还分为两种：弱抗碰撞性和强抗碰撞性。<strong>弱抗碰撞性</strong>是指要找到和给定的消息具有相同散列值的另外一条消息是非常困难的。<strong>强抗碰撞性</strong>则是指要找到散列值相同的两条不同的消息是非常困难的。单向散列函数必须既具备弱抗碰撞性，也必须具备强抗碰撞性。</li>
+</ul>
+<blockquote>
+<h3 id="单向散列函数的例子"><a href="#单向散列函数的例子" class="headerlink" title="单向散列函数的例子"></a>单向散列函数的例子</h3></blockquote>
+<p>单向散列函数有很多种，MD4、MD5、SHA-1、SHA-256、SHA-384、SHA-512、SHA-3等等。</p>
+<p>MD4是由Rivest于1990年设计的，MD是消息摘要(message digest)的缩写，两者都能够产生128比特的散列值。不过，第二年，即1991年，就已经有人提出了MD4的漏洞，很容易就寻找到了MD4散列碰撞的方法。因此，Rivest又设计了更为成熟的MD5。MD5到现在依然有着广泛的应用，例如很多网站和应用的登录密码都使用了MD5。但MD5的强抗碰撞性已经被攻破，也就是说，现在已经能够产生具备相同散列值的两条不同的消息。所以，其实MD5已经不安全了。</p>
+<p>SHA是NSA(美国国家安全局)设计，NIST(美国国家标准与技术研究院)发布的一系列单向散列函数。SHA是以MD4和MD5类似的原理为基础来设计的。SHA-1能够产生160比特的散列值，不过消息长度是有上限的，上限为2^64比特(准备地说是2^64-1)。当然这个数已经非常巨大，所以在实际应用中没有问题。不过，SHA-1的强抗碰撞性已于2005年被攻破。所以，SHA-1也和MD5一样没那么安全了。不过，貌似SHA-1依然是目前使用最广泛的单向散列函数。</p>
+<p>SHA-256、SHA-384和SHA-512的散列值长度分别为256比特、384比特和512比特。它们的消息长度也存在上限，SHA-256的上限和SHA-1一样，而SHA-384和SHA-512的消息上限则为2^128比特(确切值为2^128-1)。这些单向散列函数合起来称为SHA-2。目前，SHA-2还没有被攻破。</p>
+<p>在2005年SHA-1被攻破的背景下，促进了SHA-3的产生。SHA-3与AES一样采用了公开竞赛的方式进行标准化，最后胜出的是Keccak算法。</p>
+<blockquote>
+<h3 id="单向散列函数SHA-1"><a href="#单向散列函数SHA-1" class="headerlink" title="单向散列函数SHA-1"></a>单向散列函数SHA-1</h3></blockquote>
+<p>SHA-1作为一个具有代表性的单向散列函数，让我们看看它的算法流程是怎样的。整体流程如下图：</p>
+<img src="/post/reading/20160705/17-51-46.jpg">
+
+<p>可以分为四个步骤：</p>
+<ol>
+<li><p><strong>填充</strong><br>对消息进行填充处理，使其长度为512比特的整数。这里的512比特称为一个输入分组。具体填充的步骤也分为三步：第一步在消息末尾添加一个1比特的数值“1”；第二步在添加了“1”之后的消息末尾不断添加0，直到消息的长度达到512比特的整数倍，但最后一个分组的最后64比特需要空出来；第三步将消息的长度换成二进制后添加到上一步空出来的最后一个分组的最后64比特中。</p>
+</li>
+<li><p><strong>计算 W0 ~ W79</strong><br>对每一个输入分组分别计算80个32比特的值，这80个值将用于“单步处理“中。计算流程如下图：</p>
+<img src="/post/reading/20160705/21-27-07.jpg">
+
+</li>
+</ol>
+<p>首先，将输入分组的512比特分成16组，每组32比特。然后，剩下的 W16 ~ W79 使用如下的公式进行计算：</p>
+<img src="/post/reading/20160705/21-30-51.jpg">
+
+<ol start="3">
+<li><strong>分组处理</strong><br>接下来，对输入分组进行80个步骤的处理，目的是根据输入分组的信息来改变内部状态。流程如下图，其中，160比特的内部状态是通过名为A~E的5个32比特的缓冲区来表示的：<img src="/post/reading/20160705/21-39-08.jpg">
+
+</li>
+</ol>
+<p>将5个缓冲区的值与输入分组的信息进行混合，然后再执行80个步骤的处理。从结果来看，这80个步骤所完成的操作，就是将输入分组的512比特的数据，也SHA-1所保持的160比特的内部状态(5个缓冲区)进行混合。通过80个步骤的反复执行，SHA-1就能够将已经过填充的消息全部混入这160比特的内部状态中，而SHA-1所输出的散列值，就是所有处理结束之后最终的内部状态(160比特)。</p>
+<ol start="4">
+<li><strong>单步处理</strong><br>单步处理是指上面的80个步骤中的每一步的处理，处理过程如下图：<img src="/post/reading/20160705/21-55-03.jpg">
+
+</li>
+</ol>
+<p>在一个步骤完成之后，缓冲区A、B、C、D的内容会被分别复制到B、C、D、E中(其中B要循环左移30比特之后再复制)，而缓冲区 E 的内容则会与其他缓冲区的内容以及Wt、Kt相加之后再被复制到缓冲区A中。<br>由于上述处理要循环80个步骤，因此输入分组中 1 比特的变化，就会影响到散列值中几乎所有的比特，通过这样的方式，就能够实现单向散列函数所应具备的性质。</p>
+<blockquote>
+<h3 id="对单向散列函数的攻击"><a href="#对单向散列函数的攻击" class="headerlink" title="对单向散列函数的攻击"></a>对单向散列函数的攻击</h3></blockquote>
+<p>对单向散列函数的攻击主要就是对单向散列函数的”抗碰撞性“的攻击。</p>
+<p>对“弱抗碰撞性”的攻击主要是利用消息的冗余性生成具有相同散列值的另一个消息，这种攻击也是<strong>暴力破解</strong>，每次都稍微改变一下消息的值，然后对这些消息求散列值。在这种情况下，暴力破解需要尝试的次数可以根据散列值的长度计算出来。以SHA-1为例，由于它的散列值长度为160比特，因此最多只要尝试2^160次就能够找到目标消息。由于尝试次数纯粹是由散列值长度决定的，因此散列值长度越长的单向散列函数，其抵御暴力破解的能力也就越强。</p>
+<p>对“强抗碰撞性”的攻击一般称为<strong>生日攻击</strong>。生日攻击不是寻找生成特定散列值的消息，而是要找到相同散列值的两条消息，而散列值则可以是任何值。生日攻击的原理来自生日悖论，也就是利用了“任意散列值一致的概率比想象中高”这样的特性。相对于暴力破解，生日攻击所需尝试的次数要少得多，一般只需要是暴力破解的一半。</p>
+<blockquote>
+<h3 id="单向散列函数无法解决的问题"><a href="#单向散列函数无法解决的问题" class="headerlink" title="单向散列函数无法解决的问题"></a>单向散列函数无法解决的问题</h3></blockquote>
+<p>单向散列函数可以实现完整性的检查，但却识别不了“伪装”，即无法解决认证问题。认证问题需要使用消息认证码和数字签名来解决。</p>
+<p>单向散列函数在实际应用中很少单独使用，而是和其他密码技术结合使用。后面要讲的消息认证码和数字签名都使用了单向散列函数，而下一篇要讲的密钥、伪随机数和应用技术也都使用了单向散列函数。</p>
+<h2 id="消息认证码"><a href="#消息认证码" class="headerlink" title="消息认证码"></a>消息认证码</h2><p><strong>消息认证码</strong>(message authentication code)是一种确认完整性并进行认证的技术，简称为 <strong>MAC</strong>。消息认证码的输入包括任意长度的<strong>消息</strong>和一个发送者与接受者之间<strong>共享的密钥</strong>，它可以输出固定长度的数据，这个数据称为 <strong>MAC 值</strong>。</p>
+<p>消息认证码与单向散列函数很类似，都是根据任意长度的消息输出固定长度的数据，不同的是，消息认证码比单向散列函数多了一个共享密钥。没有共享密钥的人就无法计算出 MAC 值，消息认证码正是利用这一性质来完成认证的。此外，和单向散列函数一样，哪怕消息中发生 1 比特的变化，MAC 值也会发生变化，消息认证码正是利用这一性质来确认完整性的。</p>
+<blockquote>
+<h3 id="消息认证码的使用步骤"><a href="#消息认证码的使用步骤" class="headerlink" title="消息认证码的使用步骤"></a>消息认证码的使用步骤</h3></blockquote>
+<p>消息认证码的使用步骤如下图：</p>
+<img src="/post/reading/20160705/23-48-57.jpg">
+
+<p>发送者与接收者需要事先共享密钥，然后发送者使用共享密钥对消息计算 MAC 值，接着将消息和 MAC值一起发送给接收者。接收者收到消息和 MAC 值后，使用同一个共享密钥对消息计算 MAC 值，当计算出来的 MAC 值和接收到的 MAC 值一致的，就证明认证成功了。</p>
+<p>而既然是使用共享密钥，那就和对称密码一样，存在密钥配送问题。要解决密钥配送问题，同样可以使用事先共享密钥、密钥配送中心、Diffie-Hellman密钥交换、公钥密码等方法。具体请看<a href="http://keeganlee.me/post/reading/20160629">前一篇</a>文章的<strong>密钥配送问题</strong>部分。</p>
+<blockquote>
+<h3 id="消息认证码的实现"><a href="#消息认证码的实现" class="headerlink" title="消息认证码的实现"></a>消息认证码的实现</h3></blockquote>
+<p>消息认证码有很多种实现方法。可以使用SHA-1、MD5之类的<strong>单向散列函数</strong>来实现，其中有一种实现方法叫 <strong>HMAC</strong>，后面我们再讲它实现的具体步骤。</p>
+<p>也可以使用DES、AES之类的<strong>分组密码</strong>来实现消息认证码，将分组密码的密钥作为消息认证码的共享密钥来使用，并用 CBC 模式将消息全部加密。由于消息认证码不需要解密，因此，可以只保留最后一个分组的密文作为 MAC 值，而其他密文则全部丢弃。由于 CBC 模式的最后一个分组会收到整个消息以及密钥的双重影响，因此可以将它用作消息认证码。</p>
+<p>此外，使用流密码和公钥密码等也可以实现消息认证码。</p>
+<blockquote>
+<h3 id="HMAC"><a href="#HMAC" class="headerlink" title="HMAC"></a>HMAC</h3></blockquote>
+<p><strong>HMAC</strong> 是一种使用单向散列函数来构造消息认证码的方法，其中，HMAC 中的 H 就是 Hash 的意思。HMAC 中所使用的单向散列函数并不仅限于一种，任何高强度的单向散列函数都可以被用于 HMAC，也就是说，HMAC 所使用的单向散列函数是可以被替换的。</p>
+<p>HMAC 是按照下列步骤来计算 MAC 值的：</p>
+<img src="/post/reading/20160705/18-16-52.jpg">
+
+<ol>
+<li>密钥填充<br>如果密钥比单向散列函数的分组长度要短，就需要在末尾填充0，直到其长度达到单向散列函数的分组长度为止。如果密钥比分组长度要长，则要用单向散列函数求出密钥的散列值，然后将这个散列值用作 HMAC 的密钥。</li>
+<li>填充后的密钥与 ipad 的 XOR<br>将填充后的密钥与被称为 ipad 的比特序列进行 XOR 运算。<strong>ipad</strong> 是将 00110110 这一比特序列(即16进制的36）不断循环反复直到达到分组长度所形成的比特序列，其中 ipad 的 i 是 inner 的意思。XOR 运算后得到的值，就是一个和单向散列函数分组长度相同，且和密钥相关的比特序列。这里将这个比特序列称为 <strong>ipadkey</strong>。</li>
+<li>与消息组合<br>随后，将 ipadkey 与消息进行组合，ipadkey 一般附加在消息开头。</li>
+<li>计算散列值<br>将上一步组合的结果输入单向散列函数，计算出散列值。</li>
+<li>填充后的密钥与 opad 的 XOR<br>将填充后的密钥与被称为 opad 的比特序列进行 XOR 运算。<strong>opad</strong> 是将 01011100 这一比特序列(即16进制的5C）不断循环反复直到达到分组长度所形成的比特序列，其中 opad 的 o 是 outer 的意思。XOR 运算后得到的值，也是一个和单向散列函数分组长度相同，且和密钥相关的比特序列。这里将这个比特序列称为 <strong>opadkey</strong>。 </li>
+<li>与散列值组合<br>将第4步计算出来的散列值拼在 opadkey 的后面。</li>
+<li>计算散列值<br>将上一步的结果输入单向散列函数，计算出散列值。这个散列值就是 MAC 值。</li>
+</ol>
+<blockquote>
+<h3 id="对消息认证码的攻击"><a href="#对消息认证码的攻击" class="headerlink" title="对消息认证码的攻击"></a>对消息认证码的攻击</h3></blockquote>
+<p>对消息认证码可以发起<strong>重放攻击</strong>，即攻击者可以通过将事先拦截保存的正确 MAC 值不断重放来发动攻击。有几种方法可以防御重放攻击：</p>
+<ul>
+<li>序号<br>每次发送消息时都赋予一个递增的序号，并在计算 MAC 值时将序号也包含在消息中。这样，由于攻击者无法计算序号递增之后的 MAC 值，因此就可以防御重放攻击。这种方法虽然有效，但对每个通信对象都需要记录最后一个消息的序号。</li>
+<li>时间戳<br>发送消息时可以包含进当前时间，如果收到以前的消息，即便 MAC 值正确也将其视为错误的消息来处理，这样就可以防御重放攻击。这种方法虽然也有效，但发送者与接收者的时钟必须一致，而且考虑到通信的延迟，必须在时间的判断上留下缓冲，于是多多少少还是会存在可以进行重放攻击的。</li>
+<li>nonce<br>在通信之前，接收者先向发送者发送一个一次性的随机数，这个随机数一般称为 <strong>nonce</strong>。发送者在消息中包含这个 nonce 并计算 MAC 值。由于每次通信时 nonce 的值都会发生变化，因此无法进行重放攻击。这种方法虽然有效，但通信的数据量会有所增加。</li>
+</ul>
+<p>另外，除了重放攻击，对消息认证码也可以进行暴力破解和生日攻击，这和对单向散列函数的攻击一样。对消息认证码来说，应保证不能根据 MAC 值推测出通信双方所使用的密钥。例如 HMAC 就是利用单向散列函数的单向性和抗碰撞性来保证无法根据 MAC 值推测出密钥的。</p>
+<blockquote>
+<h3 id="消息认证码无法解决的问题"><a href="#消息认证码无法解决的问题" class="headerlink" title="消息认证码无法解决的问题"></a>消息认证码无法解决的问题</h3></blockquote>
+<p>使用消息认证码可以对消息进行认证并确认完整性，即能够识别出消息的篡改和伪装。但却解决不了“对第三方证明”和“防止否认”。</p>
+<p>假如接收者在收到发送者的消息之后，想要向第三方证明这条消息的确是发送者发送的，但是用消息认证码无法进行这样的证明，为什么呢？首先，第三方要校验 MAC 值，就需要知道发送者与接收者之间共享的密钥。但知道密钥后，也校验出 MAC 值是正确的，依然无法证明消息就是发送者发的，因为也有可能是接收者发的。</p>
+<p>既然第三方无法做出证明，那么，如果发送者事后否认自己发送过消息，而谎称是接收者自己发送给自己的消息，对于这种情况也是无法证明，即无法防止否认。</p>
+<p>后面要讲的数字签名就可以解决这两个问题。</p>
+<h2 id="数字签名"><a href="#数字签名" class="headerlink" title="数字签名"></a>数字签名</h2><p>消息认证码之所以无法对第三方证明和防止否认，就是因为发送者和接收者使用了同一个共享密钥。那么，如果发送者和接收者不使用共享密钥，而各自使用不同密钥呢？假如发送者使用的密钥是一个只有自己知道的私钥，在这里可称为“签名密钥”，当发送者发送消息时，用她的签名密钥生成一个“签名”。相对地，接收者使用另一个密钥，称为“验证密钥”，可对签名进行验证。但是，使用验证密钥是无法生成签名的。也就是说，只有签名密钥可以生成签名，而用相应的验证密钥可以对该签名进行验证。这种技术就是<strong>数字签名</strong>(digital signature)，也称为<strong>电子签名</strong>，或简称为<strong>签名</strong>。另外，签名密钥只能由签名的人持有，而验证密钥则是任何需要验证签名的人都可以持有。</p>
+<p>上面讲的内容，和公钥密码很像吧？其实，数字签名就是通过将公钥密码反过来用而实现的。</p>
+<blockquote>
+<h3 id="公钥密码与数字签名"><a href="#公钥密码与数字签名" class="headerlink" title="公钥密码与数字签名"></a>公钥密码与数字签名</h3></blockquote>
+<p>下图是使用公钥加密(即公钥密码)的简单流程图：</p>
+<img src="/post/reading/20160705/22-31-41.jpg">
+<p>而下图则是使用私钥加密(即数字签名)的简单流程图：</p>
+<img src="/post/reading/20160705/22-29-08.jpg">
+
+<p>那么，为什么用私钥加密就相当于生成签名，而用公钥解密就相当于验证签名呢？这是因为组成密钥对的两个密钥之间存在严密的数学关系，使用公钥加密的密文，只能用与该公钥配对的私钥才能解密；同样地，使用私钥加密的密文，也只能用与该私钥配对的公钥才能解密。也就是说，如果用某个公钥成功解密了密文，那么就能够证明这段密文是用与该公钥配对的私钥进行加密所得到的。用私钥进行加密这一行为只能由持有私钥的人完成，正是基于这一事实，才可以将用私钥加密的密文作为签名来对待。而由于公钥是对外公开的，因此任何人都可以用公钥进行解密，即任何人都能够对签名进行验证。</p>
+<blockquote>
+<h3 id="数字签名的方法"><a href="#数字签名的方法" class="headerlink" title="数字签名的方法"></a>数字签名的方法</h3></blockquote>
+<p>有两种生成和验证数字签名的方法：</p>
+<ul>
+<li><strong>直接对消息签名的方法</strong><br>直接对消息签名的方法很容易理解，但实际上很少使用。签名和验证的过程如下图：<img src="/post/reading/20160705/12-28-14.jpg">
+
+</li>
+</ul>
+<p>我们知道，公钥密码算法本来就非常慢。用这种方法需要对整个消息进行加密，就会非常耗时。因此，在实际应用中，基本不会使用直接对消息签名的方法。</p>
+<ul>
+<li><strong>对消息的散列值签名的方法</strong><br>对消息先使用单向散列函数计算出散列值，再对散列值进行签名，这种方法的过程如下图：<img src="/post/reading/20160705/12-34-17.jpg">
+
+</li>
+</ul>
+<p>因为散列值比较短，因此对其进行加密签名就会快很多。</p>
+<blockquote>
+<h3 id="数字签名的实现"><a href="#数字签名的实现" class="headerlink" title="数字签名的实现"></a>数字签名的实现</h3></blockquote>
+<p>数字签名的实现也有很多种，基本也是使用单向散列函数和公钥密码技术相结合。而公钥密码部分常用的就是使用RSA，另外也有使用EIGamal、Rabin。还有一种数字签名算法叫DSA(Digital Signature Algorithm)。而使用最广泛的应该就是使用RSA的数字签名了。</p>
+<p>使用RSA实现数字签名很简单。而为了更加简单起见，这里不使用单向散列函数，而是直接对消息进行签名。首先，需要将文本的消息先编码为数字，因为在RSA中，被签名的消息、密钥以及最终生成的签名都是以数字形式表示的。接着，使用下列公式生成签名：</p>
+<ul>
+<li>签名 = 消息^D mod N  (用RSA生成签名)</li>
+</ul>
+<p>D 和 N 就是签名者的私钥。生成签名后，发送者就可以将消息和签名一起发送给接收者了。</p>
+<p>而验证签名时则使用下列公式：</p>
+<ul>
+<li>由签名求得的消息 = 签名^E mod N  (用RSA验证签名)</li>
+</ul>
+<p>E 和 N 就是签名者的公钥。接收者计算出“由签名求得的消息”后，与发送者直接发送过来的“消息”内容进行对比(如果使用了单向散列函数那就是对比消息的散列值)。如果两者一致则签名验证成功，否则签名验证失败。</p>
+<blockquote>
+<h3 id="对数字签名的攻击"><a href="#对数字签名的攻击" class="headerlink" title="对数字签名的攻击"></a>对数字签名的攻击</h3></blockquote>
+<p>因为数字签名结合了单向散列函数和公钥密码，因此，对单向散列函数和公钥密码的攻击也同样对数字签名有效。比如，针对公钥密码的中间人攻击对数字签名来说就颇具威胁。要防止中间人攻击，就需要确认自己所得到的公钥是否真的属于自己的通信对象。而解决此问题的方案也和公钥密码一样，一般可以使用公钥证书。</p>
+<p>对单向散列函数的攻击也是对“抗碰撞性”的攻击，使用高强度的单向散列函数就可以增大被破解的难度。</p>
+<p>另外，还可以利用数字签名攻击公钥密码。因为对消息签名，从另一方面来说，也是对消息解密。利用这一点，攻击者就可以发动一种巧妙的攻击，即利用数字签名来破译密文。</p>
+<p>假设攻击者拦截到发送者发给接收者的密文后将其保存了下来，并给接收者写了一封邮件，谎称自己是密码学研究者，正在进行关于数字签名的实验，请求接收者对附件中的数据进行签名并回复，说附件中的数据只是随机数据，不会造成任何问题。而实际上，附件的数据就是刚才保存下来的密文。如果接收者中计而对附近进行了签名并回复给了攻击者，那攻击者不费吹灰之力就可以破译密文了。</p>
+<p>对于这种攻击，应该采取怎样的对策呢？首先，不要直接对消息进行签名，对散列值进行签名比较安全；其次，公钥密码和数字签名最好分别使用不同的密钥对。然而，最重要的就是绝对不要对意思不清楚的消息进行签名，尤其是不要对看起来只是随机数据的消息进行签名。</p>
+<blockquote>
+<h3 id="数字签名无法解决的问题"><a href="#数字签名无法解决的问题" class="headerlink" title="数字签名无法解决的问题"></a>数字签名无法解决的问题</h3></blockquote>
+<p>用数字签名既可以识别出篡改和伪装，还可以防止否认。即是说，数字签名同时实现了确认消息的完整性、进行认证以及否认防止。</p>
+<p>然而，数字签名存在和公钥密码一样的问题，那就是公钥问题。公钥必须属于真正的发送者，要确认公钥是否合法，就需要使用证书。这就是后面要讲到的内容了。</p>
+<h2 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h2><p>无论是公钥密码还是数字签名，都存在需要验证公钥是否合法的问题。而证书，就是用来对公钥合法性提供证明的技术。</p>
+<p><strong>公钥证书</strong>(Public-Key Certificate，PKC)和驾照类似，一般会记有姓名、组织、邮箱地址等个人信息，以及属于本人的公钥，并由<strong>认证机构</strong>(Certification Authority、Certifying Authority，CA)施加数字签名。</p>
+<p>认证机构就是能够认定“公钥确实属于此人”并能够生成数字签名的个人或组织。认证机构中有国际性组织和政府所设立的组织，也有通过提供认证服务来盈利的一般企业，此外个人也可以成立认证机构哦。世界上最有名的认证机构当属VeriSign公司。</p>
+<blockquote>
+<h3 id="证书的应用场景"><a href="#证书的应用场景" class="headerlink" title="证书的应用场景"></a>证书的应用场景</h3></blockquote>
+<p>通过认证机构使用证书的过程如下图所示：</p>
+<img src="/post/reading/20160705/10-22-29.jpg">
+
+<ol>
+<li>接收者生成密钥对；</li>
+<li>接收者在认证机构注册自己的公钥；</li>
+<li>认证机构用自己的私钥对接收者的公钥施加数字签名并生成证书；</li>
+<li>发送者得到带有认证机构数字签名的属于接收者的公钥证书；</li>
+<li>发送者使用认证机构的公钥验证数字签名，验证通过则证明证书中包含的公钥的确属于接收者的；</li>
+<li>发送者用接收者的公钥加密消息并发送给接收者；</li>
+<li>接收者用自己的私钥解密密文得到消息。</li>
+</ol>
+<blockquote>
+<h3 id="公钥基础设施-PKI"><a href="#公钥基础设施-PKI" class="headerlink" title="公钥基础设施(PKI)"></a>公钥基础设施(PKI)</h3></blockquote>
+<p><strong>公钥基础设施</strong>(Public-Key Infrastructure)是为了能够更有效地运用公钥而制定的一系列规范和规格的总称。公钥基础设施一般根据其英语缩写而简称为PKI。PKI只是一个总称，而并非指某一个单独的规范或规格。比如，使用最广泛的 X.509 规范也是PKI的一种。</p>
+<p>PKI的组成要素主要有3个：</p>
+<ul>
+<li><strong>用户</strong>：使用PKI的人</li>
+<li><strong>认证机构</strong>：颁发证书的人</li>
+<li><strong>仓库</strong>：保存证书的数据库</li>
+</ul>
+<p>这三者的关系如下图：</p>
+<img src="/post/reading/20160705/10-54-39.jpg">
+
+<p>另外，认证机构会有层级的关系，处于最顶层的认证机构一般就称为<strong>根CA</strong>(Root CA)。上层认证机构可以验证下层认证机构的证书，即是说，下层认证机构的证书是经过上层认证机构签名的。而根CA则会对自己的证书进行签名，这叫<strong>自签名</strong>。认证机构的层级关系如下图：</p>
+<img src="/post/reading/20160705/10-59-23.jpg">
+
+<p>当发送者需要对最底层的Bob的数字签名进行验证时，首先从最顶层的根CA开始，然后获得下层的公钥证书，这个证书上面会带有上层的数字签名，因此需要用上层的公钥对数字签名进行验证。这样逐层向下验证，一直验证到最底层的Bob。</p>
+<blockquote>
+<h3 id="对证书的攻击"><a href="#对证书的攻击" class="headerlink" title="对证书的攻击"></a>对证书的攻击</h3></blockquote>
+<p>由于证书使用的就是数字签名技术，因此针对数字签名的所有攻击方法对证书都有效。</p>
+<p>另外，在公钥注册之前也可以进行攻击。用户准备在认证机构注册自己的公钥时，攻击者可以把消息拦截，然后将公钥替换成自己的。这样一来，认证机构就会对“接收者的个人信息”和“攻击者的公钥”这个组合进行数字签名。要防止这种攻击，接收者可以在将自己的公钥发送给认证机构进行注册时，使用认证机构的公钥对自己的公钥进行加密。此外，认证机构在确认接收者的身份时，也可以将公钥的指纹(即散列值)一并发送给接收者请他进行确认。</p>
+<p>攻击者还可以利用注册相似人名进行攻击。证书是认证机构对公钥及其持有者的信息加上数字签名的产物，对于一些相似的身份信息，计算机可以进行区别，但人类往往很容易认错，而这就可以被用来进行攻击。比如，假设用户信息中名字的部分是：</p>
+<ul>
+<li>Name = Bob  (首字母大写)</li>
+</ul>
+<p>而攻击者用另一个类似的用户信息注册了另一个不同的公钥：</p>
+<ul>
+<li>Name = BOB (所有字母大写)</li>
+</ul>
+<p>随后，攻击者伪装成Bob，将 Name = BOB 的公钥发送给通信对象Alice，Alice看到证书中的用户信息，很可能会将BOB误认为是自己要发送消息的对象Bob。</p>
+<p>要防止这种攻击，认证机构必须确认证书中所包含的信息是否真的是其持有者的个人信息，当本人身份确认失败时则不向其颁发证书。</p>
+<p>攻击者也可以窃取认证机构的私钥，不过认证机构对私钥的保护是非常严密的，所以一般比较难窃取。如果认证机构的私钥泄露了，认证机构就需要将私钥泄露一事通过 CRL 通知用户。CRL(Certificate Revocation List)为证书作废清单，是认证机构宣布作废的证书一览表，具体来说，是一张已作废的证书序列号的清单，并由认证机构加上了数字签名。</p>
+<p>利用钻上面提到的 CRL 的空子也可以进行攻击。因为从公钥失效到发送者收到 CRL 需要经过一段时间，攻击者就可以利用这段时间差来发动攻击。</p>
+<blockquote>
+<h3 id="关于证书的-Q-amp-A"><a href="#关于证书的-Q-amp-A" class="headerlink" title="关于证书的 Q&amp;A"></a>关于证书的 Q&amp;A</h3></blockquote>
+<ul>
+<li><strong>为什么需要证书</strong><br>如果从认证机构获取公钥，就可以降低遭到中间人攻击的风险。因为带有证书的公钥是经过认证机构进行数字签名的，事实上无法被篡改。</li>
+</ul>
+<p>其实，如果能够取得可信的公钥，比如通信双方在同一个办公室，很容易取得可信的公钥，这种情况下则不需要认证机构。否则，认证机构和证书的存在就有意义了。当持有可信的认证机构公钥，并相信认证机构所进行的身份确认的情况下，则可以信任该认证机构颁发的证书以及通过该途径取得的公钥。</p>
+<ul>
+<li><strong>通过自己的方法进行认证是不是更安全</strong><br>有些人对使用公开的技术总觉得不放心，使用公开的技术等于为攻击者提供了用于攻击的信息，相比之下，还是使用公司自己开发的保密的认证方法更安全吧？</li>
+</ul>
+<p>其实这是错误的。自己开发保密的方法是犯了典型的<strong>隐蔽式安全</strong>(security by obscurity)错误。私下开发安全相关的技术其实是危险的，仅靠一家公司的力量无法开发出足以抵御攻击的安全技术。这也是为什么 AES 和 RSA 算法要采用公开竞赛的方式，让全世界的安全专家一起来验证这些技术的安全性。</p>
+<ul>
+<li><strong>为什么要相信认证机构</strong></li>
+</ul>
+<p>其实，这个问题关系到“信任是如何产生的”这一本质性问题。为什么我们要把钱存进银行呢？认证机构是否让人感到可信，和银行是一样的。</p>
+<p>也有不依赖于认证机构的，PGP 软件就是。PGP 是通过<strong>信任网</strong>的方法来建立每个人之间的信任关系的。下一篇文章再具体讲 PGP。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本篇文章总结了四部分内容：单向散列函数、消息认证码、数字签名和证书。数字签名的安全性最高，既能确保完整性，也能进行认证和防止否认。另外，数字签名也是将单向散列函数和公钥密码技术相结合在了一起。<a href="http://keeganlee.me/post/reading/20160629">前一篇</a>文章所讲的混合密码系统也是结合了多种技术。其实，实用性的安全产品，都是多种密码技术组合在一起实用的。例如，PGP、SSL\TLS等。下一篇就会讲如何将多种密码技术组合在一起。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/reading/20160705/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/读书笔记/" rel="tag"># 读书笔记</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/reading/20160629/" rel="next" title="读《图解密码技术》(一):密码">
+                <i class="fa fa-chevron-left"></i> 读《图解密码技术》(一):密码
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/reading/20160722/" rel="prev" title="读《图解密码技术》(三):密钥、随机数和应用技术">
+                读《图解密码技术》(三):密钥、随机数和应用技术 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#单向散列函数"><span class="nav-number">1.</span> <span class="nav-text">单向散列函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#单向散列函数的性质"><span class="nav-number">1.1.</span> <span class="nav-text">单向散列函数的性质</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单向散列函数的例子"><span class="nav-number">1.2.</span> <span class="nav-text">单向散列函数的例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单向散列函数SHA-1"><span class="nav-number">1.3.</span> <span class="nav-text">单向散列函数SHA-1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对单向散列函数的攻击"><span class="nav-number">1.4.</span> <span class="nav-text">对单向散列函数的攻击</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#单向散列函数无法解决的问题"><span class="nav-number">1.5.</span> <span class="nav-text">单向散列函数无法解决的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#消息认证码"><span class="nav-number">2.</span> <span class="nav-text">消息认证码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#消息认证码的使用步骤"><span class="nav-number">2.1.</span> <span class="nav-text">消息认证码的使用步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息认证码的实现"><span class="nav-number">2.2.</span> <span class="nav-text">消息认证码的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HMAC"><span class="nav-number">2.3.</span> <span class="nav-text">HMAC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对消息认证码的攻击"><span class="nav-number">2.4.</span> <span class="nav-text">对消息认证码的攻击</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#消息认证码无法解决的问题"><span class="nav-number">2.5.</span> <span class="nav-text">消息认证码无法解决的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数字签名"><span class="nav-number">3.</span> <span class="nav-text">数字签名</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#公钥密码与数字签名"><span class="nav-number">3.1.</span> <span class="nav-text">公钥密码与数字签名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数字签名的方法"><span class="nav-number">3.2.</span> <span class="nav-text">数字签名的方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数字签名的实现"><span class="nav-number">3.3.</span> <span class="nav-text">数字签名的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对数字签名的攻击"><span class="nav-number">3.4.</span> <span class="nav-text">对数字签名的攻击</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数字签名无法解决的问题"><span class="nav-number">3.5.</span> <span class="nav-text">数字签名无法解决的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#证书"><span class="nav-number">4.</span> <span class="nav-text">证书</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#证书的应用场景"><span class="nav-number">4.1.</span> <span class="nav-text">证书的应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#公钥基础设施-PKI"><span class="nav-number">4.2.</span> <span class="nav-text">公钥基础设施(PKI)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对证书的攻击"><span class="nav-number">4.3.</span> <span class="nav-text">对证书的攻击</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于证书的-Q-amp-A"><span class="nav-number">4.4.</span> <span class="nav-text">关于证书的 Q&amp;A</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#写在最后"><span class="nav-number">5.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

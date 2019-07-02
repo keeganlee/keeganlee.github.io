@@ -967,6 +967,1205 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/reading/20160722/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/reading/20160722/" class="post-title-link" itemprop="url">读《图解密码技术》(三):密钥、随机数和应用技术</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-07-22 12:00:00" itemprop="dateCreated datePublished" datetime="2016-07-22T12:00:00+08:00">2016-07-22</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 12:09:31" itemprop="dateModified" datetime="2019-07-02T12:09:31+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/reading/" itemprop="url" rel="index"><span itemprop="name">reading</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/reading/20160722"><strong>http://keeganlee.me/post/reading/20160722</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-07-22</p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">读《图解密码技术》(一):密码</a><br><a href="http://keeganlee.me/post/reading/20160705">读《图解密码技术》(二):认证</a><br><a href="http://keeganlee.me/post/reading/20160722">读《图解密码技术》(三):密钥、随机数和应用技术</a></p>
+<hr>
+<p>最后一篇了，如果还没看过前两篇的，最好先翻回去看看，因为这最后一篇的内容是建立在前两篇的基础之上的。本篇的内容包括密钥、随机数、PGP、SSL/TLS，最后再讲讲密码技术的现状和局限性，以及简单介绍一下量子密码和量子计算机。</p>
+<h2 id="密钥"><a href="#密钥" class="headerlink" title="密钥"></a>密钥</h2><p>在使用对称密码、公钥密码、消息认证码、数字签名等密码技术时，都需要密钥。密钥长度一般不能太短，太短意味着密钥空间太小，那么，进行暴力破解就很容易。</p>
+<p>DES的密钥长度为56比特(7字节)，密钥空间为2^56，在现有的计算能力下，还是比较容易被暴力破解的。三重DES的DES-EDE3的密钥长度为168比特(21字节)，是DES的密钥长度的三倍多，但是密钥空间可不是三倍这么简单，DES-EDE3的密钥空间为2^168，整整是DES密钥空间的2^112倍，这么大的密钥空间，以现有的计算能力，还无法在现实的时间里被暴力破解。AES的密钥长度则可以从128、192和256比特中进行选择，三者的密钥空间也是不小的。</p>
+<p>密钥和明文其实是等价的，因为对攻击者来说，得到密钥就等价于得到明文。</p>
+<blockquote>
+<h3 id="各种不同的密钥"><a href="#各种不同的密钥" class="headerlink" title="各种不同的密钥"></a>各种不同的密钥</h3></blockquote>
+<p>从前两篇文章我们就知道，密钥分很多种类，这里我们做一下整理。</p>
+<p>在对称密码中，加密和解密使用的是相同的<strong>共享密钥</strong>。而在公钥密码中，加密用的是<strong>公钥</strong>，解密用的则是<strong>私钥</strong>，相对应的公钥和私钥组为<strong>密钥对</strong>。消息认证码使用的也是共享密钥。而数字签名使用的和公钥密码一样是密钥对，用私钥签名，用公钥验证签名。混合密码系统中还使用了一次性密钥，称为<strong>会话密钥</strong>。而相对于每次通信都更换的会话密钥，一直被重复使用的密码则称为<strong>主密钥</strong>。用于加密内容的密钥称为<strong>CEK</strong>(Contents Encrypting Key，内容加密密钥)；相对地，用于加密密钥的密钥则称为<strong>KEK</strong>(Key Encrypting Key，密钥加密密钥)。CEK 和 KEK 的用法可以如下图所示：</p>
+<img src="/post/reading/20160722/12-34-15.jpg">
+
+<p>在很多情况下，会话密钥都是被作为 CEK 使用的，而主密钥则是被作为 KEK 使用的。</p>
+<blockquote>
+<h3 id="密钥的管理"><a href="#密钥的管理" class="headerlink" title="密钥的管理"></a>密钥的管理</h3></blockquote>
+<p>生成密钥最好的方法就是使用真正的随机数，因为密钥需要具备不可预测性。不过，一般我们都是使用伪随机数生成器来生成密钥。另外，密码学用途的伪随机数生成器必须是专门针对密码学用途而设计的。毕竟，生成伪随机数的算法很多，但有些并不具备不可预测性。</p>
+<p>有时我们也会使用容易记住的<strong>口令</strong>(password 或 passphrase)来生成密钥。passphrase 指的是一种由多个单词组成的较长的 passwrod，在此将两者统称为口令。严格来说，很少直接用口令来作为密钥使用，一般都是将口令输入单向散列函数，然后将得到的散列值作为密钥使用。而在使用口令生成密钥时，为了防止字典攻击，需要在口令上面附加一串称为<strong>盐</strong>(salt)的随机数，然后再将其输入单向散列函数。这种方法称为“基于口令的密码”(Password Based Encryption, PBE)。关于 PBE 稍后再详细介绍。</p>
+<p>对于共享密钥，就会存在密钥配送问题。在<a href="http://keeganlee.me/post/reading/20160629">密码篇</a>就提到几种解决方案：<strong>事先共享密钥</strong>、<strong>使用密钥分配中心</strong>、<strong>使用公钥密码</strong>、<strong>Diffie-Hellman密钥交换</strong>。关于Diffie-Hellman密钥交换的原理，之前的文章没讲，在本篇稍后会详细介绍。</p>
+<p>为了提高通信的机密性，还可以采用<strong>密钥更新</strong>(key updating)的方法。这种方法就是在使用共享密钥进行通信的过程中，定期改变密钥。例如，在更新密钥时，发送者和接收者使用单向散列函数计算当前密钥的散列值，并将这个散列值用作新的密钥。简单说，就是<strong>用当前密钥的散列值作为下一个密钥</strong>。</p>
+<p>除了只使用一次的会话密钥，其他密钥基本都需要考虑<strong>保存密钥</strong>的问题。尤其对于共享密钥来说，很多应用都需要将密钥保存在客户端，例如移动App，要么将密钥硬编码在代码里，或者保存在文件中，但无论哪种方式，应用一旦被反编译，密钥就存在泄漏的风险。以防密钥被盗，可以使用<strong>将密钥加密后保存</strong>的方法。但要将密钥加密，必然需要另一个密钥，即 KEK。那么，KEK 又如何保存？这问题还真不好解决。不过，对密钥进行加密的方法却可以<strong>减少需要保管的密钥数量</strong>。比如，假设平台系统接入了10万个应用，每个应用都有一个自己的密钥，即系统需要保管10万个密钥。那么，用 KEK 对这10万个密钥进行加密，这样的话只要保管这一个 KEK 就可以了。即是说，不需要确保多个密钥(CEK)的机密性，而只需要确保一个密钥(KEK)的机密性就可以了。这和认证机构的层级化非常相似。在后者中，我们不需要信任多个认证机构，而只需要信任一个根 CA 就可以了。</p>
+<blockquote>
+<h3 id="Diffie-Hellman密钥交换"><a href="#Diffie-Hellman密钥交换" class="headerlink" title="Diffie-Hellman密钥交换"></a>Diffie-Hellman密钥交换</h3></blockquote>
+<p>通过Diffie-Hellman密钥交换算法，通信双方仅通过交换一些可以公开的信息就能够生成出共享的秘密数字，而这一秘密数字就可以被用作对称密码的密钥。虽然这种方法名字叫“密钥交换”，但实际上双方并没有真正交换密钥，而是通过计算生成出了一个相同的共享密钥。因此，这种方法也称为<strong>Diffie-Hellman密钥协商</strong>。</p>
+<p>Diffie-Hellman密钥交换的步骤如下：</p>
+<img src="/post/reading/20160722/16-19-35.jpg">
+
+<ol>
+<li><strong>Alice 向 Bob 发送两个质数 P 和 G</strong><br>P 必须是一个非常大的质数，而 G 则是一个和 P 相关的数，称为<strong>生成元</strong>(generator)。G 可以是一个较小的数字。</li>
+<li><strong>Alice 生成一个随机数 A</strong><br>A 是一个 1 ~ P-2 之间的整数。这个数是一个只有 Alice 知道的秘密数字。</li>
+<li><strong>Bob 生成一个随机数 B</strong><br>B 也是一个 1 ~ P-2 之间的整数。这个数是一个只有 Bob 才知道的秘密数字。</li>
+<li><strong>Alice 将 G^A mod P 计算结果的数发送给 Bob</strong></li>
+<li><strong>Bob 将  G^B mod P 计算结果的数发送给 Alice</strong></li>
+<li><strong>Alice 用 Bob 发过来的数计算 A 次方并求 mod P</strong><br>这个数就是共享密钥。Alice 计算的密钥 = (G^B mod P)^A mod P = G^(A*B) mod P</li>
+<li><strong>Bob 用 Alice 发过来的数计算 B 次方并求 mod P</strong><br>Bob 计算的密钥 = (G^A mod P)^B mod P = G^(A*B) mod P = Alice 计算的密钥。可见两方计算的密钥是相等的。</li>
+</ol>
+<p>关于第1步提到的生成元是什么呢？先来看一张表，假设 P = 13：</p>
+<img src="/post/reading/20160722/16-45-42.jpg">
+
+<p>其中，2、6、7、11都是13的生成元。这几个数有什么性质呢？从上表可以发现，这几个数的乘方结果中都出现了1~12的全部整数。也就是说，P 的生成元的乘方结果与 1 ~ P-1 中的数字是一一对应的。正是因为具有这样一一对应的关系，Alice 才能够从 1 ~ P-2 的范围中随机选择一个数字(之所以不能选择 P-1，是因为 G^(P-1) mod P 的值一定是等于1的)。</p>
+<p>最后，需要清楚，针对Diffie-Hellman密钥交换是可以发动中间人攻击的。而为了防止中间人攻击，可以使用数字签名、证书等方法来应对。</p>
+<blockquote>
+<h3 id="基于口令的密码-PBE"><a href="#基于口令的密码-PBE" class="headerlink" title="基于口令的密码(PBE)"></a>基于口令的密码(PBE)</h3></blockquote>
+<p><strong>基于口令的密码</strong>(Password Based Encryption，PBE)就是一种根据口令生成密钥并用该密钥进行加密的方法。</p>
+<p>PBE 的加密可以用下图来表示：</p>
+<img src="/post/reading/20160722/17-02-17.jpg">
+
+<p>主要有三个步骤：</p>
+<ol>
+<li><strong>生成 KEK</strong><br>首先，通过伪随机数生成器生成一个被称为<strong>盐</strong>(salt)的随机数。然后，将盐和口令一起输入单向散列函数，输出的结果就是 KEK。盐是一种用于防御字典攻击的机制。</li>
+<li><strong>生成会话密钥并加密</strong><br>会话密钥 CEK 也是通过伪随机数生成器来生成，生成之后使用 KEK 对其进行加密，然后将加密后的会话密钥和盐一起保存在安全的地方。</li>
+<li><strong>加密消息</strong><br>最后，使用 CEK 对消息进行加密。</li>
+</ol>
+<p>而 PBE 解密的过程则如下图：</p>
+<img src="/post/reading/20160722/17-10-23.jpg">
+
+<p>解密主要也是有三个步骤：</p>
+<ol>
+<li><strong>重建KEK</strong><br>将之前保存下来的盐和口令一起输入单向散列函数，得到的散列值就是 KEK 了。</li>
+<li><strong>解密会话密钥</strong><br>再将之前保存下来的已加密的会话密钥用 KEK 进行解密，就能得到会话密钥 CEK 了。</li>
+<li><strong>解密消息</strong><br>最后，用已解密的 CEK 对密文进行解密即可。</li>
+</ol>
+<p>另外，在生成 KEK 时，通过多次使用单向散列函数可以提高安全性。</p>
+<h2 id="随机数"><a href="#随机数" class="headerlink" title="随机数"></a>随机数</h2><p>有哪些场景使用到随机数呢？主要可能有以下这些：</p>
+<ul>
+<li><strong>生成密钥</strong></li>
+<li><strong>生成密钥对</strong></li>
+<li><strong>生成初始化向量(IV)</strong></li>
+<li><strong>生成nonce</strong></li>
+<li><strong>生成盐</strong></li>
+</ul>
+<p>随机数的性质主要分为三类：</p>
+<ul>
+<li><strong>随机性</strong>：不存在统计学偏差，是完全杂乱的数列。</li>
+<li><strong>不可预测性</strong>：不能从过去的数列推测出下一个出现的数。</li>
+<li><strong>不可重现性</strong>：除非将数列本身保存下来，否则不能重现相同的数列。</li>
+</ul>
+<p>上面三个性质中，越往下就越严格。具备随机性，不代表一定具备不可预测性。具备不可预测性的数列，则一定具备随机性。具备不可重现性的数列，也一定具备不可预测性和随机性。在书中，将这三个性质的随机数按顺序分别命名为“弱伪随机数”、“强伪随机数”和“真随机数”。</p>
+<blockquote>
+<h3 id="伪随机数生成器"><a href="#伪随机数生成器" class="headerlink" title="伪随机数生成器"></a>伪随机数生成器</h3></blockquote>
+<p>随机数可以通过硬件来生成，也可以通过软件来生成。通过硬件生成的随机数列一般都是真随机数，是从不可重现的物理现象中获取信息而生成数列的，比如周围的温度和声音的变化、用户移动鼠标的位置信息、键盘输入的时间间隔、放射线测量仪的输出值等。像这样的硬件设备称为<strong>随机数生成器</strong>(Random Number Generator，RNG)。而生成随机数的软件则称为<strong>伪随机数生成器</strong>(Pseudo Random Number Generator，PRNG)。因为仅靠软件无法生成真随机数，因为要加上一个“伪”字。</p>
+<p>伪随机数生成器具有“内部状态”，并根据外部输入的“种子”来生成伪随机数列，如下图：</p>
+<img src="/post/reading/20160722/22-08-13.jpg">
+
+<p>伪随机数生成器的<strong>内部状态</strong>，是指伪随机数生成器所管理的内存中的数值。这个数值在每次生成随机数后都会改变。而<strong>种子</strong>是用来初始化内部状态的。伪随机数生成器是公开的，但种子是需要保密的，这就好像密码算法是公开的，但密钥是保密的。</p>
+<blockquote>
+<h3 id="具体的伪随机数生成器"><a href="#具体的伪随机数生成器" class="headerlink" title="具体的伪随机数生成器"></a>具体的伪随机数生成器</h3></blockquote>
+<p>具体的伪随机数生成器有很多，书中介绍了五种：杂乱的方法、线性同余法、单向散列函数法、密码法、ANSI X9.17。</p>
+<ul>
+<li><p><strong>杂乱的方法</strong><br>杂乱的方法就是使用杂乱无章的算法来生成随机数，但这种方法其实并不可取。一是因为复杂算法所生成的数列大多数具有很短的周期(即短数列的不断重复)；二是因为如果程序员不能够理解算法的详细内容，那么就无法判断所生成的随机数是否具备不可预测性。</p>
+</li>
+<li><p><strong>线性同余法</strong><br>线性同余法就是将当前的伪随机数值乘以 A 再加上 C，然后将除以 M 得到的余数作为下一个伪随机数。其中，A、C、M都是常量，且 A 和 C 需要小于 M。C 语言的库函数 rand，以及Java 的 Random 类，都采用了线性同余法。线性同余法并不具备不可预测性，因此不可以用于密码技术。</p>
+<img src="/post/reading/20160722/23-08-18.jpg">
+</li>
+<li><p><strong>单向散列函数法</strong><br>使用单向散列函数可以编写出具备不可预测性的伪随机数列(即强伪随机数)的伪随机数生成器。单向散列函数的单向性是支撑伪随机数生成器不可预测性的基础。</p>
+<img src="/post/reading/20160722/23-16-58.jpg">
+</li>
+<li><p><strong>密码法</strong><br>也可以使用密码来编写能够生成强伪随机数的伪随机数生成器。既可以使用 AES 等对称密码，也可以使用 RSA 等公钥密码。密码的机密性是支撑伪随机数生成器不可预测性的基础。</p>
+<img src="/post/reading/20160722/23-21-49.jpg">
+</li>
+<li><p><strong>ANSI X9.17</strong><br>ANSI X9.17 伪随机数生成器的结构则有点复杂，PGP 密码软件就使用了这种方法。</p>
+<img src="/post/reading/20160722/23-26-50.jpg">
+
+</li>
+</ul>
+<h2 id="PGP"><a href="#PGP" class="headerlink" title="PGP"></a>PGP</h2><p>PGP 将多种密码技术进行了完美的组合，其具备了现代密码软件所必需的几乎全部功能，包括但不限于：对称密码、公钥密码、数字签名、单向散列函数、证书、压缩、大文件的拆分和拼合、钥匙串管理等。</p>
+<blockquote>
+<h3 id="生成密钥对"><a href="#生成密钥对" class="headerlink" title="生成密钥对"></a>生成密钥对</h3></blockquote>
+<p>要在 PGP 中进行加密和数字签名，需要先生成自己的密钥对。下图展示了从命令行生成密钥的过程，其中，粗体为用户输入的内容：</p>
+<img src="/post/reading/20160722/12-32-19.jpg">
+
+<blockquote>
+<h3 id="加密和解密"><a href="#加密和解密" class="headerlink" title="加密和解密"></a>加密和解密</h3></blockquote>
+<p>使用 PGP 进行加密的过程如下图所示：</p>
+<img src="/post/reading/20160722/12-24-53.jpg">
+
+<p>而解密的过程则如下：</p>
+<img src="/post/reading/20160722/12-25-15.jpg">
+
+<p>PGP 的私钥是保存在用户的钥匙串中的。另外，私钥都是以加密状态保存的，并在保存时使用了基于口令的密码(PBE)。</p>
+<blockquote>
+<h3 id="生成和验证数字签名"><a href="#生成和验证数字签名" class="headerlink" title="生成和验证数字签名"></a>生成和验证数字签名</h3></blockquote>
+<p>生成数字签名的过程如下图：</p>
+<img src="/post/reading/20160722/12-40-27.jpg">
+
+<p>而验证签名的过程则如下图：</p>
+<img src="/post/reading/20160722/12-41-39.jpg">
+
+<blockquote>
+<h3 id="生成数字签名并加密以及解密并验证数字签名"><a href="#生成数字签名并加密以及解密并验证数字签名" class="headerlink" title="生成数字签名并加密以及解密并验证数字签名"></a>生成数字签名并加密以及解密并验证数字签名</h3></blockquote>
+<p>如何将密码和数字签名进行组合，下面两张图是整本书最复杂的，但它只不过是将之前讲解的内容组合起来了而已。<br>下图是生成数字签名并加密的过程：</p>
+<img src="/post/reading/20160722/12-44-34.jpg">
+
+<p>而下图则是解密并验证数字签名的过程：</p>
+<img src="/post/reading/20160722/12-45-00.jpg">
+
+<blockquote>
+<h3 id="信任网"><a href="#信任网" class="headerlink" title="信任网"></a>信任网</h3></blockquote>
+<p>如何确认公钥的合法性？前面介绍的证书是一种方法。对公钥的信任是建立在对认证机构的信任的基础之上的。不过，PGP 却没有使用认证机构，而是采用了一种叫做<strong>信任网</strong>(也称为<strong>信任圈</strong>或<strong>好友圈</strong>)的方法。信任网的要点是“不依赖认证机构，而是建立每个人之间的信任关系”。换言之，就是能够自己决定要信任哪些公钥。</p>
+<p>PGP 当初的设计目的是在连国家都不可信的情况下依然能够使用，因此它并不关心有没有可信的认证机构，而是采用了“由用户自己来决定信任谁”这样的设计。</p>
+<p>需要注意，“公钥是否合法”与“所有者是否可信”是两个不同的问题，因为尽管公钥合法，其所有者也可以是不可信的。例如，Alice认为从Bob那获得的公钥是合法的，因为这个公钥是Bob当面交给Alice的。但是Alice不信任Bob在数字签名上的判断能力，即便Bob对其他的公钥进行了数字签名，Alice也会怀疑Bob是否真的进行了本人确认。</p>
+<p>在 PGP 中，信任级别可以分为四种：绝对信任、完全信任、有限信任和不信任。</p>
+<h2 id="SSL-TLS"><a href="#SSL-TLS" class="headerlink" title="SSL/TLS"></a>SSL/TLS</h2><p>SSL/TLS也是综合运用了对称密码、公钥密码、消息认证码、数字签名、伪随机数生成器等密码技术。而我们知道SSL/TLS最广泛的应用就是套接在HTTP上，但实际上，SSL/TLS还可以套接在其他网络协议之上的，例如，SMTP 和 POP3 之类的电子邮件协议。因为现在广泛使用的是TLS协议，因此下文只以TLS协议为主。</p>
+<p>TLS安全协议可分为两层：<strong>TLS记录协议</strong>和 <strong>TLS握手协议</strong>。TLS记录协议在TLS握手协议的下层，负责数据封装、压缩、加密等功能。而TLS握手协议则用于在实际的数据传输开始前，通信双方进行身份认证、协商加密算法、交换密钥等。TLS握手协议又分为4个子协议：握手协议、密码规格变更协议、警告协议和应用数据协议。TLS协议的层次结构如下图：</p>
+<img src="/post/reading/20160722/14-06-27.jpg">
+
+<blockquote>
+<h3 id="TLS记录协议"><a href="#TLS记录协议" class="headerlink" title="TLS记录协议"></a>TLS记录协议</h3></blockquote>
+<p>TLS记录协议的处理过程如下图：</p>
+<img src="/post/reading/20160722/12-43-27.jpg">
+
+<p>首先，消息被分割成多个片段，然后分别对每个片段进行压缩。压缩算法需要与通信对象协商决定。接下来，经过压缩的片段会被加上消息认证码，这就可以保证完整性，并进行数据的认证。同时，为了防止重放攻击，在计算消息认证码时，还加上了片段的编号。单向散列函数的算法，以及消息认证码所使用的密钥都需要与通信对象协商决定。再接下来，就是加密了。加密使用CBC模式，CBC模式的初始化向量(IV)通过主密码生成，而对称密码的算法和共享密钥也是需要与通信对象协商决定。最后，密文再加上数据类型、版本号、压缩后的长度组成的报头就是最终的报文数据。其中，数据类型为TLS握手协议中的4个子协议之一。</p>
+<blockquote>
+<h3 id="TLS握手协议"><a href="#TLS握手协议" class="headerlink" title="TLS握手协议"></a>TLS握手协议</h3></blockquote>
+<p>TLS握手协议可分为4个子协议，其中，<strong>握手协议</strong>是最复杂的一个子协议，其过程如下图：</p>
+<img src="/post/reading/20160722/12-58-28.jpg">
+
+<p><strong>1. ClientHello(客户端-&gt;服务器)</strong><br>客户端向服务器发送ClientHello消息，消息内容主要包括：可用的版本号、当前时间、客户端随机数、会话ID、可用的密码套件清单、可用的压缩方式清单。<br><strong>2. ServerHello(服务器-&gt;客户端)</strong><br>对于客户端发送的ClientHello消息，服务器会返回一个ServerHello消息，消息内容主要包括：使用的版本号、当前时间、服务器随机数、会话ID、使用的密码套件、使用的压缩方式。这一步确定了通信中使用的“版本号”、“密码套件”和“压缩方式”。<br><strong>3. Certificate(服务器-&gt;客户端)</strong><br>服务器再向客户端发送Certificate消息，主要是<strong>证书清单</strong>。首先发送的是服务器的证书，然后会按顺序发送对服务器证书签名的认证机构的证书。<br><strong>4. ServerKeyExchange(服务器-&gt;客户端)</strong><br>当Certificate消息不足以满足需求时，服务器会向客户端发送ServerKeyExchange消息。具体所发送的消息内容会根据所使用的密码套件而有所不同。<br><strong>5. CertificateRequest(服务器-&gt;客户端)</strong><br>CertificateRequest消息用于服务器向客户端请求证书，这是为了进行<strong>客户端认证</strong>。消息内容还包括：服务器能够理解的证书类型清单和认证机构名称清单。当不使用客户端认证时，不会发送CertificateRequest消息。<br><strong>6. ServerHelloDone(服务器-&gt;客户端)</strong><br>服务器发送ServerHelloDone消息则表示从ServerHello消息开始的一系列消息的结束。<br><strong>7. Certificate(客户端-&gt;服务器)</strong><br>当服务器发送了CertificateRequest消息时，则客户端会发送Certificate消息，将自己的证书同消息一起发送给服务器。如果服务器没有发送CertificateRequest消息，客户端则不会发送Certificate消息。<br><strong>8. ClientKeyExchange(客户端-&gt;服务器)</strong><br>客户端发送ClientKeyExchange消息。当密码套件中包含RSA时，会随消息一起发送<strong>经过加密的预备主密码</strong>。当密码套件中包含Diffie-Hellman密钥交换时，会随消息一起发送<strong>Diffie-Hellman的公开值</strong>。预备主密码是由客户端生成的随机数，之后会被用作生成主密码的种子。根据预备主密码，服务器和客户端会计算出相同的<strong>主密码</strong>，然后再根据主密码生成：对称密码的密钥、消息认证码的密钥、对称密码的CBC模式中使用的初始化向量(IV)。<br><strong>9. CertificateVerify(客户端-&gt;服务器)</strong><br>客户端只有在服务器发送CertificateRequest消息时才会发送CertificateVerify消息。这个消息的目的是向服务器证明自己的确持有客户端证书的私钥。为了实现这一目的，客户端会计算“主密码”和“握手协议中传送的消息”的散列值，并加上自己的数字签名后发送给服务器。<br><strong>10. ChangeCipherSpec(客户端-&gt;服务器)</strong><br>客户端发送ChangeCipherSpec消息表示要切换密码。实际上，这不是握手协议的消息，而是密码规格变更协议的消息。在ChangeCipherSpec消息之前，客户端和服务器之间以及交换了所有关于密码套件的信息，因此在收到这一消息时，客户端和服务器会同时切换密码。在这一消息之后，TLS记录协议就开始使用双方协商决定的密码通信方式了。<br><strong>11. Finished(客户端-&gt;服务器)</strong><br>客户端发送Finished消息表示握手协议到此结束。这个消息其实是使用切换后的密码套件来发送的。实际负责加密操作的是TLS记录协议。<br><strong>12. ChangeCipherSpec(服务器-&gt;客户端)</strong><br>这次轮到服务器发送ChangeCipherSpec消息了，表明服务器要切换密码了。<br><strong>13. Finished(服务器-&gt;客户端)</strong><br>服务器也同样发送Finished消息表明握手协议到此结束。这个消息同样使用切换后的密码套件来发送。实际负责加密操作的也是TLS记录协议。<br><strong>14. 切换至应用数据协议</strong><br>在此之后，客户端和服务器会使用应用数据协议和TLS记录协议进行密码通信。</p>
+<p>从结果来看，握手协议完成了下列操作：</p>
+<ul>
+<li>客户端获得了服务器的合法公钥，完成了服务器认证。</li>
+<li>服务器获得了客户端的合法公钥，完成了客户端认证(当需要客户端认证时)。</li>
+<li>客户端和服务器生成了密码通信中使用的共享密钥。</li>
+<li>客户端和服务器生成了消息认证码中使用的共享密钥。</li>
+</ul>
+<p>除了握手协议，其他3个子协议都很简单。<strong>密码规格变更协议</strong>用于密码切换的同步。简单地说，就跟向对方喊“1、2、3！”差不多。当协议中途发生错误时，就会通过警告协议传达给对方。<strong>警告协议</strong>负责在发生错误时将错误传达给对方。如果没有发生错误，则会使用应用数据协议来进行通信。<strong>应用数据协议</strong>用于和通信对象之间传送应用数据。当TLS套接在HTTP时，HTTP的请求和相应就会通过TLS的应用数据协议和TLS记录协议来进行传送。</p>
+<h2 id="密码技术与现实社会"><a href="#密码技术与现实社会" class="headerlink" title="密码技术与现实社会"></a>密码技术与现实社会</h2><p>前面讲到的6种基本的密码技术可整理成下图：</p>
+<img src="/post/reading/20160722/14-01-39.jpg">
+
+<p>书中多次使用了<strong>框架</strong>这个说法。框架的特点就是能够对其中作为组成元素的技术进行替换，就像更好零件一样。例如，消息认证码算法HMAC的设计就允许对单向散列函数的算法进行替换。在PGP中，对称密码、公钥密码、单向散列函数等都是可以替换的。在SSL/TLS中，客户端和服务器可以通过握手协议进行通信，并当场决定所使用的密码套件。使用框架能够提高密码技术系统的重用性，也能够提高系统的强度。通过将单独的密码技术像零件一样组合起来，并根据需要进行替换，能够实现更长期的、更高的安全性。</p>
+<p>另外，所有密码技术其实也可以看成是一种“压缩技术”，如下表所示：</p>
+<img src="/post/reading/20160722/14-16-59.jpg">
+
+<blockquote>
+<h3 id="量子密码和量子计算机"><a href="#量子密码和量子计算机" class="headerlink" title="量子密码和量子计算机"></a>量子密码和量子计算机</h3></blockquote>
+<p><strong>量子密码</strong>是基于量子理论的通信技术，是一种让通信本身不可窃听的技术，也可以理解为是一种利用光子的量子特性来实现通信的方法。最早的量子密码中，利用了两个事实：<br><strong>1. 从原理上说，无法准确测出光子的偏振方向</strong><br>根据这一事实，可以让窃听者得到的内容变得不正确。<br><strong>2. 测量行为本身会导致光子的状态发送改变</strong><br>根据这一事实，接收者可以判断出通信是否被窃听。</p>
+<p>而<strong>量子计算机</strong>则有着超强的计算能力。如果有了量子计算机，那现有的所有密码都能够瞬间被暴力破解。根据量子理论，粒子可同时具有多种状态。如果使用具有多种状态的粒子进行计算，则可以同时完成多种状态的计算。如果用1个粒子能够计算0和1两种状态，那么用128个这样的粒子就可以同时计算2^128中状态。换句话说，就是一台超级并行计算机。</p>
+<p>如果量子密码比量子计算机先进入实用领域，则可以使用量子密码来实现一次性密码本，从而产生完美的密码技术。由于一次性密码本在原理上是无法破译的，因此即使用量子计算机也无法破译量子密码。然而，如果量子计算机比量子密码先进入实用领域，则实用目前的密码技术所产生的密文将会全部被破译。</p>
+<blockquote>
+<h3 id="只有完美的密码，没有完美的人"><a href="#只有完美的密码，没有完美的人" class="headerlink" title="只有完美的密码，没有完美的人"></a>只有完美的密码，没有完美的人</h3></blockquote>
+<p>就算量子密码进入实用领域，也不能实现完美的安全。因为在安全问题中，密码技术能够覆盖的范围是非常有限的。在确保系统的整体安全方面，人是一个特别巨大的弱点。</p>
+<p>为了配送对称密码的密钥，我们需要使用公钥密码，而为了对公钥进行认证，我们又需要认证机构的公钥。以此类推，无穷无尽，我们必须在某个节点上找到一个公钥是自己能够完全信任的，也就是必须要有一个信任的种子。</p>
+<p>通过密码技术，我们可以提高机密性，也能够让认证变得更加容易，但是这并不意味着我们可以实现完美的机密性和完美的认证。</p>
+<p>就算通过人的指纹、声纹、面容识别等生物识别认证也并不是完美的认证。要进行生物识别认证，就必须在某个时间点上将生物信息转换为比特序列，而实际的认证则是通过转换后的比特序列来完成的。因此，如果这些比特序列被窃取，就会和钥匙被偷产生相同的后果。</p>
+<p>另外，“防御必须天衣无缝，攻击只需突破一点”。为了保卫系统安全，我们必须应对各种可能的攻击，而且这种防御必须24小时连续工作。另一方面，要攻击一个系统，则只要找到一种有效的攻击方法，而且只需利用防御方一瞬间的破绽就可以完成了。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>其实，在实际应用中，安全问题所涉及的技术，远比这本书里所讲到的密码技术多得多，也复杂得多。例如，App的加壳保护、OAuth认证等。在实际的应用中，还需要考虑更多，比如，安全性和性能之间需要平衡。虽然，懂得了这些密码技术，并不意味着就能设计出非常安全的系统。但是，如果不懂这些密码技术，那就更难以设计出安全的系统。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/reading/20160722/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/reading/20160705/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/reading/20160705/" class="post-title-link" itemprop="url">读《图解密码技术》(二):认证</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-07-05 13:30:00" itemprop="dateCreated datePublished" datetime="2016-07-05T13:30:00+08:00">2016-07-05</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 11:59:22" itemprop="dateModified" datetime="2019-07-02T11:59:22+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/reading/" itemprop="url" rel="index"><span itemprop="name">reading</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/reading/20160705"><strong>http://keeganlee.me/post/reading/20160705</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-07-05</p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">读《图解密码技术》(一):密码</a><br><a href="http://keeganlee.me/post/reading/20160705">读《图解密码技术》(二):认证</a><br><a href="http://keeganlee.me/post/reading/20160722">读《图解密码技术》(三):密钥、随机数和应用技术</a></p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">前一篇文章</a>总结了密码部分的内容，包括一次性密码本、对称密码、公钥密码、混合密码系统等。这些密码在一定程度上能够保证消息的机密性，即可以防止被窃听导致秘密泄露。但却无法防御信息被篡改，也无法确定消息的来源是否就是真实的发送者而不是来自伪装者，也防止不了发送者事后否认自己先前做过的行为。关于这些问题，在本文总结的密码技术中就可以找到解决方案。</p>
+<p>本文是关于《图解密码技术》第二部分的内容总结，包括单向散列函数、消息认证码、数字签名、证书。</p>
+<h2 id="单向散列函数"><a href="#单向散列函数" class="headerlink" title="单向散列函数"></a>单向散列函数</h2><p>使用单向散列函数可以获取消息的“指纹”，通过对比“指纹”，就能够知道两条消息是否一致。这种一致性，也称为完整性，可以识别出消息是否被篡改。</p>
+<p><strong>单向散列函数</strong>(one-way hash function)有一个输入和一个输出，其中输入称为<strong>消息</strong>(message)，输出称为<strong>散列值</strong>(hash value)。散列值也称为<strong>消息摘要</strong>(message digest)或者<strong>指纹</strong>(fingerprint)。单向散列函数可以根据消息的内容计算出散列值，而散列值就可以用来检查消息的完整性。</p>
+<blockquote>
+<h3 id="单向散列函数的性质"><a href="#单向散列函数的性质" class="headerlink" title="单向散列函数的性质"></a>单向散列函数的性质</h3></blockquote>
+<ul>
+<li><strong>根据任意长度的消息计算出固定长度的散列值</strong><br>首先，单向散列函数的输入必须能够是任意长度的消息。其次，无论输入多长的消息，必须都能够生成很短的散列值。如果消息越长生成的散列值也越长的话就不好用了，而且为了方便使用，散列值的长度最好是短且固定的。不管消息是1比特，还是100M，甚至是100G，单向散列函数都会计算出固定长度的散列值。比如，SHA-1计算出的散列值固定为160比特（20字节）。</li>
+<li><strong>能够快速计算出散列值</strong><br>计算散列值所花费的时间必须要短。尽管消息越长，计算散列值的时间也会越长，但如果不能在现实的时间内完成计算就没有意义了。</li>
+<li><strong>具备单向性</strong><br>单向散列函数必须具备单向性。单向性是指无法通过散列值反算出消息的性质。就如同将玻璃砸得粉碎很容易，但却无法将碎片还原成完整的玻璃一样，根据消息计算出散列值很容易，但根据散列值却无法反算出消息。</li>
+<li><strong>消息不同散列值也不同</strong><br>为了能够确认完整性，消息中哪怕只有 1 比特的改变，也必须有很高的概率产生不同的散列值。为什么说有很高的概率呢？这是因为消息很长，而散列值很短，那就肯定会存在不同消息产生相同散列值的情况，这种情况称为<strong>碰撞</strong>(collision)。因此，单向散列函数没法完全避免碰撞，只能减低碰撞发生的概率。而且，更重要的是，要避免被人为地发现碰撞。难以发现碰撞的性质称为<strong>抗碰撞性</strong>(collision resistance)。单向散列函数必须具备抗碰撞性。另外，抗碰撞性还分为两种：弱抗碰撞性和强抗碰撞性。<strong>弱抗碰撞性</strong>是指要找到和给定的消息具有相同散列值的另外一条消息是非常困难的。<strong>强抗碰撞性</strong>则是指要找到散列值相同的两条不同的消息是非常困难的。单向散列函数必须既具备弱抗碰撞性，也必须具备强抗碰撞性。</li>
+</ul>
+<blockquote>
+<h3 id="单向散列函数的例子"><a href="#单向散列函数的例子" class="headerlink" title="单向散列函数的例子"></a>单向散列函数的例子</h3></blockquote>
+<p>单向散列函数有很多种，MD4、MD5、SHA-1、SHA-256、SHA-384、SHA-512、SHA-3等等。</p>
+<p>MD4是由Rivest于1990年设计的，MD是消息摘要(message digest)的缩写，两者都能够产生128比特的散列值。不过，第二年，即1991年，就已经有人提出了MD4的漏洞，很容易就寻找到了MD4散列碰撞的方法。因此，Rivest又设计了更为成熟的MD5。MD5到现在依然有着广泛的应用，例如很多网站和应用的登录密码都使用了MD5。但MD5的强抗碰撞性已经被攻破，也就是说，现在已经能够产生具备相同散列值的两条不同的消息。所以，其实MD5已经不安全了。</p>
+<p>SHA是NSA(美国国家安全局)设计，NIST(美国国家标准与技术研究院)发布的一系列单向散列函数。SHA是以MD4和MD5类似的原理为基础来设计的。SHA-1能够产生160比特的散列值，不过消息长度是有上限的，上限为2^64比特(准备地说是2^64-1)。当然这个数已经非常巨大，所以在实际应用中没有问题。不过，SHA-1的强抗碰撞性已于2005年被攻破。所以，SHA-1也和MD5一样没那么安全了。不过，貌似SHA-1依然是目前使用最广泛的单向散列函数。</p>
+<p>SHA-256、SHA-384和SHA-512的散列值长度分别为256比特、384比特和512比特。它们的消息长度也存在上限，SHA-256的上限和SHA-1一样，而SHA-384和SHA-512的消息上限则为2^128比特(确切值为2^128-1)。这些单向散列函数合起来称为SHA-2。目前，SHA-2还没有被攻破。</p>
+<p>在2005年SHA-1被攻破的背景下，促进了SHA-3的产生。SHA-3与AES一样采用了公开竞赛的方式进行标准化，最后胜出的是Keccak算法。</p>
+<blockquote>
+<h3 id="单向散列函数SHA-1"><a href="#单向散列函数SHA-1" class="headerlink" title="单向散列函数SHA-1"></a>单向散列函数SHA-1</h3></blockquote>
+<p>SHA-1作为一个具有代表性的单向散列函数，让我们看看它的算法流程是怎样的。整体流程如下图：</p>
+<img src="/post/reading/20160705/17-51-46.jpg">
+
+<p>可以分为四个步骤：</p>
+<ol>
+<li><p><strong>填充</strong><br>对消息进行填充处理，使其长度为512比特的整数。这里的512比特称为一个输入分组。具体填充的步骤也分为三步：第一步在消息末尾添加一个1比特的数值“1”；第二步在添加了“1”之后的消息末尾不断添加0，直到消息的长度达到512比特的整数倍，但最后一个分组的最后64比特需要空出来；第三步将消息的长度换成二进制后添加到上一步空出来的最后一个分组的最后64比特中。</p>
+</li>
+<li><p><strong>计算 W0 ~ W79</strong><br>对每一个输入分组分别计算80个32比特的值，这80个值将用于“单步处理“中。计算流程如下图：</p>
+<img src="/post/reading/20160705/21-27-07.jpg">
+
+</li>
+</ol>
+<p>首先，将输入分组的512比特分成16组，每组32比特。然后，剩下的 W16 ~ W79 使用如下的公式进行计算：</p>
+<img src="/post/reading/20160705/21-30-51.jpg">
+
+<ol start="3">
+<li><strong>分组处理</strong><br>接下来，对输入分组进行80个步骤的处理，目的是根据输入分组的信息来改变内部状态。流程如下图，其中，160比特的内部状态是通过名为A~E的5个32比特的缓冲区来表示的：<img src="/post/reading/20160705/21-39-08.jpg">
+
+</li>
+</ol>
+<p>将5个缓冲区的值与输入分组的信息进行混合，然后再执行80个步骤的处理。从结果来看，这80个步骤所完成的操作，就是将输入分组的512比特的数据，也SHA-1所保持的160比特的内部状态(5个缓冲区)进行混合。通过80个步骤的反复执行，SHA-1就能够将已经过填充的消息全部混入这160比特的内部状态中，而SHA-1所输出的散列值，就是所有处理结束之后最终的内部状态(160比特)。</p>
+<ol start="4">
+<li><strong>单步处理</strong><br>单步处理是指上面的80个步骤中的每一步的处理，处理过程如下图：<img src="/post/reading/20160705/21-55-03.jpg">
+
+</li>
+</ol>
+<p>在一个步骤完成之后，缓冲区A、B、C、D的内容会被分别复制到B、C、D、E中(其中B要循环左移30比特之后再复制)，而缓冲区 E 的内容则会与其他缓冲区的内容以及Wt、Kt相加之后再被复制到缓冲区A中。<br>由于上述处理要循环80个步骤，因此输入分组中 1 比特的变化，就会影响到散列值中几乎所有的比特，通过这样的方式，就能够实现单向散列函数所应具备的性质。</p>
+<blockquote>
+<h3 id="对单向散列函数的攻击"><a href="#对单向散列函数的攻击" class="headerlink" title="对单向散列函数的攻击"></a>对单向散列函数的攻击</h3></blockquote>
+<p>对单向散列函数的攻击主要就是对单向散列函数的”抗碰撞性“的攻击。</p>
+<p>对“弱抗碰撞性”的攻击主要是利用消息的冗余性生成具有相同散列值的另一个消息，这种攻击也是<strong>暴力破解</strong>，每次都稍微改变一下消息的值，然后对这些消息求散列值。在这种情况下，暴力破解需要尝试的次数可以根据散列值的长度计算出来。以SHA-1为例，由于它的散列值长度为160比特，因此最多只要尝试2^160次就能够找到目标消息。由于尝试次数纯粹是由散列值长度决定的，因此散列值长度越长的单向散列函数，其抵御暴力破解的能力也就越强。</p>
+<p>对“强抗碰撞性”的攻击一般称为<strong>生日攻击</strong>。生日攻击不是寻找生成特定散列值的消息，而是要找到相同散列值的两条消息，而散列值则可以是任何值。生日攻击的原理来自生日悖论，也就是利用了“任意散列值一致的概率比想象中高”这样的特性。相对于暴力破解，生日攻击所需尝试的次数要少得多，一般只需要是暴力破解的一半。</p>
+<blockquote>
+<h3 id="单向散列函数无法解决的问题"><a href="#单向散列函数无法解决的问题" class="headerlink" title="单向散列函数无法解决的问题"></a>单向散列函数无法解决的问题</h3></blockquote>
+<p>单向散列函数可以实现完整性的检查，但却识别不了“伪装”，即无法解决认证问题。认证问题需要使用消息认证码和数字签名来解决。</p>
+<p>单向散列函数在实际应用中很少单独使用，而是和其他密码技术结合使用。后面要讲的消息认证码和数字签名都使用了单向散列函数，而下一篇要讲的密钥、伪随机数和应用技术也都使用了单向散列函数。</p>
+<h2 id="消息认证码"><a href="#消息认证码" class="headerlink" title="消息认证码"></a>消息认证码</h2><p><strong>消息认证码</strong>(message authentication code)是一种确认完整性并进行认证的技术，简称为 <strong>MAC</strong>。消息认证码的输入包括任意长度的<strong>消息</strong>和一个发送者与接受者之间<strong>共享的密钥</strong>，它可以输出固定长度的数据，这个数据称为 <strong>MAC 值</strong>。</p>
+<p>消息认证码与单向散列函数很类似，都是根据任意长度的消息输出固定长度的数据，不同的是，消息认证码比单向散列函数多了一个共享密钥。没有共享密钥的人就无法计算出 MAC 值，消息认证码正是利用这一性质来完成认证的。此外，和单向散列函数一样，哪怕消息中发生 1 比特的变化，MAC 值也会发生变化，消息认证码正是利用这一性质来确认完整性的。</p>
+<blockquote>
+<h3 id="消息认证码的使用步骤"><a href="#消息认证码的使用步骤" class="headerlink" title="消息认证码的使用步骤"></a>消息认证码的使用步骤</h3></blockquote>
+<p>消息认证码的使用步骤如下图：</p>
+<img src="/post/reading/20160705/23-48-57.jpg">
+
+<p>发送者与接收者需要事先共享密钥，然后发送者使用共享密钥对消息计算 MAC 值，接着将消息和 MAC值一起发送给接收者。接收者收到消息和 MAC 值后，使用同一个共享密钥对消息计算 MAC 值，当计算出来的 MAC 值和接收到的 MAC 值一致的，就证明认证成功了。</p>
+<p>而既然是使用共享密钥，那就和对称密码一样，存在密钥配送问题。要解决密钥配送问题，同样可以使用事先共享密钥、密钥配送中心、Diffie-Hellman密钥交换、公钥密码等方法。具体请看<a href="http://keeganlee.me/post/reading/20160629">前一篇</a>文章的<strong>密钥配送问题</strong>部分。</p>
+<blockquote>
+<h3 id="消息认证码的实现"><a href="#消息认证码的实现" class="headerlink" title="消息认证码的实现"></a>消息认证码的实现</h3></blockquote>
+<p>消息认证码有很多种实现方法。可以使用SHA-1、MD5之类的<strong>单向散列函数</strong>来实现，其中有一种实现方法叫 <strong>HMAC</strong>，后面我们再讲它实现的具体步骤。</p>
+<p>也可以使用DES、AES之类的<strong>分组密码</strong>来实现消息认证码，将分组密码的密钥作为消息认证码的共享密钥来使用，并用 CBC 模式将消息全部加密。由于消息认证码不需要解密，因此，可以只保留最后一个分组的密文作为 MAC 值，而其他密文则全部丢弃。由于 CBC 模式的最后一个分组会收到整个消息以及密钥的双重影响，因此可以将它用作消息认证码。</p>
+<p>此外，使用流密码和公钥密码等也可以实现消息认证码。</p>
+<blockquote>
+<h3 id="HMAC"><a href="#HMAC" class="headerlink" title="HMAC"></a>HMAC</h3></blockquote>
+<p><strong>HMAC</strong> 是一种使用单向散列函数来构造消息认证码的方法，其中，HMAC 中的 H 就是 Hash 的意思。HMAC 中所使用的单向散列函数并不仅限于一种，任何高强度的单向散列函数都可以被用于 HMAC，也就是说，HMAC 所使用的单向散列函数是可以被替换的。</p>
+<p>HMAC 是按照下列步骤来计算 MAC 值的：</p>
+<img src="/post/reading/20160705/18-16-52.jpg">
+
+<ol>
+<li>密钥填充<br>如果密钥比单向散列函数的分组长度要短，就需要在末尾填充0，直到其长度达到单向散列函数的分组长度为止。如果密钥比分组长度要长，则要用单向散列函数求出密钥的散列值，然后将这个散列值用作 HMAC 的密钥。</li>
+<li>填充后的密钥与 ipad 的 XOR<br>将填充后的密钥与被称为 ipad 的比特序列进行 XOR 运算。<strong>ipad</strong> 是将 00110110 这一比特序列(即16进制的36）不断循环反复直到达到分组长度所形成的比特序列，其中 ipad 的 i 是 inner 的意思。XOR 运算后得到的值，就是一个和单向散列函数分组长度相同，且和密钥相关的比特序列。这里将这个比特序列称为 <strong>ipadkey</strong>。</li>
+<li>与消息组合<br>随后，将 ipadkey 与消息进行组合，ipadkey 一般附加在消息开头。</li>
+<li>计算散列值<br>将上一步组合的结果输入单向散列函数，计算出散列值。</li>
+<li>填充后的密钥与 opad 的 XOR<br>将填充后的密钥与被称为 opad 的比特序列进行 XOR 运算。<strong>opad</strong> 是将 01011100 这一比特序列(即16进制的5C）不断循环反复直到达到分组长度所形成的比特序列，其中 opad 的 o 是 outer 的意思。XOR 运算后得到的值，也是一个和单向散列函数分组长度相同，且和密钥相关的比特序列。这里将这个比特序列称为 <strong>opadkey</strong>。 </li>
+<li>与散列值组合<br>将第4步计算出来的散列值拼在 opadkey 的后面。</li>
+<li>计算散列值<br>将上一步的结果输入单向散列函数，计算出散列值。这个散列值就是 MAC 值。</li>
+</ol>
+<blockquote>
+<h3 id="对消息认证码的攻击"><a href="#对消息认证码的攻击" class="headerlink" title="对消息认证码的攻击"></a>对消息认证码的攻击</h3></blockquote>
+<p>对消息认证码可以发起<strong>重放攻击</strong>，即攻击者可以通过将事先拦截保存的正确 MAC 值不断重放来发动攻击。有几种方法可以防御重放攻击：</p>
+<ul>
+<li>序号<br>每次发送消息时都赋予一个递增的序号，并在计算 MAC 值时将序号也包含在消息中。这样，由于攻击者无法计算序号递增之后的 MAC 值，因此就可以防御重放攻击。这种方法虽然有效，但对每个通信对象都需要记录最后一个消息的序号。</li>
+<li>时间戳<br>发送消息时可以包含进当前时间，如果收到以前的消息，即便 MAC 值正确也将其视为错误的消息来处理，这样就可以防御重放攻击。这种方法虽然也有效，但发送者与接收者的时钟必须一致，而且考虑到通信的延迟，必须在时间的判断上留下缓冲，于是多多少少还是会存在可以进行重放攻击的。</li>
+<li>nonce<br>在通信之前，接收者先向发送者发送一个一次性的随机数，这个随机数一般称为 <strong>nonce</strong>。发送者在消息中包含这个 nonce 并计算 MAC 值。由于每次通信时 nonce 的值都会发生变化，因此无法进行重放攻击。这种方法虽然有效，但通信的数据量会有所增加。</li>
+</ul>
+<p>另外，除了重放攻击，对消息认证码也可以进行暴力破解和生日攻击，这和对单向散列函数的攻击一样。对消息认证码来说，应保证不能根据 MAC 值推测出通信双方所使用的密钥。例如 HMAC 就是利用单向散列函数的单向性和抗碰撞性来保证无法根据 MAC 值推测出密钥的。</p>
+<blockquote>
+<h3 id="消息认证码无法解决的问题"><a href="#消息认证码无法解决的问题" class="headerlink" title="消息认证码无法解决的问题"></a>消息认证码无法解决的问题</h3></blockquote>
+<p>使用消息认证码可以对消息进行认证并确认完整性，即能够识别出消息的篡改和伪装。但却解决不了“对第三方证明”和“防止否认”。</p>
+<p>假如接收者在收到发送者的消息之后，想要向第三方证明这条消息的确是发送者发送的，但是用消息认证码无法进行这样的证明，为什么呢？首先，第三方要校验 MAC 值，就需要知道发送者与接收者之间共享的密钥。但知道密钥后，也校验出 MAC 值是正确的，依然无法证明消息就是发送者发的，因为也有可能是接收者发的。</p>
+<p>既然第三方无法做出证明，那么，如果发送者事后否认自己发送过消息，而谎称是接收者自己发送给自己的消息，对于这种情况也是无法证明，即无法防止否认。</p>
+<p>后面要讲的数字签名就可以解决这两个问题。</p>
+<h2 id="数字签名"><a href="#数字签名" class="headerlink" title="数字签名"></a>数字签名</h2><p>消息认证码之所以无法对第三方证明和防止否认，就是因为发送者和接收者使用了同一个共享密钥。那么，如果发送者和接收者不使用共享密钥，而各自使用不同密钥呢？假如发送者使用的密钥是一个只有自己知道的私钥，在这里可称为“签名密钥”，当发送者发送消息时，用她的签名密钥生成一个“签名”。相对地，接收者使用另一个密钥，称为“验证密钥”，可对签名进行验证。但是，使用验证密钥是无法生成签名的。也就是说，只有签名密钥可以生成签名，而用相应的验证密钥可以对该签名进行验证。这种技术就是<strong>数字签名</strong>(digital signature)，也称为<strong>电子签名</strong>，或简称为<strong>签名</strong>。另外，签名密钥只能由签名的人持有，而验证密钥则是任何需要验证签名的人都可以持有。</p>
+<p>上面讲的内容，和公钥密码很像吧？其实，数字签名就是通过将公钥密码反过来用而实现的。</p>
+<blockquote>
+<h3 id="公钥密码与数字签名"><a href="#公钥密码与数字签名" class="headerlink" title="公钥密码与数字签名"></a>公钥密码与数字签名</h3></blockquote>
+<p>下图是使用公钥加密(即公钥密码)的简单流程图：</p>
+<img src="/post/reading/20160705/22-31-41.jpg">
+<p>而下图则是使用私钥加密(即数字签名)的简单流程图：</p>
+<img src="/post/reading/20160705/22-29-08.jpg">
+
+<p>那么，为什么用私钥加密就相当于生成签名，而用公钥解密就相当于验证签名呢？这是因为组成密钥对的两个密钥之间存在严密的数学关系，使用公钥加密的密文，只能用与该公钥配对的私钥才能解密；同样地，使用私钥加密的密文，也只能用与该私钥配对的公钥才能解密。也就是说，如果用某个公钥成功解密了密文，那么就能够证明这段密文是用与该公钥配对的私钥进行加密所得到的。用私钥进行加密这一行为只能由持有私钥的人完成，正是基于这一事实，才可以将用私钥加密的密文作为签名来对待。而由于公钥是对外公开的，因此任何人都可以用公钥进行解密，即任何人都能够对签名进行验证。</p>
+<blockquote>
+<h3 id="数字签名的方法"><a href="#数字签名的方法" class="headerlink" title="数字签名的方法"></a>数字签名的方法</h3></blockquote>
+<p>有两种生成和验证数字签名的方法：</p>
+<ul>
+<li><strong>直接对消息签名的方法</strong><br>直接对消息签名的方法很容易理解，但实际上很少使用。签名和验证的过程如下图：<img src="/post/reading/20160705/12-28-14.jpg">
+
+</li>
+</ul>
+<p>我们知道，公钥密码算法本来就非常慢。用这种方法需要对整个消息进行加密，就会非常耗时。因此，在实际应用中，基本不会使用直接对消息签名的方法。</p>
+<ul>
+<li><strong>对消息的散列值签名的方法</strong><br>对消息先使用单向散列函数计算出散列值，再对散列值进行签名，这种方法的过程如下图：<img src="/post/reading/20160705/12-34-17.jpg">
+
+</li>
+</ul>
+<p>因为散列值比较短，因此对其进行加密签名就会快很多。</p>
+<blockquote>
+<h3 id="数字签名的实现"><a href="#数字签名的实现" class="headerlink" title="数字签名的实现"></a>数字签名的实现</h3></blockquote>
+<p>数字签名的实现也有很多种，基本也是使用单向散列函数和公钥密码技术相结合。而公钥密码部分常用的就是使用RSA，另外也有使用EIGamal、Rabin。还有一种数字签名算法叫DSA(Digital Signature Algorithm)。而使用最广泛的应该就是使用RSA的数字签名了。</p>
+<p>使用RSA实现数字签名很简单。而为了更加简单起见，这里不使用单向散列函数，而是直接对消息进行签名。首先，需要将文本的消息先编码为数字，因为在RSA中，被签名的消息、密钥以及最终生成的签名都是以数字形式表示的。接着，使用下列公式生成签名：</p>
+<ul>
+<li>签名 = 消息^D mod N  (用RSA生成签名)</li>
+</ul>
+<p>D 和 N 就是签名者的私钥。生成签名后，发送者就可以将消息和签名一起发送给接收者了。</p>
+<p>而验证签名时则使用下列公式：</p>
+<ul>
+<li>由签名求得的消息 = 签名^E mod N  (用RSA验证签名)</li>
+</ul>
+<p>E 和 N 就是签名者的公钥。接收者计算出“由签名求得的消息”后，与发送者直接发送过来的“消息”内容进行对比(如果使用了单向散列函数那就是对比消息的散列值)。如果两者一致则签名验证成功，否则签名验证失败。</p>
+<blockquote>
+<h3 id="对数字签名的攻击"><a href="#对数字签名的攻击" class="headerlink" title="对数字签名的攻击"></a>对数字签名的攻击</h3></blockquote>
+<p>因为数字签名结合了单向散列函数和公钥密码，因此，对单向散列函数和公钥密码的攻击也同样对数字签名有效。比如，针对公钥密码的中间人攻击对数字签名来说就颇具威胁。要防止中间人攻击，就需要确认自己所得到的公钥是否真的属于自己的通信对象。而解决此问题的方案也和公钥密码一样，一般可以使用公钥证书。</p>
+<p>对单向散列函数的攻击也是对“抗碰撞性”的攻击，使用高强度的单向散列函数就可以增大被破解的难度。</p>
+<p>另外，还可以利用数字签名攻击公钥密码。因为对消息签名，从另一方面来说，也是对消息解密。利用这一点，攻击者就可以发动一种巧妙的攻击，即利用数字签名来破译密文。</p>
+<p>假设攻击者拦截到发送者发给接收者的密文后将其保存了下来，并给接收者写了一封邮件，谎称自己是密码学研究者，正在进行关于数字签名的实验，请求接收者对附件中的数据进行签名并回复，说附件中的数据只是随机数据，不会造成任何问题。而实际上，附件的数据就是刚才保存下来的密文。如果接收者中计而对附近进行了签名并回复给了攻击者，那攻击者不费吹灰之力就可以破译密文了。</p>
+<p>对于这种攻击，应该采取怎样的对策呢？首先，不要直接对消息进行签名，对散列值进行签名比较安全；其次，公钥密码和数字签名最好分别使用不同的密钥对。然而，最重要的就是绝对不要对意思不清楚的消息进行签名，尤其是不要对看起来只是随机数据的消息进行签名。</p>
+<blockquote>
+<h3 id="数字签名无法解决的问题"><a href="#数字签名无法解决的问题" class="headerlink" title="数字签名无法解决的问题"></a>数字签名无法解决的问题</h3></blockquote>
+<p>用数字签名既可以识别出篡改和伪装，还可以防止否认。即是说，数字签名同时实现了确认消息的完整性、进行认证以及否认防止。</p>
+<p>然而，数字签名存在和公钥密码一样的问题，那就是公钥问题。公钥必须属于真正的发送者，要确认公钥是否合法，就需要使用证书。这就是后面要讲到的内容了。</p>
+<h2 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h2><p>无论是公钥密码还是数字签名，都存在需要验证公钥是否合法的问题。而证书，就是用来对公钥合法性提供证明的技术。</p>
+<p><strong>公钥证书</strong>(Public-Key Certificate，PKC)和驾照类似，一般会记有姓名、组织、邮箱地址等个人信息，以及属于本人的公钥，并由<strong>认证机构</strong>(Certification Authority、Certifying Authority，CA)施加数字签名。</p>
+<p>认证机构就是能够认定“公钥确实属于此人”并能够生成数字签名的个人或组织。认证机构中有国际性组织和政府所设立的组织，也有通过提供认证服务来盈利的一般企业，此外个人也可以成立认证机构哦。世界上最有名的认证机构当属VeriSign公司。</p>
+<blockquote>
+<h3 id="证书的应用场景"><a href="#证书的应用场景" class="headerlink" title="证书的应用场景"></a>证书的应用场景</h3></blockquote>
+<p>通过认证机构使用证书的过程如下图所示：</p>
+<img src="/post/reading/20160705/10-22-29.jpg">
+
+<ol>
+<li>接收者生成密钥对；</li>
+<li>接收者在认证机构注册自己的公钥；</li>
+<li>认证机构用自己的私钥对接收者的公钥施加数字签名并生成证书；</li>
+<li>发送者得到带有认证机构数字签名的属于接收者的公钥证书；</li>
+<li>发送者使用认证机构的公钥验证数字签名，验证通过则证明证书中包含的公钥的确属于接收者的；</li>
+<li>发送者用接收者的公钥加密消息并发送给接收者；</li>
+<li>接收者用自己的私钥解密密文得到消息。</li>
+</ol>
+<blockquote>
+<h3 id="公钥基础设施-PKI"><a href="#公钥基础设施-PKI" class="headerlink" title="公钥基础设施(PKI)"></a>公钥基础设施(PKI)</h3></blockquote>
+<p><strong>公钥基础设施</strong>(Public-Key Infrastructure)是为了能够更有效地运用公钥而制定的一系列规范和规格的总称。公钥基础设施一般根据其英语缩写而简称为PKI。PKI只是一个总称，而并非指某一个单独的规范或规格。比如，使用最广泛的 X.509 规范也是PKI的一种。</p>
+<p>PKI的组成要素主要有3个：</p>
+<ul>
+<li><strong>用户</strong>：使用PKI的人</li>
+<li><strong>认证机构</strong>：颁发证书的人</li>
+<li><strong>仓库</strong>：保存证书的数据库</li>
+</ul>
+<p>这三者的关系如下图：</p>
+<img src="/post/reading/20160705/10-54-39.jpg">
+
+<p>另外，认证机构会有层级的关系，处于最顶层的认证机构一般就称为<strong>根CA</strong>(Root CA)。上层认证机构可以验证下层认证机构的证书，即是说，下层认证机构的证书是经过上层认证机构签名的。而根CA则会对自己的证书进行签名，这叫<strong>自签名</strong>。认证机构的层级关系如下图：</p>
+<img src="/post/reading/20160705/10-59-23.jpg">
+
+<p>当发送者需要对最底层的Bob的数字签名进行验证时，首先从最顶层的根CA开始，然后获得下层的公钥证书，这个证书上面会带有上层的数字签名，因此需要用上层的公钥对数字签名进行验证。这样逐层向下验证，一直验证到最底层的Bob。</p>
+<blockquote>
+<h3 id="对证书的攻击"><a href="#对证书的攻击" class="headerlink" title="对证书的攻击"></a>对证书的攻击</h3></blockquote>
+<p>由于证书使用的就是数字签名技术，因此针对数字签名的所有攻击方法对证书都有效。</p>
+<p>另外，在公钥注册之前也可以进行攻击。用户准备在认证机构注册自己的公钥时，攻击者可以把消息拦截，然后将公钥替换成自己的。这样一来，认证机构就会对“接收者的个人信息”和“攻击者的公钥”这个组合进行数字签名。要防止这种攻击，接收者可以在将自己的公钥发送给认证机构进行注册时，使用认证机构的公钥对自己的公钥进行加密。此外，认证机构在确认接收者的身份时，也可以将公钥的指纹(即散列值)一并发送给接收者请他进行确认。</p>
+<p>攻击者还可以利用注册相似人名进行攻击。证书是认证机构对公钥及其持有者的信息加上数字签名的产物，对于一些相似的身份信息，计算机可以进行区别，但人类往往很容易认错，而这就可以被用来进行攻击。比如，假设用户信息中名字的部分是：</p>
+<ul>
+<li>Name = Bob  (首字母大写)</li>
+</ul>
+<p>而攻击者用另一个类似的用户信息注册了另一个不同的公钥：</p>
+<ul>
+<li>Name = BOB (所有字母大写)</li>
+</ul>
+<p>随后，攻击者伪装成Bob，将 Name = BOB 的公钥发送给通信对象Alice，Alice看到证书中的用户信息，很可能会将BOB误认为是自己要发送消息的对象Bob。</p>
+<p>要防止这种攻击，认证机构必须确认证书中所包含的信息是否真的是其持有者的个人信息，当本人身份确认失败时则不向其颁发证书。</p>
+<p>攻击者也可以窃取认证机构的私钥，不过认证机构对私钥的保护是非常严密的，所以一般比较难窃取。如果认证机构的私钥泄露了，认证机构就需要将私钥泄露一事通过 CRL 通知用户。CRL(Certificate Revocation List)为证书作废清单，是认证机构宣布作废的证书一览表，具体来说，是一张已作废的证书序列号的清单，并由认证机构加上了数字签名。</p>
+<p>利用钻上面提到的 CRL 的空子也可以进行攻击。因为从公钥失效到发送者收到 CRL 需要经过一段时间，攻击者就可以利用这段时间差来发动攻击。</p>
+<blockquote>
+<h3 id="关于证书的-Q-amp-A"><a href="#关于证书的-Q-amp-A" class="headerlink" title="关于证书的 Q&amp;A"></a>关于证书的 Q&amp;A</h3></blockquote>
+<ul>
+<li><strong>为什么需要证书</strong><br>如果从认证机构获取公钥，就可以降低遭到中间人攻击的风险。因为带有证书的公钥是经过认证机构进行数字签名的，事实上无法被篡改。</li>
+</ul>
+<p>其实，如果能够取得可信的公钥，比如通信双方在同一个办公室，很容易取得可信的公钥，这种情况下则不需要认证机构。否则，认证机构和证书的存在就有意义了。当持有可信的认证机构公钥，并相信认证机构所进行的身份确认的情况下，则可以信任该认证机构颁发的证书以及通过该途径取得的公钥。</p>
+<ul>
+<li><strong>通过自己的方法进行认证是不是更安全</strong><br>有些人对使用公开的技术总觉得不放心，使用公开的技术等于为攻击者提供了用于攻击的信息，相比之下，还是使用公司自己开发的保密的认证方法更安全吧？</li>
+</ul>
+<p>其实这是错误的。自己开发保密的方法是犯了典型的<strong>隐蔽式安全</strong>(security by obscurity)错误。私下开发安全相关的技术其实是危险的，仅靠一家公司的力量无法开发出足以抵御攻击的安全技术。这也是为什么 AES 和 RSA 算法要采用公开竞赛的方式，让全世界的安全专家一起来验证这些技术的安全性。</p>
+<ul>
+<li><strong>为什么要相信认证机构</strong></li>
+</ul>
+<p>其实，这个问题关系到“信任是如何产生的”这一本质性问题。为什么我们要把钱存进银行呢？认证机构是否让人感到可信，和银行是一样的。</p>
+<p>也有不依赖于认证机构的，PGP 软件就是。PGP 是通过<strong>信任网</strong>的方法来建立每个人之间的信任关系的。下一篇文章再具体讲 PGP。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本篇文章总结了四部分内容：单向散列函数、消息认证码、数字签名和证书。数字签名的安全性最高，既能确保完整性，也能进行认证和防止否认。另外，数字签名也是将单向散列函数和公钥密码技术相结合在了一起。<a href="http://keeganlee.me/post/reading/20160629">前一篇</a>文章所讲的混合密码系统也是结合了多种技术。其实，实用性的安全产品，都是多种密码技术组合在一起实用的。例如，PGP、SSL\TLS等。下一篇就会讲如何将多种密码技术组合在一起。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/reading/20160705/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/reading/20160629/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/reading/20160629/" class="post-title-link" itemprop="url">读《图解密码技术》(一):密码</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-06-29 10:50:00" itemprop="dateCreated datePublished" datetime="2016-06-29T10:50:00+08:00">2016-06-29</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 12:15:18" itemprop="dateModified" datetime="2019-07-02T12:15:18+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/reading/" itemprop="url" rel="index"><span itemprop="name">reading</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/reading/20160629"><strong>http://keeganlee.me/post/reading/20160629</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-06-29</p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">读《图解密码技术》(一):密码</a><br><a href="http://keeganlee.me/post/reading/20160705">读《图解密码技术》(二):认证</a><br><a href="http://keeganlee.me/post/reading/20160722">读《图解密码技术》(三):密钥、随机数和应用技术</a></p>
+<hr>
+<p>以前，对一些密码技术，虽然懂得怎么用，但对其原理却一直不甚了解，比如，用公钥加密后，为什么用私钥就可以解密？DES和AES加密时为什么需要一个初始化向量？想要了解这些密码技术的基本原理，而最近买书时看到了《图解密码技术》这本书，刚好可以解答到我的这些问题，于是，就买回来看了。</p>
+<p>而从现在开始，每读一本书，我都会尽量分享我的读书笔记，有两个目的：一是为自己做总结整理，加强记忆和理解；二是可以给还没看过该书的读者提供摘要和指引。好了，接下来进入正文。</p>
+<hr>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>《图解密码技术》的目标读者主要包括以下人群：</p>
+<ul>
+<li>对密码相关知识感兴趣的人</li>
+<li>希望理解公钥密码、数字签名等密码技术原理的人（我就属于此类）</li>
+<li>对信息安全感兴趣的人</li>
+</ul>
+<p>本书的结构分为三部分：</p>
+<ul>
+<li>密码：内容主要包括对密码技术整体性的讲解，以及历史密码、对称密码、公钥密码等保证机密性的密码技术。</li>
+<li>认证：内容包括单向散列函数、消息认证码、数字签名、证书等密码技术。</li>
+<li>密钥、随机数和应用技术：内容包括密钥、随机数相关的知识，以及PGP、SSL/TLS等应用技术。</li>
+</ul>
+<p>本篇文章是关于第一部分的笔记。</p>
+<h2 id="密码技术"><a href="#密码技术" class="headerlink" title="密码技术"></a>密码技术</h2><p>密码技术的目的很明确，就是为了解决信息安全问题。信息安全可分为四类特性：</p>
+<ul>
+<li><strong>机密性</strong>：为了防止信息被窃听，对应的密码技术有<strong>对称密码</strong>和 <strong>公钥密码</strong>。</li>
+<li><strong>完整性</strong>：为了防止信息被篡改，对应的密码技术有<strong>单向散列函数</strong>、 <strong>消息认证码</strong>、 <strong>数字签名</strong>。</li>
+<li><strong>认证</strong>：为了防止攻击者伪装成真正的发送者，对应的密码技术有<strong>消息认证码</strong>和 <strong>数字签名</strong>。</li>
+<li><strong>不可否认性</strong>：为了防止发送者事后否认自己没有做过，对应的密码技术为<strong>数字签名</strong>。</li>
+</ul>
+<p>信息安全和密码技术之间的关系可以用下图来表示：</p>
+<img src="/post/reading/20160629/09-38-10.jpg">
+
+<p>接下来就简单了解下这些密码技术：</p>
+<ul>
+<li><strong>对称密码</strong>：也称为共享密钥密码、私钥密码等，是指在加密和解密时使用同一密钥的方式。</li>
+<li><strong>公钥密码</strong>：也称为非对称密码，是指在加密和解密时使用不同密钥的方式。对称密码和公钥密码可以保证数据的机密性。</li>
+<li><strong>单向散列函数</strong>：MD5、SHA-1，就是单向散列函数的例子，使用单向散列函数可以计算出散列值，散列值也称为哈希值、密码校验和、指纹、消息摘要。使用单向散列函数可以保证数据的完整性。</li>
+<li><strong>消息认证码</strong>：消息认证码是一种确认完整性并进行认证的技术，英文名称为message authentication code，简称为MAC。</li>
+<li><strong>数字签名</strong>：数字签名相当于现实世界中的盖章、签字的功能，使用数字签名可以识别篡改和伪装，还可以防止否认。</li>
+<li><strong>伪随机数生成器</strong>：伪随机数生成器并不直接解决信息安全问题，但它承担了密钥生成的重要职责。而密钥的重要性就不用多说了。</li>
+</ul>
+<h2 id="一次性密码本"><a href="#一次性密码本" class="headerlink" title="一次性密码本"></a>一次性密码本</h2><p>曾经以为，理论上应该没有任何密码是无法破译的。只要通过暴力破解法，无论任何密文总有一天都能够被破译。如今才知道，特例是存在的。这个特例就是<strong>一次性密码本</strong>。即使用暴力破解法，就算破解到世界末日，也破译不了一次性密码本。</p>
+<p>一次性密码本其实非常简单，它的原理就是：<strong>将明文与一串随机的比特序列进行XOR运算，即异或运算</strong>。随机的比特序列也称为<strong>密钥</strong>，密钥的长度需与明文等长。而解密时，则将密文与密钥再进行一次XOR运算，就可以得到明文了。</p>
+<p>举例，现在要对midnight这个字符串进行加密，对其进行ASCII编码后得到一串比特序号：</p>
+<img src="/post/reading/20160629/11-09-16.jpg">
+
+<p>以上为64比特，然后，随机生成一个同样64比特长的密钥：</p>
+<img src="/post/reading/20160629/11-10-14.jpg">
+
+<p>接着，将明文和密钥进行XOR运算：</p>
+<img src="/post/reading/20160629/11-11-45.jpg">
+
+<p>这样，密文就产生了。而解密则是反向运算，即将密文与密钥进行XOR运算：</p>
+<img src="/post/reading/20160629/11-13-39.jpg">
+
+<p>一次性密码本，就是这么简单。那么，为什么它不可破译呢？用暴力破解，尝试所有可能的密钥组合，总能得到midnight啊。问题就在于，即使解密出了midnight这个字符串，也无法判断它是否是正确的明文。因为，所有64比特的排列组合都会出现，那么，解密出来的，除了midnight，还会有onenight、lastnight，以及aaaaaaaa、abcdefgh、ZZZZZZZZ等各种字符串，根本无法判断哪个才是正确的明文。</p>
+<p>虽然一次性密码本无法被破译，但它并不实用。最大的缺点就在于每一次通信都需要使用不同的密钥，所以密钥就无法重用了，“一次性”也正是由此而来。而且，每次密钥的生成都必须是无重现性的真正随机数，而不是伪随机数。其他的，密钥的配送、保存、同步也都是比较麻烦。所以，能够使用一次性密码本的，只有机密性重于一切，且可以花费大量财力和人力来生成并配送密钥的场合。据说，大国之间的热线就用了一次性密码本，密钥应该是通过特工直接送到对方手上的。</p>
+<h2 id="对称密码"><a href="#对称密码" class="headerlink" title="对称密码"></a>对称密码</h2><p>对称密码使用相同的密钥进行加密和解密，作为标准的对称密码主要有<strong>DES</strong>、 <strong>三重DES</strong>和 <strong>AES</strong>，它们都属于<strong>分组密码</strong>，即以分组为单位进行处理的密码算法。DES和三重DES的分组长度都是64比特，而AES的分组长度可以为128比特、192比特和256比特中的一种。那么，如果要加密的明文比较长，就需要对密码算法进行迭代，而迭代的方法就称为分组密码的<strong>模式</strong>。具体有哪些模式，后面再说。</p>
+<blockquote>
+<h3 id="DES"><a href="#DES" class="headerlink" title="DES"></a>DES</h3></blockquote>
+<p>DES(Data Encryption Standard)是一种将64比特的明文加密成64比特的密文的对称密码算法，它的密钥长度是56比特，即7个字节。DES的结构采用的是<strong>Feistel网络</strong>。Feistel网络中，加密的各个步骤称为<strong>轮</strong>(round)，整个加密过程就是进行若干次轮的循环。下图是Feistel网络中一轮的计算流程。DES是一种16轮循环的Feistel网络。</p>
+<img src="/post/reading/20160629/21-44-33.jpg">
+
+<p>一轮的具体计算步骤如下：</p>
+<ol>
+<li>将输入的数据等分为左右两部分；</li>
+<li>将输入的右侧直接发送到输出的右侧；</li>
+<li>将输入的右侧发送到轮函数；</li>
+<li>轮函数根据右侧数据和子密钥，计算出一串看上去是随机的比特序列；</li>
+<li>将上一步得到的比特序列与左侧数据进行XOR运算，并将结果作为加密后的左侧。</li>
+</ol>
+<p>其中，<strong>子密钥</strong>指的是本轮加密使用的密钥。每一轮的子密钥都是不同的。<strong>轮函数</strong>的作用则是根据“右侧”和子密钥生成对“左侧”进行加密的比特序列，它是密码系统的核心。</p>
+<p>但是，这样一来“右侧”根据没有被加密，因此需要用不同子密钥对一轮的处理重复若干次，并在没两轮之间将左侧和右侧的数据对调。下图展示了一个3轮的Feistel网络：</p>
+<img src="/post/reading/20160629/22-01-06.jpg">
+
+<p>那么，Feistel如何解密呢？很简单，只要按照相同的顺序来使用子密钥就可以完成解密了。即将上图中的子密钥1换成了子密钥3，而子密钥3则换成子密钥1，输入的为密文，输出的则为明文了。</p>
+<p>无论是任何轮数、任何轮函数，Feistel网络都可以用相同的结构实现加密和解密，且加密的结果必定能够正确解密。因为Feistel网络具有如此方便的特性，因此，被许多分组密码算法使用，包括5个AES最终候选算法中的其中3个算法：MARS、RC6、Twofish。</p>
+<blockquote>
+<h3 id="三重DES"><a href="#三重DES" class="headerlink" title="三重DES"></a>三重DES</h3></blockquote>
+<p>现在DES已经可以在短时间内被暴力破解，因此，其强度大不如前了。为了增强DES的强度，因此出现了三重DES(triple-DES)，将DES重复3次所得到的一种密码算法，通常缩写为3DES，其机制如下图所示：</p>
+<img src="/post/reading/20160629/22-28-53.jpg">
+
+<p>明文经过三次DES处理才能变成最后的密文，而由于DES的密钥长度为56比特，因此三重DES的密钥长度则为56<em>3=128比特。另外，从图中也可以发现，三重DES并不是进行3次DES加密，而是加密-&gt;*</em>解密**-&gt;加密的过程。这是为了向下兼容，即使用DES加密的密文，也可以通过三重DES进行解密。</p>
+<p>三重DES的解密过程和加密相反，是以密钥3、密钥2、密钥1的顺序执行解密-&gt;加密-&gt;解密的操作。即将上图从明文到密文的箭头反过来就是解密的流程了。</p>
+<blockquote>
+<h3 id="AES"><a href="#AES" class="headerlink" title="AES"></a>AES</h3></blockquote>
+<p>AES(Advanced Encryption Standard)是取代其前任标准(DES)而成为新标准的一种对称密码算法。AES最终候选算法名单中，总共有5种算法，分为为：MARS、RC6、Rijndael、Serpent、Twofish。但最终被选定为AES的是<strong>Rijndael</strong>算法。</p>
+<p>Rijndael使用的并不是Feistel网络，而是<strong>SPN结构</strong>。Rijndael加密中的一轮如下图所示，其分组为128比特，即16字节，加密过程经过4个步骤：SubBytes、ShiftRows、MixColumns、AddRoundKey。</p>
+<img src="/post/reading/20160629/22-48-28.jpg">
+
+<p><strong>SubBytes</strong>就是根据一张替换表(S-Box)，将输入中每个字节的值替换成另一个字节的值。<strong>ShiftRows</strong>即将SubBytes的输出以字节为单位进行打乱出路，当然，这种打乱处理也是有规律的。<strong>MixColumns</strong>即对一个4字节的值进行比特运算，将其变成另外一个4字节的值。<strong>AddRoundKey</strong>就是将MixColumns的输出与轮密钥进行XOR处理。至此，一轮就结束了。实际上，在Rijndael中需要重复进行10~14轮计算。</p>
+<p>而下图则是一轮解密的流程图，基本也是反向操作，加密时的SubBytes、ShiftRows、MixColumns，解密时分别为反向运算的InvSubBytes、InvShiftRows、InvMixColumns。这是因为Rijndael不像Feistel网络一样能够用同一种结构实现加密和解密。</p>
+<img src="/post/reading/20160629/23-30-28.jpg">
+
+<p>对于三种对称密码，DES因为已经很容易被暴力破解，因此不建议再使用；三重DES目前还被银行等机构使用，但其处理速度不高，而且在安全性方面也逐渐显现出了一些问题；AES作为最新标准，安全、快速，而且可以在各种平台上工作，可以算是目前最佳的选择。另外，其他AES最终候选算法也可以作为AES的备份。和Rijndael一样，这些密码算法也都经过了严格的测试，且没有发现任何弱点。</p>
+<h2 id="分组模式"><a href="#分组模式" class="headerlink" title="分组模式"></a>分组模式</h2><p>DES、AES都属于分组密码，它们只能加密固定长度的明文。如果需要加密任意长度的明文，就需要对分组密码进行迭代，而迭代方法就称为分组密码的“模式”。分组密码有很多种模式，主要有：ECB、CBC、CFB、OFB、CTR。如果模式选择不恰当，就无法保证机密性。</p>
+<blockquote>
+<h3 id="ECB模式"><a href="#ECB模式" class="headerlink" title="ECB模式"></a>ECB模式</h3></blockquote>
+<p><strong>ECB</strong>全称为Electronic CodeBook，<strong>电子密码本模式</strong>，是最简单的一种模式，它直接将明文分割成多个分组并逐个加密，如下图，其中，加密和解密是指用分组密码算法加密和解密，其中也省略了密钥的描述。</p>
+<img src="/post/reading/20160629/21-42-05.jpg">
+
+<p>当最后一个明文分组的内容小于分组长度时，需要用一些特定的数据进行填充。</p>
+<p>这种模式的优点就是简单、快速，加密和解密都支持并行计算。而缺点也比较明显，因为每个明文分组都各自独立地进行加密和解密，如果明文中存在多个相同的明文分组，则这些分组最终会被转换为相同的密文分组。这样一来，只要观察一下密文，就可以知道明文中存在怎样的重复组合，并可以以此为线索来破译密码。另外，攻击者可以通过改变密文分组的顺序，或删除密文分组，或替换掉密文分组，就可以达到对明文操纵的目的，而无需破译密码。</p>
+<blockquote>
+<h3 id="CBC模式"><a href="#CBC模式" class="headerlink" title="CBC模式"></a>CBC模式</h3></blockquote>
+<p><strong>CBC</strong>全称为Cipher Block Channing，<strong>密文分组链接模式</strong>，是将前一个密文分组与当前明文分组的内容混合起来进行加密的。在CBC模式中，首先将明文分组与前一个密文分组进行XOR运算，然后再进行加密。加密第一个明文分组时，由于不存在“前一个密文分组”，因此需要事先准备一个长度为一个分组的比特序列来代替“前一个密文分组”，这个比特序列称为<strong>初始化向量</strong>(initialization vector)，通常缩写为IV。一般来说，每次加密时都会随机产生一个不同的比特序列来作为初始化向量。CBC模式的加解密流程如下图：</p>
+<img src="/post/reading/20160629/21-43-28.jpg">
+
+<p>CBC模式避免了ECB模式的弱点，明文的重复排列不会反映在密文中。这是推荐使用的一种模式。</p>
+<blockquote>
+<h3 id="CFB模式"><a href="#CFB模式" class="headerlink" title="CFB模式"></a>CFB模式</h3></blockquote>
+<p><strong>CFB</strong>全称为Cipher FeedBack，<strong>密文反馈模式</strong>，前一个密文分组会被送回到密码算法的输入端，如下图：</p>
+<img src="/post/reading/20160629/13-13-14.jpg">
+
+<p>CFB模式中，由密码算法所生成的比特序列称为<strong>密钥流</strong>(key stream)。需要注意的是，CFB模式解密时，密码算法执行的是加密操作，因为密钥流是通过加密操作来生成的。</p>
+<p>CFB模式无法抵御重放攻击。因此，一般不建议使用了，推荐用CTR模式代替。</p>
+<blockquote>
+<h3 id="OFB模式"><a href="#OFB模式" class="headerlink" title="OFB模式"></a>OFB模式</h3></blockquote>
+<p><strong>OFB</strong>全称为Output-FeedBack，<strong>输出反馈模式</strong>，密码算法的输出会反馈到密码算法的输入中，如下图：</p>
+<img src="/post/reading/20160629/13-24-29.jpg">
+
+<p>OFB模式有个缺陷，如果对密钥流的一个分组进行加密后其结果碰巧和加密前是相同的，那么这一分组之后的密钥流就会变成同一值的不断反复。因此，一般不建议使用了，推荐用CTR模式代替。</p>
+<blockquote>
+<h3 id="CTR模式"><a href="#CTR模式" class="headerlink" title="CTR模式"></a>CTR模式</h3></blockquote>
+<p><strong>CTR</strong>全称为CountTeR，<strong>计数器模式</strong>，是一种通过逐次累加的计数器进行加密来生成密钥流的流密码，如下图：</p>
+<img src="/post/reading/20160629/13-28-45.jpg">
+
+<p>CTR模式中，每个分组对应一个逐次累加的计数器，并通过对计数器进行加密来生成密钥流。计数器分为两部分，前部分为<strong>nonce</strong>，这和初始化向量一样，也是一个随机比特序列；后部分为分组序号。</p>
+<p>从图中还可以知道，CTR模式对每个分组的处理是相对独立的，这就意味着加密和解密都能够实现并行计算。</p>
+<p>CTR模式在错误和机密性方面都具有不错的性质，也没有上面提到的CFB和OFB的弱点，因此，现在都推荐使用CTR了。</p>
+<blockquote>
+<h3 id="关于初始化向量问题"><a href="#关于初始化向量问题" class="headerlink" title="关于初始化向量问题"></a>关于初始化向量问题</h3></blockquote>
+<p>前面讲到的几种模式中，CBC、CFB、OFB都用到了初始化向量IV，而CTR则使用了计数器，计数器的<strong>nonce</strong>部分和初始化向量IV是一样的，只是叫法不同而已。关于初始化向量IV，是一个随机比特序列，为了提高安全性，建议每次加密时都使用不同的值，这样的话，即使有两条相同的明文信息，加密后的密文也是不同的。但是，每一次发送端使用IV对明文加密后，接收端也需要使用同样的IV才能够解密，那么，发送端和接收端如何同步这个IV呢？关于这个问题，书中没有提到。于是，只好自己寻找解决方案。</p>
+<p>最简单的方式可能就是，发送端每次发送信息时，将IV和加密后的密文一起发送给接收端。接收端收到信息后，就可以将收到的IV用于解密收到的密文了。而这种方式最明显的缺陷就是IV直接暴露给攻击者了，攻击者就可以利用IV发起攻击，比如使用CBC模式时，攻击者将IV进行比特反转，就可达到操纵明文的目的。攻击者将IV中的任意比特进行反转(1变0，0变1)，则解密后的明文分组中相应的比特也会被反转。</p>
+<p>为了避免将IV直接暴露，那将IV进行加密后再发送呢？因为IV的长度和一个分组的长度是等长的，这就不需要考虑分组迭代的问题，即不需要考虑使用什么模式了，直接用密码算法进行加密即可。加密后，攻击者再想通过比特反转IV来操纵明文就困难多了。</p>
+<h2 id="密钥配送问题"><a href="#密钥配送问题" class="headerlink" title="密钥配送问题"></a>密钥配送问题</h2><p>对称密码中，由于加密和解密都使用同一个密钥，因此就必须向接收者配送密钥，这个问题就称为密钥配送问题。而解决密钥配送问题的方法有几种：</p>
+<ul>
+<li>通过事先共享密钥来解决</li>
+<li>通过密钥分配中心来解决</li>
+<li>通过Diffie-Hellman密钥交换来解决</li>
+<li>通过公钥密码来解决</li>
+</ul>
+<blockquote>
+<h3 id="通过事先共享密钥来解决"><a href="#通过事先共享密钥来解决" class="headerlink" title="通过事先共享密钥来解决"></a>通过事先共享密钥来解决</h3></blockquote>
+<p>事先用安全的方式将密钥交给对方，就称为密钥的事先共享。这是密钥配送问题最简单的一种解决方法，但有其局限性。公司内部开发的应用产品，客户端和服务端都是自己开发的，事先共享密钥就很简单，服务端人员生成密钥后直接给到客户端的开发人员就可以了。但这种情况又会带来其他问题，比如密钥在客户端如何才能安全的保存。一般，密钥都是通过硬编码或存为文件的形式保存在客户端的，那么客户端应用一旦被反编译，就很容易窃取到密钥了。</p>
+<p>而如果是开放性平台，像微博开放平台、微信开放平台等，要做到事先共享密钥就很有难度了。开发者在开放平台注册的应用，其密钥都是通过平台的管理端给到开发者的，也就是通过了网络，那就存在被窃听的风险了。</p>
+<blockquote>
+<h3 id="通过密钥分配中心来解决"><a href="#通过密钥分配中心来解决" class="headerlink" title="通过密钥分配中心来解决"></a>通过密钥分配中心来解决</h3></blockquote>
+<p>当使用密钥分配中心时，需要通信的双方可以事先在密钥分配中心注册，然后密钥分配中心给每个注册方发送一个密钥，不同注册方的密钥是不同的。那么，当某个发送端需要向某个接收端发送消息时，通信流程如下：</p>
+<ol>
+<li>发送端向密钥分配中心发起希望与接收端通信的请求；</li>
+<li>密钥分配中心随机生成一个会话密钥，该会话密钥是供发送端和接收端在本次通信中使用的临时密钥，我们简称为<strong>TempKey</strong>；</li>
+<li>密钥分配中心查询出发送端的密钥，即发送端注册时分配的密钥，我们简称为<strong>SenderKey</strong>；</li>
+<li>密钥分配中心使用<strong>SenderKey</strong>对<strong>TempKey</strong>进行加密，加密后的密文称为<strong>CipherTempKeyToSender</strong>，并发送给发送端；</li>
+<li>密钥分配中心用同样的方式查询出接收端的密钥，简称为<strong>ReceiverKey</strong>；</li>
+<li>密钥分配中心再用<strong>ReceiverKey</strong>对<strong>TempKey</strong>进行加密，加密后的密文称为<strong>CipherTempKeyToReceiver</strong>，并发送给接收端；</li>
+<li>发送端对来自密钥分配中心的<strong>CipherTempKeyToSender</strong>，用自己的密钥即<strong>SenderKey</strong>进行解密，得到<strong>TempKey</strong>；</li>
+<li>发送端将要发送给接收端的消息用<strong>TempKey</strong>进行加密，然后发送给接收端；</li>
+<li>接收端对来自密钥分配中心的<strong>CipherTempKeyToReceiver</strong>，用自己的密钥即<strong>ReceiverKey</strong>进行解密，也得到<strong>TempKey</strong>；</li>
+<li>接收端收到发送端的密文后，用<strong>TempKey</strong>对密文进行解密；</li>
+<li>通信完毕，发送端和接收端都删除<strong>TempKey</strong>。</li>
+</ol>
+<p>这个通信过程还挺复杂的，总的来说就是，发送端和接收端通信时是使用密钥分配中心分配的临时密钥进行加密和解密的。这种方案，密钥分配中心的安全性就显得非常重要了。如果攻击者入侵了密钥分配中心，盗取到所有密钥，则后果很严重。</p>
+<blockquote>
+<h3 id="通过Diffie-Hellman密钥交换来解决"><a href="#通过Diffie-Hellman密钥交换来解决" class="headerlink" title="通过Diffie-Hellman密钥交换来解决"></a>通过Diffie-Hellman密钥交换来解决</h3></blockquote>
+<p>在Diffie-Hellman密钥交换中，进行加密通信的双方需要交换一些信息，而这些信息即便被窃听者窃听到也没有问题。根据所交换的信息，双方可以各自生成相同的密钥，而窃听者却无法生成相同的密钥。</p>
+<p>虽然这种方法叫“密钥交换”，但实际上双方并没有真正交换密钥，而是通过计算生成出了一个相同的共享密钥。因此，这种方法也称为<strong>Diffie-Hellman密钥协商</strong>。支撑Diffie-Hellman密钥交换算法的是有限群的离散对数问题的复杂度。</p>
+<blockquote>
+<h3 id="通过公钥密码来解决"><a href="#通过公钥密码来解决" class="headerlink" title="通过公钥密码来解决"></a>通过公钥密码来解决</h3></blockquote>
+<p>公钥密码类似于投币寄物柜。首先，将物品放入寄物柜中。然后，投入硬币并拔出钥匙，就可以将寄物柜关闭了。关闭后的寄物柜，没有钥匙是无法打开的。只要有硬币，任何人都可以关闭寄物柜，但寄物柜一旦被关闭，再怎么投币也无法打开。要打开寄物柜只能使用钥匙，而不是硬币。因此可以说，硬币是<strong>关闭寄物柜的密钥</strong>，而钥匙是<strong>打开寄物柜的密钥</strong>。</p>
+<p>在公钥密码中，加密和解密的密钥是不同的。只要拥有加密密钥，任何人都可以进行加密，但没有解密密钥是无法解密的。接收者事先将加密密钥发送给发送者，这个加密密钥即便被窃听者获取也没有问题。发送者使用加密密钥对通信内容进行加密并发送给接收者，而只有拥有解密密钥的人（即接收者本人）才能够进行解密。这样一来，就用不着将解密密钥配送给接收者了，也就是说，不存在密钥配送问题了。</p>
+<h2 id="公钥密码"><a href="#公钥密码" class="headerlink" title="公钥密码"></a>公钥密码</h2><p>公钥密码中，密钥分为加密密钥和解密密钥两种。加密密钥一般是公开的，因此也被称为<strong>公钥</strong>(public key)。解密密钥则绝对不能公开，因此也称为<strong>私钥</strong>(private key)。公钥和私钥是一一对应的，一对公钥和私钥统称为<strong>密钥对</strong>(key pair)。由公钥加密的密文，只有配对的私钥才能够解密。</p>
+<p>使用公钥密码通信时，流程如下：</p>
+<img src="/post/reading/20160629/14-53-35.jpg">
+
+<p>那么，密钥对是如何生成的呢？为什么用公钥加密的密文能用私钥解密呢？要理解公钥密码的原理，需要先理解一些数学上的问题，mod运算是基础。</p>
+<p>公钥密码是基于数学上困难的问题来保证机密性的，比如利用质因数分解的困难度、mod运算下求离散对数的困难度、mod运算下求平方根的困难度，等等。现在使用最广泛的公钥密码算法RSA就是利用了大整数质因数分解问题的困难度。</p>
+<blockquote>
+<h3 id="数学原理"><a href="#数学原理" class="headerlink" title="数学原理"></a>数学原理</h3></blockquote>
+<p>要理解RSA算法的原理，就要先理解一些mod运算方面的知识。mod运算，其实就是“除法求余数的运算”，比如：</p>
+<ul>
+<li>27 mod 12 = 3  表示27除以12的余数等于3</li>
+</ul>
+<p>加法和乘法都非常简单，比如：</p>
+<ul>
+<li>(6 + 7) mod 12 = 13 mod 12 = 1</li>
+<li>7 * 7 mod 12 = 49 mod 12 = 1 </li>
+</ul>
+<p>减法和除法则可以看成加法和乘法的逆运算，比如：</p>
+<ul>
+<li>(7 + N) mod 12 = 0  7加上几除以12的余数为0？</li>
+<li>7 * M mode 12 = 1  7乘以几除以12的余数为1？</li>
+</ul>
+<p>这里，N 和 M 都要求大于等于 0 小于 12。N 还是很容易算出来的，答案是5。而 M 一下子就比较难算出来，可以用暴力破解把0~11都代入 M 计算一下结果，最终可以得到 M = 7。接着，看另一个算式：</p>
+<ul>
+<li>N * M mod 12 = 1</li>
+</ul>
+<p>如果没有 mod 12，那 N 和 M 就是互为倒数。此处的话，我们还要加上“在以12为模的世界中”这个条件。在一般的算术中，互为倒数可以写成：</p>
+<ul>
+<li>N * 1/N = 1</li>
+</ul>
+<p>那么，在以12为模的世界中，在0到11的数字中，是不是每一个数都存在相应的倒数呢？实际上，mod运算中“某个数是否存在倒数”这个问题，与RSA中“一个公钥是否存在相对应的私钥”这个问题是直接相关的。下表列出了结果：</p>
+<img src="/post/reading/20160629/21-54-45.jpg">
+
+<p>存在倒数的只有1、5、7、11，这些数有怎样的性质呢？其实，在 mod 12 的世界中，存在倒数的数，它们和12之间的最大公约数都是1，也可以说是和12互质的数。那么，如果是在 mod 14 的世界中，存在倒数的则有1、3、5、9、11、13。</p>
+<p>接着，看看乘方的mod运算又是怎样的。比如，现在要求 7^4 mod 12，最笨的方法就是将7^4直接算出结果，然后除以12求余。而快速的计算方法则是在计算的中间步骤求mod，如下：</p>
+<ul>
+<li>7^4 mod 12 = 7<em>7</em>7<em>7 mod 12 = ((7*7 mod 12)</em>(7<em>7 mod 12)) mod 12 = ((49 mod 12)</em>(49 mod 12)) mod 12 = 1*1 mod 12 = 1</li>
+</ul>
+<p>在中间步骤求mod，可以避免计算大整数的乘积。这种在计算过程中求mod来计算乘方的方法，也是RSA的加密和解密算法中所使用的方法。</p>
+<p>接着，再看看对数，即乘方的逆运算。mod运算中的对数称为离散对数，比如：</p>
+<ul>
+<li>7^N mod 13 = 8</li>
+</ul>
+<p>这里N应该等于几呢？像下面这样依次尝试一遍，可以得到 N = 9：</p>
+<img src="/post/reading/20160629/22-17-21.jpg">
+
+<p>当数字很大时，求离散对数就会非常困难，而且非常耗时。到现在也还没有发现能够快速求出离散对数的算法。也因此，有很多公钥算法都运用了离散对数。</p>
+<blockquote>
+<h3 id="RSA"><a href="#RSA" class="headerlink" title="RSA"></a>RSA</h3></blockquote>
+<p>RSA是现在使用最广泛的公钥密码算法，但RSA不只用于公钥密码，也用于数字签名。关于数字签名下一篇文章再讲。</p>
+<p>在RSA中，明文、密钥和密文都是数字。RSA的加密过程可以用下列公式来表达，其中，Plaintext 指明文，Cipher 指密文：</p>
+<ul>
+<li><strong>Cipher = Plaintext^E mod N （RSA加密）</strong></li>
+</ul>
+<p>RSA的密文是对明文的数字的 E 次方求 mod N 的结果。换句话说，就是将明文和自己做 E 次乘法，然后将其结果除以 N 求余数，这个余数就是密文。因此，只要知道 E 和 N 这两个数，任何人都可以完成加密的运算。所以说，E 和 N 是RSA加密的密钥，也就是说，E 和 N 的组合就是密钥。另外，E 是加密(Encryption)的首字母，N 是数字(Number)的首字母。</p>
+<p>RSA的解密和加密一样简单，可以用下面的公式来表达，其中，Plaintext 指明文，Cipher 指密文：</p>
+<ul>
+<li><strong>Plaintext = Cipher^D mod N （RSA解密）</strong></li>
+</ul>
+<p>对表示密文的数字的 D 次方求 mod N 就可以得到明文。换句话说，将密文和自己做 D 次乘法，再对其结果除以 N 求余数，就可以得到明文。这里的数字 N 和加密时的 N 是相同的。D 和 N 组合起来就是RSA的解密密钥，因此，D 和 N 的组合就是私钥。另外，D 是解密(Decryption)的首字母。</p>
+<p>整理一下，RSA的加密和解密如下图：</p>
+<img src="/post/reading/20160629/17-04-34.jpg">
+
+<p>由于 E 和 N 是公钥，D 和 N 是私钥，因此求 E、D 和 N 这三个数就是生成密钥对。密钥对的生成步骤如下：</p>
+<ol>
+<li>求N：N = p * q<br>其中，p、q 是需要事先准备的两个很大的质数。p 和 q 太小的话，密码会变得容易破译，但太大的话计算时间又会变得很长。一般来说，p 和 q 的长度都是512比特以上，N 的长度为1024以上。</li>
+<li>求L：L = lcm(p-1, q-1)<br>L 是仅在生成密钥对的过程中使用的数，它是 p-1 和 q-1 的最小公倍数。</li>
+<li>求E：1 &lt; E &lt; L &amp;&amp; gcd(E, L) = 1<br>E 是一个比 1 大、比 L 小的数。此外，E 和 L 的最大公约数必须为 1，即 E 和 L 互质，这样可以保证一定存在解密时需要使用的数 D。</li>
+<li>求D：1 &lt; D &lt; L &amp;&amp; E * D mod L = 1<br>D 也是是一个比 1 大、比 L 小的数，而且是由数 E 计算得到的。从 E * D mod L = 1 这条公式得知，要保证存在满足条件的 D，就需要保证 E 和 L 的最大公约数为 1。简单来说，E * D mod L = 1 保证了对密文进行解密时能够得到原来的明文。</li>
+</ol>
+<blockquote>
+<h3 id="公钥密码的问题"><a href="#公钥密码的问题" class="headerlink" title="公钥密码的问题"></a>公钥密码的问题</h3></blockquote>
+<p>公钥密码虽然可以避免密钥配送问题，但也存在两个很大的问题：</p>
+<ol>
+<li>公钥密码的处理速度远远低于对称密码；</li>
+<li>公钥密码难以抵御中间人攻击。</li>
+</ol>
+<p>如果用公钥密码去处理很长的消息，那么，公钥密码速度慢的缺点就会显露无疑。所以，一般，不会用公钥密码直接处理消息。而是和对称密码相结合，采用混合密码系统。关于混合密码系统，下面再说。</p>
+<p>对于第二个问题，是因为公钥是公开的，任何人都可以获取，也包括攻击者。所谓中间人攻击，就是攻击者混入发送者和接收者中间，对发送者伪装成接收者，对接收者伪装成发送者的攻击方式。如下图所示：</p>
+<img src="/post/reading/20160629/09-55-25.jpg">
+
+<p>在这种情况下，就没有机密性可言了，因为发送者用来加密的其实是攻击者的公钥，攻击者拦截到信息后就可以用自己的私钥解密出来，再用之前拦截到的接收者的公钥对伪造的消息加密后发给接收者。</p>
+<p>仅靠公钥密码本身，是无法防御中间人攻击的。要防御中间人攻击，还需要一种手段来确认所收到的公钥是否真的属于接收者，这种手段称为认证。针对上面的情况，我们可以使用公钥的证书。关于认证和证书，下一篇文章再讲。</p>
+<h2 id="混合密码系统"><a href="#混合密码系统" class="headerlink" title="混合密码系统"></a>混合密码系统</h2><p>混合密码系统是将对称密码和公钥密码的优势相结合的方法，加密消息使用快速的对称密码，而用公钥密码来加密对称密码的密钥。因为对称密码的密钥一般比消息本身要短，因此公钥密码速度慢的问题就可以忽略了。另外，对称密码使用的密钥是临时生成的会话密钥。混合密码系统的加密过程如下图：</p>
+<img src="/post/reading/20160629/10-18-43.jpg">
+
+<p>从图中就可得知：</p>
+<ol>
+<li>会话密钥是随机生成的，因此，每次加密的会话密钥都会不同；</li>
+<li>混合密码系统的明文是用对称密码加密的，而加密使用的密钥就是上一步生成的会话密钥；</li>
+<li>用公钥密码对会话密钥进行加密，形成了加密后的会话密钥；</li>
+<li>将加密后的会话密钥和加密后的消息组合在一起，就是混合密码系统的密文。</li>
+</ol>
+<p>而解密过程则如下图所示：</p>
+<img src="/post/reading/20160629/10-25-49.jpg">
+
+<p>从图中也可得知：</p>
+<ol>
+<li>将已加密的会话密钥和消息进行分离；</li>
+<li>用公钥密码对已加密的会话密钥进行解密，得到会话密钥明文；</li>
+<li>用对称密码对已加密的消息进行解密，而解密密钥就是上一步解密出来的会话密钥。</li>
+</ol>
+<p>那么，怎样才算是一个高强度的混合密码系统呢？混合密码系统运用了伪随机数生成器、对称密码和公钥密码，因此其中每一种技术要素的强度都必须很高，而且，这些技术要素之间的强度平衡也非常重要。</p>
+<p>如果伪随机数生成器的算法很差，生成的会话密钥就有可能被攻击者推测出来。会话密钥中哪怕只有部分比特被推测出来也是很危险的，因为会话密钥的密钥空间不大，很容易通过暴力破解来发动攻击。</p>
+<p>对称密码被用于加密消息，我们需要使用高强度的对称密码算法，并确保密钥具有足够的长度。此外，还要选择使用合适的分组密码模式。</p>
+<p>公钥密码被用于加密会话密钥，同样需要使用高强度的公钥密码算法，并确保密钥具有足够的长度。</p>
+<p>另外，公钥密码的强度应该要高于对称密码，因为对称密码的会话密钥被破译只会影响本次通信的内容，而公钥密码一旦被破译，从过去到未来的（用相同公钥加密的）所以通信内容就都能够被破译了。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本篇文章只是本书第一部分的读书笔记，虽然也有加入了一点自己的看法。第一部分的内容主要是关于保证机密性的密码技术。但信息安全还包括消息完整性、进行认证以及防止否认的技术，这些下面的文章再做总结。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/reading/20160629/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160621/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1825,727 +3024,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160329/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160329/" class="post-title-link" itemprop="url">App环境分离的实现:Android篇</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-03-29 10:00:00" itemprop="dateCreated datePublished" datetime="2016-03-29T10:00:00+08:00">2016-03-29</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:35" itemprop="dateModified" datetime="2019-07-02T11:18:35+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160329"><strong>http://keeganlee.me/post/architecture/20160329</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-03-29</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160329">App环境分离的实现:Android篇</a><br><a href="http://keeganlee.me/post/architecture/20160404">App环境分离的实现:iOS篇</a></p>
-<hr>
-<p>我在<a href="http://keeganlee.me/post/architecture/20160303">App架构经验总结</a>中有简单提到环境分离的实现方案，但没有深入讲实现细节。本系列则打算用两篇文章分别详细讲讲Android和iOS环境分离的具体实现，本篇则先讲Android的实现。</p>
-<h2 id="概念解析"><a href="#概念解析" class="headerlink" title="概念解析"></a>概念解析</h2><p>本文的实现方案是基于Gradle的，因此，有几个概念需要先了解清楚。</p>
-<blockquote>
-<h3 id="applicationId"><a href="#applicationId" class="headerlink" title="applicationId"></a>applicationId</h3></blockquote>
-<p>没有Gradle之前，我们都知道，包名是Android程序的唯一标识，通过在AndroidManifest.xml文件中定义package属性。同时，这个包名也是引用资源的路径名，即R资源文件的包名。</p>
-<p>引入Gradle之后，就多了一个applicationId的概念。官方解释是：applicationId是程序的唯一标识，而package则用来引用R类以及解析相关的activity/service注册操作。因此，可以设置多个不同的applicationId，对应多个不同版本的apk，而package则保持一致。新建的项目默认applicationId和package是一样的。</p>
-<blockquote>
-<h3 id="Product-Flavors"><a href="#Product-Flavors" class="headerlink" title="Product Flavors"></a>Product Flavors</h3></blockquote>
-<p>通过Product Flavors可以创建不同的产品渠道版本，网上流行的多渠道打包方案大部分都是通过添加多个渠道的Flavors来实现的。Flavors一般设置的属性如下图，当然，实际上不只是这些，例如manifestPlaceholders就不在此设置界面里。默认有defaultConfig这个Flavors。</p>
-<img src="/post/architecture/20160329/18-38-04.jpg">
-
-<blockquote>
-<h3 id="Build-Types"><a href="#Build-Types" class="headerlink" title="Build Types"></a>Build Types</h3></blockquote>
-<p>Build Types则是构建类型。默认提供debug和release两种类型，如下图所示。主要提供是否可调试、是否混淆等构建打包时的相关配置。</p>
-<img src="/post/architecture/20160329/16-00-40.jpg">
-
-<blockquote>
-<h3 id="Build-Variants"><a href="#Build-Variants" class="headerlink" title="Build Variants"></a>Build Variants</h3></blockquote>
-<p>Product Flavors和Build Types的组合形成了多个Build Variant，例如，如果有两个Product Flavors版本：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    free &#123; ... &#125;</span><br><span class="line">    enterprise &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>而Build Types也有两种类型：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">buildTypes &#123;</span><br><span class="line">    debug &#123; ... &#125;</span><br><span class="line">    release &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>那么，组合出来的Build Variant就有四个版本了：</p>
-<ul>
-<li>freeDebug</li>
-<li>freeRelease</li>
-<li>enterpriseDebug</li>
-<li>enterpriseRelease</li>
-</ul>
-<h2 id="环境分离实现"><a href="#环境分离实现" class="headerlink" title="环境分离实现"></a>环境分离实现</h2><p>相关概念都了解清楚了，那么，环境分离具体如何实现呢？其实，实现方案不止一个，这里，我提供两个方案，一个可以使用Product Flavors实现，一个可以使用Build Types来实现。</p>
-<blockquote>
-<h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3></blockquote>
-<p>Product Flavors用来定义产品渠道，假如我们有两个环境：测试环境和生产环境。那么，定义两个Flavors分别对应测试环境和生产环境，并且applicationId不同，可以如下定义：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    beta &#123; </span><br><span class="line">        applicationId <span class="string">'com.domain.productname.beta'</span></span><br><span class="line">    &#125;</span><br><span class="line">    production &#123;</span><br><span class="line">        applicationId <span class="string">'com.domain.productname'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这样，测试环境和生产环境实际上等于是已经分开的两个app了，已经可以在同一个设备里同时安装测试版本和生产版本了。但这样是不够的，两个app将会一模一样，很难区分。因此，我们也要修改两个环境版本的应用名称，同时还要使用不同的应用图标。怎么做呢？</p>
-<p>在app模块，src目录下，新建一个与main目录同级的beta目录，beta目录的结构如下图：</p>
-<img src="/post/architecture/20160329/16-17-55.jpg">
-<p>新建的beta目录对应于productFlavors的beta版本，beta版本目录下的图片资源ic_launcher.png对应于beta版本的应用图标，这要与main目录的ic_launcher.png保持一致的位置和名称，只是图片不同。而beta版本的strings.xml则只需要包含一个属性，如下：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">string</span> <span class="attr">name</span>=<span class="string">"app_name"</span>&gt;</span>appNameBeta<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>至此，当运行beta版的Build Variant时，则会看到beta版的应用图标和应用名称也与生产版的不同了。</p>
-<p>这里要说明一下原理。首先，productFlavors定义的每个渠道是会继承自defaultConfig的，就是说上面定义的beta和production都继承了defaultConfig。然后，productFlavors每个渠道里自定义的属性会覆盖defaultConfig相应的属性，beta和production定义了applicationId，则会覆盖了defaultConfig的applicationId。这里，因为production自定义的applicationId和defaultConfig的applicationId是一样的，所以其实也可以取消applicationId的自定义。</p>
-<p>而对于源代码部分，当运行beta版的Build Variant时，默认会引用main目录的资源文件，而beta目录下的资源会覆盖main目录相应位置的资源，例如上面beta目录下的mipmap目录的ic_launcher.png就会覆盖main目录下相应位置的ic_launcher.png；同样的，beta下的strings.xml里定义的app_name就会覆盖main目录下的strings.xml定义的app_name。</p>
-<p>但对于java类则不同，beta里定义的java类并不会覆盖main目录里相应的java类。事实上，两个目录的java类只能有一份，否则会出现类重复的错误。如果beta和production版本需要有同个页面不同的实现，例如有一个Activity需要不同的实现，那么，只能新建一个production版本目录，然后该Activity类在beta和production都有一份拷贝，代码实现可以不同，但main目录下则不能有该Activity类。</p>
-<blockquote>
-<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3></blockquote>
-<p>前面就已经说过，Build Types默认提供了debug和release两种类型，其实也可以分别对应于测试和生产环境。在Build Types的设置界面中，可以看到有个<strong>Application Id Suffix</strong>的设置选择，这个可以用来设置applicationId的后缀。这个后缀是相对于Flavors来说的，比如我们定义了一个如下的productFlavors：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    free &#123; </span><br><span class="line">        applicationId <span class="string">'com.domain.productname.free'</span></span><br><span class="line">    &#125;</span><br><span class="line">    enterprise &#123;</span><br><span class="line">        applicationId <span class="string">'com.domain.productname'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>而debug类型的<strong>Application Id Suffix</strong>设置为“.debug”，那么对应的freeDebug版本的applicationId就是’com.domain.productname.free.debug’，而enterpriseDebug版本的applicationId则是’com.domain.productname.debug’。</p>
-<p>对于本方案二来说，并不需要再定义额外的productFlavors，使用默认的即可。那么，debug类型的<strong>Application Id Suffix</strong>可设置为”.debug”，release类型则无需设置。</p>
-<p>接着，src目录下新建一个debug目录，和方案一的beta目录完全一样，只是目录名称不同。另外，如果两个版本需要有同个页面不同的实现，那么，也和方案一一样，需要新建个release目录，和production目录一样。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>如果只是从环境分离来说的话，我更倾向于方案二，因为系统默认就提供了debug和release两个版本，而对应的Build Variant也只有两个。如果采用方案一，那么将产生四个Build Variant，这显得有点多余。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160329/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160303/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160303/" class="post-title-link" itemprop="url">App架构经验总结</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-03-03 11:11:00" itemprop="dateCreated datePublished" datetime="2016-03-03T11:11:00+08:00">2016-03-03</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:39" itemprop="dateModified" datetime="2019-07-02T11:18:39+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原文链接：<a href="http://keeganlee.me/post/architecture/20160303"><strong>http://keeganlee.me/post/architecture/20160303</strong></a><br>版权声明：本文刊载在《程序员》杂志2016年3期，版权归《程序员》所有，未经许可不得转载</p>
-<hr>
-<p>架构因人而异，不同的架构师大多会有不同的看法；架构也因项目而异，不同的项目需求不同，相应的架构也会不同。然而，有些东西还是通用的，是所有架构师都需要考虑的，也是所有项目都会有的需求，比如API如何设计？架构如何分层？开发环境和生产环境如何分离？这几年，我负责研发过的App，有餐饮类的、社交类的、智能家居类的、电商类的、新闻媒体类的等等。当有了一定的经验之后，你总会有一些自己的心得体会。而以下内容就是根据我的这些经历提炼出来的关于以上几个问题方面的经验总结，内容不多，旨在抛砖引玉。</p>
-<h2 id="从API开始"><a href="#从API开始" class="headerlink" title="从API开始"></a>从API开始</h2><p>一个App，最核心的东西，其实就是数据，而数据的主要来源，就是API。我之前负责的项目，因为API的坑已经受过了不少苦，因此，之后对App项目的架构设计我都会先从API开始。</p>
-<blockquote>
-<h3 id="制定安全机制"><a href="#制定安全机制" class="headerlink" title="制定安全机制"></a>制定安全机制</h3></blockquote>
-<p>设计API第一个需要考虑的是API的安全机制。我负责的上一个项目，因为API的安全问题，就被人攻击了两次。之后经过分析，主要存在两个漏洞：一是因为缺少对调用者进行安全验证的方式，二是因为数据传输不够安全。那么，制定API的安全机制，主要就是为了解决这两个问题：</p>
-<ol>
-<li>保证API的调用者是经过自己授权的App；</li>
-<li>保证数据传输的安全。</li>
-</ol>
-<p>第一个问题的解决方案，我主要采用设计签名的方式。对每个客户端，Android、iOS、WeChat，分别分配一个AppKey和AppSecret。需要调用API时，将AppKey加入请求参数列表，并将AppSecret和所有参数一起，根据某种签名算法生成一个签名字符串，然后调用API时把该签名字符串也一起带上。服务端收到请求之后，根据请求中的AppKey查询相应的AppSecret，按照同样的签名算法，也生成一个签名字符串，当服务端生成的签名和请求带过来的签名一致的时候，那就表示这个请求的调用者是经过自己授权的，证明这个请求是安全的。而且，每个端都有一个Key，也方便不同端的标识和统计。为了防止AppSecret被别人获取，这个AppSecret一般写死在代码里面。另外，签名算法也需要有一定的复杂度，不能轻易被别人破解，最好是采用自己规定的一套签名算法，而不是采用外部公开的签名算法。另外，在参数列表中再加入一个时间戳，还可以防止部分重放攻击。</p>
-<p>第二个问题的解决方案，主要就是采用HTTPS了。HTTPS因为添加了SSL安全协议，自动对请求数据进行了压缩加密，在一定程序可以防止监听、防止劫持、防止重发，主要就是防止中间人攻击。苹果从iOS9开始，默认就采用HTTPS了。而关于在Android中如何使用HTTPS，Google官方也给出了很多安全建议。不过，大部分App并没有按照安全建议去实现，主要就是没有对SSL证书进行安全性检查，这就成为了一个很大的漏洞，中间人利用此漏洞用假证书就可以通过检查，从而可以劫持到所有数据了。因此，为了安全考虑，建议对SSL证书进行强校验，包括签名CA是否合法、域名是否匹配、是不是自签名证书、证书是否过期等。</p>
-<blockquote>
-<h3 id="接口协议标准化"><a href="#接口协议标准化" class="headerlink" title="接口协议标准化"></a>接口协议标准化</h3></blockquote>
-<p>API返回的数据，一般都是采用JSON格式进行传输。然而，JSON的值只有六种数据类型：</p>
-<ul>
-<li>Number：整数或浮点数</li>
-<li>String：字符串</li>
-<li>Boolean：true 或 false</li>
-<li>Array：数组包含在方括号[]中</li>
-<li>Object：对象包含在大括号{}中</li>
-<li>Null：空类型</li>
-</ul>
-<p>我遇到过的，关于API的坑有大部分就是因为JSON数据和实体对象转化时出错导致的，而且是各种各样的错误都有，其中不乏有一些很奇葩的错误。</p>
-<p>最麻烦的就是处理Date类型，因为JSON本身没有Date类型，因此，JSON库将Date类型的数据序列化时会转为String。这时，不同环境，不同平台，以及用不同的JSON解析库，转换后的结果经常会不同。比如，你在开发机上可能得到的结果是”2016-1-1 17:11:11”，但放到服务器后结果却变成了“Jan 1,2016 5:11:11 PM” ，客户端进行反序列化时无疑会失败。后来，我取消了所有Date类型，统一采用时间戳表示，就再没有转化的烦恼了。</p>
-<p>另外，接口的开发人员有时候会将一些数据错误地转换为了String，导致客户端使用时因类型错误而异常。例如，本来是数字的1，被转成了”1”，客户端做运算时就会出错，或用switch判断时也会出错，或其他无法转换的情况发生时；例如，为空时JSON正确地表示应该是null，但如果转为了String就变成了”null”，那问题就来了，我遇到的因为这个错误的转换导致的程序奔溃已经好几次了，第一次的时候，查了一整天才定位到问题所在。</p>
-<p>还有，因为接口的开发人员不同，很多时候还会出现不同接口同一个意思的参数名称却不同。比如，对于有分页数据的接口，一般都有当前页的参数，A开发人员可能将参数命名为currentPage，第一页是从0开始；B开发人员在另一个接口则命名为currPage，第一页却从1开始；C开发人员在另一个接口又命名为presentPage，第一页又是从0开始。客户端的开发人员看到也是醉了。</p>
-<p>每个技术团队一般都会有一份接口协议文档，主要内容包括每个接口的描述、入参、输出结果等，但一般并不严谨，很多地方没有统一标准，从而容易出现很多坑。因此，有一份统一标准且严格执行的接口协议非常重要。协议的内容除了规定每个接口，包括接口中每个数据具体的数据类型，还需要规定一套共用的数据字典，以及其他需要统一定义的信息，比如签名算法等。一旦有了这份统一标准且严格执行的接口协议，很多问题都将迎刃而解。</p>
-<blockquote>
-<h3 id="接口版本控制"><a href="#接口版本控制" class="headerlink" title="接口版本控制"></a>接口版本控制</h3></blockquote>
-<p>我们已经不止一次因为接口发生变动而导致旧版本的App出错的问题，而且变动不一定是修改了接口本身，有可能是底层增加了一种新的数据结构，接口把新数据也返回给客户端了，但客户端旧版本是解析不了的，从而就导致出错了。</p>
-<p>为了解决接口的兼容性问题，需要做好接口版本控制。实现上，一般有两种做法：</p>
-<ol>
-<li>每个接口有各自的版本，一般为接口添加个version的参数；</li>
-<li>整个接口系统有统一的版本，一般在URL中添加版本号，比如<a href="http://api.domain.com/v2。" target="_blank" rel="noopener">http://api.domain.com/v2。</a></li>
-</ol>
-<p>平时小版本的更新，就采用第一种方式，我们的做法是根据不同版本号做不同分支处理。大版本的更新，则用第二种方式，这时候，基本就是一套全新的接口系统了，跟旧版本是相对独立的。</p>
-<p>当版本越来越多时，维护就会成为一个大问题，我们没那么多精力去维护所有版本，因此，太旧的版本一般就不会再维护了。这时候，如果有用户还在使用即将废弃的旧版本，需要提醒用户升级到新版本。</p>
-<h2 id="架构分层"><a href="#架构分层" class="headerlink" title="架构分层"></a>架构分层</h2><p>API的设计完成之后，接下来我就会考虑App项目的整体架构了。整体如何架构，我也曾经做过不少尝试。早期的时候，Android就是将所有操作都放在Activity里完成，包括界面数据处理、业务逻辑处理、调用API。后来发现Activity越来越臃肿，代码越来越复杂，很难维护。于是就开始思考如何拆分，如何才能做到松耦合高内聚。</p>
-<p>前面也说过，一个App的核心就是数据，那么，从App对数据处理的角色划分出发，最简单的划分就是：数据管理、数据加工、数据展示。相应的也就有了三层架构：数据层、业务层、展示层。它们之间的关系如下图，数据层是三层中的最底层，往下，它接入API；往上，它向业务层交付数据。业务层夹在三层中间，属于数据的加工厂，将数据层提供上来的数据加工成展示层需要展示的数据。展示层处于三层中的最上层，主要就是将从业务层取得的数据展示到界面上。</p>
-<img src="/post/architecture/20160303/21-53-45.jpg">
-
-<blockquote>
-<h3 id="数据层"><a href="#数据层" class="headerlink" title="数据层"></a>数据层</h3></blockquote>
-<p>数据层是数据管理者，主要任务就是封装API，并将数据结果交付给上层，中间会再加个数据缓存。整个主流程如下图：</p>
-<img src="/post/architecture/20160303/17-36-08.jpg">
-
-<ol>
-<li>业务层向数据层请求数据；</li>
-<li>数据层检查缓存中有没有请求需要的数据；</li>
-<li>如果有缓存数据，则直接返回缓存数据；</li>
-<li>如果没有缓存数据，则从网络API获取数据，并将数据加入缓存，然后返回数据。</li>
-</ol>
-<p>调用网络API时，还要判断网络状态，根据不同状态做不同处理。如果网络不可用，就无需发起请求了。网络可用时，也要区分是连接WIFI还是连接移动网络。连接移动网络时，一般需要限制调用比较耗流量的请求。曾经，我们没有对移动网络状态下的请求进行限制，结果，测试时流量DuangDuangDuang地一下子就不见了十几M。连接WIFI时，则无需设置这种限制，而且还可以预先请求一些接口，比如请求当前分页数据时，可以将下一页的数据也预先请求。</p>
-<p>缓存也需要缓存策略，不同的接口需要做不同的缓存处理。首先，缓存只适用于获取数据的接口，对于修改数据的接口则不适用。其次，不同接口缓存时间一般也不同，对于很少变动的数据缓存时间可以设置长一些，而频繁变动的数据缓存时间则比较短，甚至不进行缓存。最后，缓存数据因为比较多，我们一般保存在数据库，而对于调用频率高、最新的数据，还会在内存中也拥有一份缓存，不过缓存时间比较短。请求缓存数据时，会先检查内存缓存中有没有，有则直接将缓存的数据返回，没有才从数据库获取。</p>
-<p>那么，如何将数据交付给业务层呢？这是整个数据层模块与外部交互的部分，当与外部交互的时候，一般都要符合面向接口编程的原则，因此只要提供开放的数据接口就可以了。对于接口的参数需要说明一下，上面提到的参数有appKey、version、currentPage这几个，还有签名sign、时间戳time，其实可以分为两类：系统参数和业务参数。像appKey、version、sign、time这些属于系统参数，而currentPage，或username之类的则属于业务参数。数据层开放的数据接口的参数只需要包含业务参数就可以了，业务层并不需要关心系统参数是什么，系统参数在数据层内部封装API时指定就可以了。</p>
-<blockquote>
-<h3 id="业务层"><a href="#业务层" class="headerlink" title="业务层"></a>业务层</h3></blockquote>
-<p>业务层是数据加工者，主要就是从数据层获取数据，然后经过业务逻辑处理后转化成展示层需要的数据。业务层因为夹在数据层和展示层中间，起着承上启下的作用。也因此，业务层很容易沦落为只是一个数据的中转站，主要就是因为对业务层具体的作用和职责没有理解清楚。</p>
-<p>这里用一个例子来说明业务层具体的工作吧，就举个用户注册的例子。用户注册时，界面上需要用户提供手机号、短信验证码、密码、确认密码。那么，最简单的操作就是，带上这些参数调用数据层的注册接口。好了，问题来了，注册接口并没有提供确认密码的参数。那好，调用注册接口之前先判断下密码和确认密码是否一致，不一致则返回错误提示给用户，一致了才调用注册接口。好了，第二个问题来了，用户等网络请求等了一段时间后，请求结果返回说手机号少了一位。下一次，又等了一段时间，这次又返回说手机号多了一位。就因为一个小错误要让用户等那么久，用户肯定有意见。后台也有意见，各种非法的请求都发过来，是嫌服务器压力不够大啊。那好，调用接口之前对这些参数做有效性检查吧，手机号要规范，短信验证码只能为六位数字，密码不能少于六位。终于注册成功了，第三个问题又来了，注册接口是没有返回用户的accessToken的，只有登录接口才会返回。让用户手动再登录一下？这用户体验不太好啊。正确的姿势应该是注册成功后再自动调用一次登录接口，如果因为网络问题第一次登录失败，后面还需要再自动调用多一次，如果还是调用失败，才让用户手动登录。</p>
-<p>上面的例子中，对参数的有效性检查，注册成功后的自动登录，都属于业务逻辑的处理，也就是说都是业务层的工作。</p>
-<p>业务层交付给展示层的数据也是通过接口的方式，不过，和数据层交付给业务层时不同的是：交付给展示层的数据应该是通过异步回调返回的。因为获取数据是一个比较耗时的任务，通过异步回调才不会阻塞UI主线程。</p>
-<blockquote>
-<h3 id="展示层"><a href="#展示层" class="headerlink" title="展示层"></a>展示层</h3></blockquote>
-<p>展示层作为数据展示者，它只要关心数据如何展示就可以了。不过，数据如何展示却不是那么简单。展示层是三层架构中最复杂的一层了，要考虑的东西远远多于其他两层，涉及的东西包括但不限于界面布局、屏幕适配、图片资源、文本资源、颜色资源等等。在开发一段时间后，展示层出现代码混乱是最常见的。因此，做好展示层，就需要保持高质量的代码。要保持高质量代码，我觉得至少应该遵循几条基本的原则：</p>
-<ol>
-<li>保持规范性：定义好开发规范，包括书写规范、命名规范、注释规范等，并按照规范严格执行；</li>
-<li>保持单一性：布局就只做布局，内容就只做内容，各自分离好，每个方法、每个类，也只做一件事情；</li>
-<li>保持简洁性：保持代码和结构的简洁，每个方法，每个类，每个包，每个文件，都不要塞太多代码或资源，感觉多了就应该拆分。</li>
-</ol>
-<p>所谓无规矩不成方圆，展示层的设计，要从开发规范开始。一份好的开发规范，是保证代码有较高的可读性的基础。iOS方面，苹果已经有一套<a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html" target="_blank" rel="noopener">Coding Guidelines</a>，主要属于命名方面的规范。当我们制定自己的开发规范时，首先就要遵守苹果的这份规范，在此基础上再加上自己的规范。Android方面，我也在我的博客中分享过一套（<a href="http://keeganlee.me/post/android/20150709">Android技术积累:开发规范</a>），主要分为书写规范、命名规范、注释规范三部分。</p>
-<p>最重要的不是开发规范的制定，而是开发规范的执行。如果没有按照开发规范去执行，那开发规范就等于形同虚设，那代码混乱的问题依然得不到解决。</p>
-<p>说到单一性，面向对象设计中，有一个基本原则就是单一职责原则，它规定一个类应该只有一个发生变化的原因。保持单一性是减低耦合度的关键标准，其目的就是各方面的解耦。而我这里说的单一性不只是规定类的单一，也包括界面的单一、方法的单一、资源文件的单一等。</p>
-<p>界面的单一，首先是界面的布局和界面的数据应该分离。另外，界面数据的获取和展示也应该分离。一句话，保持界面的单一性就是要保持界面上每个维度都做好分离，从界面的布局，到数据的获取，数据的检查，数据的展示。</p>
-<p>方法的单一，则表现为一个方法是对一个行为的封装。行为又可以拆分为多个步骤，每个步骤其实也是更细化的行为。因此，方法嵌套方法是一种常态。那么，保持方法的单一性，关键不在于怎么定义这个方法的行为，而在于这个行为要怎么拆分成更细的行为。举个例子，通常在Activity的onCreate方法，做初始化操作，细分出来就分为了：控件的初始化、逻辑变量的初始化、数据的初始化。数据的初始化又可以再细分：数据的获取、数据的展示。每个细化的行为都应该封装为一个独立的方法，这样，才真正符合方法的单一性。</p>
-<p>资源文件的单一，主要是指Android的各类资源文件，包括存放字符串的strings.xml，存放字符串数组的arrays.xml，存放颜色值的colors.xml，存放尺寸值的dimens.xml，等等。资源文件的单一，是说所有相关的资源信息要在资源文件里定义并引用到代码或布局文件里，而不是在代码或布局文件里直接定义。这样做，可以很方便地做各种适配和修改，比如支持国际化，比如不同分辨率的屏幕用不同尺寸值。iOS则没有提供和Android一样的资源文件分离的机制，但可以参考Android的做法自己去实现。</p>
-<h2 id="环境分离"><a href="#环境分离" class="headerlink" title="环境分离"></a>环境分离</h2><p>每个App项目，至少都会有两个环境：测试环境和生产环境。多的甚至有四个环境：开发环境、测试环境、预生产环境和生产环境。开发人员经常需要在环境之间切换，测试人员也同样。经常出现测试人员今天需要测试环境的最新版本，叫App开发人员打包一个给她，明天需要切换到生产版本，再叫App开发人员打包一个生产环境的给她。我们知道，一个App，在一台手机上要么只能是测试环境的，要么只能是生产环境的。测试人员要测试两个环境，只能不断替换不同环境的同个App，这实在太麻烦了。为了解决此问题，最好的方案就是环境分离，不同环境有不同的App。</p>
-<p>一个App的唯一标识，Android是用包名，iOS是用Bundle Identify。那么，在一个系统想安装不同环境的App，只要每个环境App的包名和Bundle Identify不同即可。比如，生产版的包名和Bundle Identify命名为com.mydomain.myapp，测试版的包名和Bundle Identify则命名为com.mydomain.myapp.beta，这样，Android和iOS都会识别为两个不同的App了。</p>
-<p>不过，只改包名和Bundle Identify是不够的，应用图标和应用名称也要修改，不然安装之后很难区分哪个App是哪个环境的。一般做法就是，非生产环境的App图标就是在生产图标的基础上添加一个环境标签，同时App的应用名称也是在生产的基础上添加环境后缀名。另外，因为包名和Bundle Identify不同了，微信、微博、百度地图等这些第三方平台也都需要为不同环境的App分别申请不同的appID。</p>
-<p>实现上，最笨的方法就是拷贝当前工程，然后修改，缺陷很明显，维护成本很高。不过，好在Android和iOS都有很方便的修改方式。</p>
-<p>Android有了Gradle，可以设置多个不同的Flavors，每个Flavor都有一个applicationId属性，其实就是App的包名。比如，生产版和测试版的设置如下：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    myapp &#123;</span><br><span class="line">        applicationId <span class="string">"com.mydomain.myapp"</span></span><br><span class="line">    &#125;</span><br><span class="line">    myappBeta &#123;</span><br><span class="line">        applicationId <span class="string">'com.mydomain.myapp.beta'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这样，其实就有两个App了。然后，源代码新建一个和main同级的目录，命名为myappBeta，然后，将图标、名称和第三方设置之类的，和main保持一样的位置、文件名、属性等，就可以替换成环境相关的了。</p>
-<p>iOS则可以通过创建多个环境的Target来实现环境分离，不同Target可以设置不同的Bundle Identify、Bundle display name、更换图标。另外，每个Target也各自有自己的一份plist文件的，环境变量和第三方设置之类的，都可以设置在相应的plist文件里。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>至此，关于App架构方面的经验总结就先讲这么多了。其中，部分内容在我以往的博客上也已经有所体现，有兴趣的读者可以前往我的博客了解并欢迎参与讨论。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160303/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160222/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160222/" class="post-title-link" itemprop="url">App架构设计经验谈:展示层的设计</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-02-22 20:40:00" itemprop="dateCreated datePublished" datetime="2016-02-22T20:40:00+08:00">2016-02-22</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:48" itemprop="dateModified" datetime="2019-07-02T11:18:48+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160222"><strong>http://keeganlee.me/post/architecture/20160222</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-02-22</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160107">App架构设计经验谈:接口的设计</a><br><a href="http://keeganlee.me/post/architecture/20160114">App架构设计经验谈:技术选型</a><br><a href="http://keeganlee.me/post/architecture/20160120">App架构设计经验谈:数据层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160214">App架构设计经验谈:业务层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160222">App架构设计经验谈:展示层的设计</a></p>
-<hr>
-<p>三层架构中，<a href="http://keeganlee.me/post/architecture/20160120">数据层</a>和<a href="http://keeganlee.me/post/architecture/20160214">业务层</a>都已经做过了简单的分享，最后，就剩下展示层了。本篇就给各位分享下我在展示层设计方面的一些经验心得。</p>
-<p>展示层是三层架构中最复杂的一层了，需要考虑的包括但不限于界面布局、屏幕适配、文字大小、颜色、图片资源、提示信息、动画等等。展示层也是变化最频繁的一个层面，每天改得最多的就是界面了。因此，展示层也是最容易变得混乱不堪的一个层面。一个良好的展示层，应该有较好的可读性、健壮性、维护性、扩展性。</p>
-<h2 id="三原则"><a href="#三原则" class="headerlink" title="三原则"></a>三原则</h2><p>我在<a href="http://keeganlee.me/post/android/20150619">Android项目重构之路:界面篇</a>中提到过三个原则，要设计好展示层，至少需要遵循好这三条基本的原则：</p>
-<ol>
-<li>保持规范性：定义好开发规范，包括书写规范、命名规范、注释规范等，并按照规范严格执行；</li>
-<li>保持单一性：布局就只做布局，内容就只做内容，各自分离好，每个方法、每个类，也只做一件事情；</li>
-<li>保持简洁性：保持代码和结构的简洁，每个方法，每个类，每个包，每个文件，都不要塞太多代码或资源，感觉多了就应该拆分。</li>
-</ol>
-<p>关于这三个原则详细的解说，界面篇已经讲过的，我这里就不再重复。在此，我只做些补充。</p>
-<p>关于规范，Android方面，我已经分享过一套<a href="http://keeganlee.me/post/android/20150709">Android技术积累:开发规范</a>，主要分为书写规范、命名规范、注释规范三部分。iOS方面，苹果已经有一套<a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html" target="_blank" rel="noopener">Coding Guidelines</a>，主要属于命名方面的规范。当我们制定自己的开发规范时，首先就要遵守苹果的这份规范，在此基础上再加上自己的规范。</p>
-<p>最重要的不是开发规范的制定，而是开发规范的执行。如果没有按照开发规范去执行，那开发规范就等于形同虚设，那代码混乱的问题依然得不到解决。</p>
-<p>另外，Android系统本身已经对资源进行了很好的分离，字符串、颜色值、尺寸大小、图片、动画等等都用不同的xml文件定义。而iOS系统在这方面就逊色很多，只能自己实现，其中一种实现方案就是通过plist文件的方式实现和Android一样的机制。</p>
-<h2 id="工程结构"><a href="#工程结构" class="headerlink" title="工程结构"></a>工程结构</h2><p>工程结构其实就是模块的划分，无非分为两类：按业务划分或按组件划分。</p>
-<p>比如一个电商App，可能会有首页、附近、分类、我的四大模块，工程结构也根据这四大模块进行划分，Android可能就分为了四个模块包：</p>
-<ul>
-<li>com.domain.home 首页</li>
-<li>com.domain.nearby 附近</li>
-<li>com.domain.category 分类</li>
-<li>com.domain.user 我的</li>
-</ul>
-<p>同样的，iOS则分为四个分组：home、nearby、category、user。</p>
-<p>之后，每个模块下相应的页面就放入相应的模块。那么，问题来了，商品详情页应该属于哪个模块呢？首页会跳转到商品详情页，附近也会跳转到商品详情页，分类也会跳转到商品详情页，用户查看订单时也能跳转到商品详情页。有些页面，并不能很明显的区分出属于哪个模块的。我接手过的，按业务划分的二手项目中（即不是由我搭建的项目），我要找一个页面时，我认为应该属于A模块的，但在A模块却找不到，问了同事才知道在B模块。类似的情况出现过很多次，而且不止出现在我身上，对业务不熟悉的开发人员都会出现这个问题。而且，对业务不熟悉的开发人员开发新的页面或功能时，如果对业务理解不深，划分出错，那也将成为问题，其他人员要找该页面时更难找到了。</p>
-<p>因此，我更喜欢按组件划分的工程结构，因为组件每个人都懂，不管对业务熟不熟悉，查找起来都明显方便很多。Android按组件划分大致如下：</p>
-<ul>
-<li>com.domain.activities 存放所有的Activity</li>
-<li>com.domain.fragments 存放所有的Fragment</li>
-<li>com.domain.adapters 存放所有的Adapter</li>
-<li>com.domain.services 存放所有的Service</li>
-<li>com.domain.views 存放所有的自定义View</li>
-<li>com.domain.utils 存放所有的工具类</li>
-</ul>
-<p>iOS的分组则大致如下：</p>
-<ul>
-<li>controllers 存放所有ViewController</li>
-<li>cells 存放所有Cell，包括TableViewCell和CollectionViewCell</li>
-<li>views 存放所有自定义控件或对系统控件的扩展</li>
-<li>utils 存放所有的工具类</li>
-</ul>
-<h2 id="基类的定义"><a href="#基类的定义" class="headerlink" title="基类的定义"></a>基类的定义</h2><p>Android的Activity、Fragment、Adapter，iOS的ViewController，分别定义一个基类，将大部分通用的变量和方法定义和封装好，将减少很多工作量，而且有了统一的设置，也会减少代码的混乱。比如我在<a href="http://keeganlee.me/post/android/20150629">Android项目重构之路:实现篇</a>中提到的KBaseActivity和KBaseAdapter的实现就是例子，当然还可以抽离出更多变量和方法。</p>
-<p>每个Activity的onCreate()方法，一般分为三步：</p>
-<ol>
-<li>变量的初始化；</li>
-<li>View的初始化；</li>
-<li>加载数据。</li>
-</ol>
-<p>因此，其实可以将onCreate()方法拆分成三个方法：</p>
-<ol>
-<li>initVariables()</li>
-<li>initViews()</li>
-<li>loadData()</li>
-</ol>
-<p>在基类中将这三个方法定义为抽象方法，由子类去实现，这样，子类就不需要实现onCreate()方法了，只要实现更细化的上述三个方法即可。</p>
-<p>iOS的ViewController也是同样的方式，这里就不重复了。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>自此，该系列的文章暂时就完结了，方法论比较多，很少涉及到具体的实现。因为具体实现的方案很多，而且还要结合实际项目，无法说哪个方案好哪个方案差。但方法论大部分是想通的，所以，本系列主要讲方法论。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160222/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2592,7 +3070,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-count">17</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -2613,7 +3091,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">2</span>
+                      
+                    
+                    <span class="site-state-item-count">3</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -2638,7 +3118,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">4</span>
+                      
+                    
+                    <span class="site-state-item-count">5</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>
