@@ -102,12 +102,14 @@
 <meta property="og:site_name" content="Keegan小钢">
 <meta property="og:description" content="原文链接：http://keeganlee.me/post/architecture/20160303版权声明：本文刊载在《程序员》杂志2016年3期，版权归《程序员》所有，未经许可不得转载  架构因人而异，不同的架构师大多会有不同的看法；架构也因项目而异，不同的项目需求不同，相应的架构也会不同。然而，有些东西还是通用的，是所有架构师都需要考虑的，也是所有项目都会有的需求，比如API如何设计？架构">
 <meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/architecture/20160303/21-53-45.jpg">
+<meta property="og:image" content="https://keeganlee.me/post/architecture/20160303/17-36-08.jpg">
 <meta property="og:image" content="https://keeganlee.me/post/architecture/20160303/qrcode_keegan.jpg">
-<meta property="og:updated_time" content="2019-07-02T02:17:22.226Z">
+<meta property="og:updated_time" content="2019-07-02T03:18:39.331Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="App架构经验总结">
 <meta name="twitter:description" content="原文链接：http://keeganlee.me/post/architecture/20160303版权声明：本文刊载在《程序员》杂志2016年3期，版权归《程序员》所有，未经许可不得转载  架构因人而异，不同的架构师大多会有不同的看法；架构也因项目而异，不同的项目需求不同，相应的架构也会不同。然而，有些东西还是通用的，是所有架构师都需要考虑的，也是所有项目都会有的需求，比如API如何设计？架构">
-<meta name="twitter:image" content="https://keeganlee.me/post/architecture/20160303/qrcode_keegan.jpg">
+<meta name="twitter:image" content="https://keeganlee.me/post/architecture/20160303/21-53-45.jpg">
 
 
 
@@ -382,7 +384,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-07-02 10:17:22" itemprop="dateModified" datetime="2019-07-02T10:17:22+08:00">2019-07-02</time>
+                <time title="修改时间：2019-07-02 11:18:39" itemprop="dateModified" datetime="2019-07-02T11:18:39+08:00">2019-07-02</time>
               </span>
             
           
@@ -475,12 +477,12 @@
 <p>当版本越来越多时，维护就会成为一个大问题，我们没那么多精力去维护所有版本，因此，太旧的版本一般就不会再维护了。这时候，如果有用户还在使用即将废弃的旧版本，需要提醒用户升级到新版本。</p>
 <h2 id="架构分层"><a href="#架构分层" class="headerlink" title="架构分层"></a>架构分层</h2><p>API的设计完成之后，接下来我就会考虑App项目的整体架构了。整体如何架构，我也曾经做过不少尝试。早期的时候，Android就是将所有操作都放在Activity里完成，包括界面数据处理、业务逻辑处理、调用API。后来发现Activity越来越臃肿，代码越来越复杂，很难维护。于是就开始思考如何拆分，如何才能做到松耦合高内聚。</p>
 <p>前面也说过，一个App的核心就是数据，那么，从App对数据处理的角色划分出发，最简单的划分就是：数据管理、数据加工、数据展示。相应的也就有了三层架构：数据层、业务层、展示层。它们之间的关系如下图，数据层是三层中的最底层，往下，它接入API；往上，它向业务层交付数据。业务层夹在三层中间，属于数据的加工厂，将数据层提供上来的数据加工成展示层需要展示的数据。展示层处于三层中的最上层，主要就是将从业务层取得的数据展示到界面上。</p>
-
+<img src="/post/architecture/20160303/21-53-45.jpg">
 
 <blockquote>
 <h3 id="数据层"><a href="#数据层" class="headerlink" title="数据层"></a>数据层</h3></blockquote>
 <p>数据层是数据管理者，主要任务就是封装API，并将数据结果交付给上层，中间会再加个数据缓存。整个主流程如下图：</p>
-
+<img src="/post/architecture/20160303/17-36-08.jpg">
 
 <ol>
 <li>业务层向数据层请求数据；</li>
