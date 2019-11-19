@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191118微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-18  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:MVP版本">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191118/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191118微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-18  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191118/v1.0-architecture.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191118/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-11-19T12:52:43.378Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:MVP版本">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191118微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-18  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191118/v1.0-architecture.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191118/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:MVP版本 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191118/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:MVP版本
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-18 20:21:14" itemprop="dateCreated datePublished" datetime="2019-11-18T20:21:14+08:00">2019-11-18</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-19 20:52:43" itemprop="dateModified" datetime="2019-11-19T20:52:43+08:00">2019-11-19</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191118"><strong>http://keeganlee.me/post/matching/20191118</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-18</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a></p>
+<hr>
+<p>开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直接将我的撮合引擎和国家级撮合引擎作对比了。如果我的撮合引擎达到上交所级别，那就不止值5万了，估计至少值500万了。不过，我的撮合引擎随着不断升级迭代，以后能达到国家级别也说不定。为了避免再次出现这种尴尬，我还是先说明清楚对此撮合引擎的定位。</p>
+<h2 id="MVP版本需求"><a href="#MVP版本需求" class="headerlink" title="MVP版本需求"></a>MVP版本需求</h2><p>《精益创业》有个核心概念叫 <strong>MVP</strong>(Minimum Viable Product)，即<strong>最小可行性产品</strong>。我的撮合引擎第一个版本也是一个 MVP，只实现最基础的功能。所谓最基础的功能，即是说，如果移除了该功能，整个系统都无法完成工作。当然，我们还要加上应用场景，应用于一个初创的小交易平台和应用于像火币、币安甚至深交所、上交所这样庞大的交易平台，对基础功能的定义范围是有很大区别的。我所要做的 MVP 版本，只要适用于小交易平台即可。</p>
+<p>这里我要稍微展开聊下产品设计的问题，很多团队——尤其是初创团队，做第一版产品的时候，总觉得这个功能很重要、那个功能很重要，都往第一版的产品里面加。其实，做第一版的时候，更多的应该是做减法，而不是做加法。很多看起来很重要的功能，大部分都是属于那种有了它更好，但没有它也不是整个产品就运行不下去了。</p>
+<p>下面我们就来讨论下 MVP 版本的撮合引擎具体要实现哪些功能。</p>
+<p>我们知道，撮合有<strong>集合竞价</strong>和<strong>连续竞价</strong>两种方式，但对于我们的 MVP 版本来说，是否有必要两种撮合方式都支持呢？其实，在币圈，不管是小交易所还是大交易所，基本只采用连续竞价的方式。我以前从事的贵金属交易平台，也同样没有集合竞价这一步。这也说明，集合竞价对一个交易所来说，其实并不是必需的。既然如此，那第一版的撮合引擎其实就可以先把集合竞价功能砍掉。</p>
+<p>支持下单和撤单则是必需的，这是一个交易所最最基础的功能，没有这两个功能，交易所就没意义了。下委托单一般还分有几种不同的类型，包括<strong>限价</strong>、<strong>市价</strong>、<strong>止盈止损</strong>等，最简单的就是限价，这也是所有交易所都必须支持的交易类型，初创交易所一般也只先支持限价交易，所以我们的 MVP 版本也只先支持限价交易即可。</p>
+<p>下单和撤单的结果还需要通过事件的方式发送出去，其他服务会监听这些事件并做相应的后续处理。</p>
+<p>维护<strong>交易委托账本(OrderBook)</strong>也是必需的，撮合就是和 OrderBook 里的订单进行匹配成交，暂时没成交的就会保存在 OrderBook 里。</p>
+<p>另外，我们也要采用<strong>内存撮合</strong>技术，因此，OrderBook 其实是直接保存在程序的内存中的。那么，如果程序异常退出的话，那保存的数据也被清空了。所以，我们还需要引入缓存用来备份数据。当程序重启时，可以从缓存中重新加载数据。</p>
+<p>MVP 版本还要支持多个交易标的的撮合，因为我们的 MVP 版本撮合引擎只是个单机版的程序，总不能只支持一个交易标的吧。</p>
+<p>还要支持开启和关闭指定交易标的撮合的功能，开启撮合时需要做一些初始化的操作，包括初始化开盘价，而关闭撮合后则会删除数据、释放资源等。</p>
+<p>汇总一下，我们的 MVP 版本要实现以下这些功能：</p>
+<ol>
+<li>支持连续竞价的撮合方式；</li>
+<li>支持限价交易、支持撤单；</li>
+<li>支持下单和撤单结果的下发；</li>
+<li>采用内存撮合技术，在内存里维护交易委托账本；</li>
+<li>需要缓存数据，当程序重启时，可以恢复数据；</li>
+<li>支持多个交易标的的撮合；</li>
+<li>支持开启和关闭指定交易标的的撮合功能。</li>
+</ol>
+<h2 id="技术选型"><a href="#技术选型" class="headerlink" title="技术选型"></a>技术选型</h2><p>需求确定了，接下来就要确定技术方案了，先聊下一些技术选型吧。</p>
+<p>首先是开发语言，我的选择是 <strong>Golang</strong>，原因很简单，Golang 有着接近 C/C++ 的执行性能，但比 C/C++ 有着更高的开发效率，既能满足撮合引擎对性能的要求，也能满足我们快速实现产品的需求。当然，用其他语言也能实现，毕竟，设计思路是通用的。</p>
+<p>下单和撤单，开启和关闭撮合，以及结果的下发，都涉及到与其他服务的通信。服务间的通信主要就两种可选方案：同步调用的 <strong>RPC</strong> 和异步调用的 <strong>MQ</strong>。同步调用能使请求得到即时的响应，通信相对高效且可靠性较高，但只适用于一对一的通信，且如果并发请求出现超负荷时可能会引发大量的请求超时甚至服务宕机。而 MQ 支持一对多的通信，也因为有缓存队列，能避免并发请求达到峰值时出现服务不可用的情况，但也因为多了个消息中间件，传输有延迟，且请求无法得到即时的应答，还存在丢消息的可能，因此可靠性就比不上同步的 RPC 方式。</p>
+<p>对于我们的应用场景来说，结果的下发只能使用 MQ，因为我们并不清楚有多少个下游服务会消费我们的结果消息，也无法要求下游服务提供统一的 RPC 接口供我们调用。下单和撤单请求，则最好采用 RPC 同步方式调用，一是可以对一些无效的请求即时返回响应，二是能减少 MQ 的传输延迟，三是能保证可靠性。对于并发请求超负荷的问题，应该在更上层的网关服务就做好负载均衡，而不应该丢给撮合引擎来处理。</p>
+<p>不过，RPC 和 MQ 也有多种具体的实现方案。RPC 方案有 <strong>REST</strong>、<strong>gRPC</strong>、<strong>Thrift</strong>、<strong>rpcx</strong> 等，MQ 方案有 <strong>Kafka</strong>、<strong>RocketMQ</strong>、<strong>RabbitMQ</strong>、<strong>Redis</strong>等。这些不同的具体方案之间的差异性我就不展开了，感兴趣的读者们可以自己去百度或 Google。RPC 方案我们选择最简单的 REST 即可，开发、对接和测试都比较方便。MQ 方案则选定 Redis，因为 Redis 从 5.0 版本开始引入了 <strong>Stream</strong> 数据结构，提供了类似Kafka的消息队列功能，但由于 Redis 的数据是存储在内存中的，其处理速度相比其他 MQ 快很多。另外，我们还要用 Redis 做缓存，用同一个中间件也更方便。</p>
+<h2 id="软件结构"><a href="#软件结构" class="headerlink" title="软件结构"></a>软件结构</h2><img src="/post/matching/20191118/v1.0-architecture.png">
+
+<p>上图就是我们 MVP 版本的撮合服务的软件结构设计图，很简单吧。其实，就是按照业务流程进行了分层而已。分层是最简单的一种架构方式，其实任何庞大复杂的系统，第一步拆解都可以按业务流程进行分层。</p>
+<p><strong>Handler</strong> 接收由上游服务发过来的 HTTP 请求，我们只需定义三个接口：</p>
+<ul>
+<li><strong>OpenMatching</strong>：开启撮合，只需接收两个参数：交易标的（交易对）和开盘价。</li>
+<li><strong>CloseMatching</strong>：关闭撮合，只需一个参数：交易标的（交易对）。</li>
+<li><strong>HandleOrder</strong>：接收委托单，会有一个参数 <strong>Action</strong> 表示动作是下单还是撤单，其他参数则是委托单的数据了，包括订单 ID、交易对、买卖方向、委托数量、委托价格等。</li>
+</ul>
+<p>Handler 对请求做一些常规的校验之后，就会转发给相应的 Process 做处理，我们也定义了对应的三个 <strong>Process</strong>：</p>
+<ul>
+<li><strong>NewEngine</strong>：创建一个新的协程/线程，作为指定交易对的撮合引擎。</li>
+<li><strong>CloseEngine</strong>：将指定交易对的撮合引擎关闭。</li>
+<li><strong>Dispatch</strong>：将不同交易对的委托单分发到相应的撮合引擎。</li>
+</ul>
+<p><strong>Engine</strong> 即是每个交易对的撮合引擎协程或线程了。由于每个交易对的撮合引擎对委托单的处理必须是串行的，因此，Dispatch 时需将委托单先扔到不同交易对的有序队列里去，再由 Engine 从各自的队列中消费取出委托单进行撮合处理。</p>
+<p><strong>Redis</strong> 既用来做数据缓存，也用来做消息队列。缓存的数据主要是当前开启了撮合的交易对，以及撮合引擎里的交易委托账本。为了保证数据的一致性，账本里每个委托单的每一次变化，都需要更新到 Redis 中去。当撮合引擎重启时，就需要从 Redis 中读取缓存的委托单，重新初始化交易委托账本。这样，就能保证程序退出后重启，能恢复到退出前的状态。消息队列则可用 Redis 的新数据结构 Stream 实现，用来发送成交记录和撤单结果。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>我们第一版先做个 MVP，做个单体版的撮合服务，支持连续竞价、限价委托、撤单、开启和关闭撮合、支持多交易对等功能，采用内存撮合技术。软件结构上主要分为 Handler、Process、Engine 三个层级，底层用 Redis 做数据缓存和消息队列。下一篇我们来设计数据结构。</p>
+<p>留一个思考题：Dispatch 分发委托单到 Engine 时，有序队列可以如何实现？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191118/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191117/" rel="next" title="撮合引擎开发:开篇">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:开篇
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/post/matching/20191119/" rel="prev" title="撮合引擎开发:数据结构设计">
+                撮合引擎开发:数据结构设计 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#MVP版本需求"><span class="nav-number">1.</span> <span class="nav-text">MVP版本需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#技术选型"><span class="nav-number">2.</span> <span class="nav-text">技术选型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#软件结构"><span class="nav-number">3.</span> <span class="nav-text">软件结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

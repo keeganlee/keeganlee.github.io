@@ -322,6 +322,658 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191119/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/matching/20191119/" class="post-title-link" itemprop="url">撮合引擎开发:数据结构设计</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-19 20:21:14 / 修改时间：20:52:23" itemprop="dateCreated datePublished" datetime="2019-11-19T20:21:14+08:00">2019-11-19</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191119"><strong>http://keeganlee.me/post/matching/20191119</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-19</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a></p>
+<hr>
+<h2 id="交易委托账本"><a href="#交易委托账本" class="headerlink" title="交易委托账本"></a>交易委托账本</h2><p><strong>交易委托账本(OrderBook)</strong>是整个撮合引擎里最核心也是最复杂的数据结构，每个交易对都需要维护一份交易委托账本，账本里保存着指定交易对所有待撮合的委托单。每份账本都有两个队列，一个卖单队列和一个买单队列，两个队列都需要按照<strong>价格优先、时间优先</strong>的原则进行排序。</p>
+<p>所谓价格优先、时间优先，即是说：卖单队列的委托单是按价格由低到高排序，买单队列则相反，按价格由高到低排序；相同价格的委托单，则是按下单时间的先后来排序。</p>
+<img src="/post/matching/20191119/orderbook.png">
+
+<p>如上图，每个小方格表示一个委托单，标 <strong>H</strong> 的是排在头部的委托单，<strong>N</strong>则是与 H 同价格但下单时间上排在 H 后面的委托单，<strong>S</strong>则是下一档位价格的第一个委托单。可以从图中明显看出，横向上，委托单是按时间排序的，竖向上，又是按价格排序的。</p>
+<p>撮合的时候，都是先取出 <strong>H</strong> 委托单与新委托单进行匹配。如果新委托单是<strong>买单</strong>，则获取<strong>卖单队列</strong>的 H 单出来匹配；如果新委托单是<strong>卖单</strong>，则获取<strong>买单队列</strong>的 H 单。如果 <strong>H</strong> 单全部匹配成交了，那标识为 <strong>N</strong> 的委托单就变成了新的 <strong>H</strong> 单。如果第一排的全部委托单都匹配完了，那就 <strong>S</strong> 单会变成新的 <strong>H</strong> 单。</p>
+<p>交易委托账本可支持一些操作方法，包括初始化、增加买卖委托单、移除买卖委托单、获取头部委托单等。交易委托账本的类图大概如下：</p>
+<img src="/post/matching/20191119/class-orderbook.png">
+
+<p>其中，<strong>getHead</strong> 和 <strong>popHead</strong> 方法的区别是：get 只读头部委托单但不会移除它，而 pop 会将头部委托单从队列中移除。</p>
+<h2 id="订单队列"><a href="#订单队列" class="headerlink" title="订单队列"></a>订单队列</h2><p>买单队列和卖单队列可以设计为使用统一的订单队列类型，两者只有价格排序方向不同，那订单队列就可以用一个属性来表示排序方向。队列里的所有订单可以采用二维数组或二维链表来保存，考虑到主要操作是插入和删除，用链表比用数组效率更高。如果想让操作效率更高，那就需要使用更复杂的数据结构了，比如再结合跳表。目前版本为了简单，采用简单的二维链表即可。</p>
+<p>使用二维链表的话，那链表中的每个元素保存的就是横向上按时间排序的订单链表，这些订单链表又组成了竖向上按价格排序的链表。</p>
+<p>另外，还可以保存一个 Map，将价格作为 Key，将同价格的订单链表作为 Value，这样就能加快同价格订单的查询。</p>
+<p>订单队列可支持的操作方法也很简单，包括初始化、新增订单、移除订单、获取头部订单等。其类图大概如下：</p>
+<img src="/post/matching/20191119/class-orderqueue.png">
+
+<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList **保存整个二维链表，第一维以价格排序，第二维以时间排序，</strong>elementMap** 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<h2 id="委托单"><a href="#委托单" class="headerlink" title="委托单"></a>委托单</h2><p>委托单则是撮合引擎里最基本的数据结构了，其数据主要是从上游服务传输过来的，其类图大概如下：</p>
+<img src="/post/matching/20191119/class-order.png">
+
+<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type **表示交易类型，即</strong>限价交易(limit)<strong>或</strong>市价交易(market)<strong>等，我们的 MVP 版本只支持限价交易。</strong>amount <strong>是购买数量，</strong>price** 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
+<p><strong>toJson() *<em>和 *</em>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
+<h2 id="成交记录"><a href="#成交记录" class="headerlink" title="成交记录"></a>成交记录</h2><p>撮合成交的委托单就会生成对应的成交记录，成交记录需要发布到 MQ 给下游服务消费。成交记录的数据结构如下图：</p>
+<img src="/post/matching/20191119/class-trade.png">
+
+<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId *<em>和 *</em>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount **就是成交数量，</strong>price** 指成交价格，*<em>timestamp *</em>是成交时间。</p>
+<h2 id="Redis缓存"><a href="#Redis缓存" class="headerlink" title="Redis缓存"></a>Redis缓存</h2><p>我们需要用 Redis 缓存委托单数据和撮合中的交易对数据，主要有两个作用，一是可以对请求做去重处理，二是程序重启后可以恢复数据。</p>
+<p>由于网络中断或延迟，或其他异常情况，上游服务有可能会重复发送相同请求给到撮合引擎，因此，程序是需要做去重处理的，有了数据缓存就可以解决去重问题了。另外，由于我们采用的是内存撮合，撮合时的数据都是直接保存在程序内存里的，一旦程序退出了，那所有数据也都消失了，重启后就需要从其他地方重新加载数据，采用Redis缓存就可以很快速地缓存数据和加载数据。</p>
+<p>开启一个交易对引擎时需要将交易对缓存，关闭时则从缓存中删除，保证缓存的都是运行中的交易对，当重启时，就可以重新启动这些交易对的撮合引擎了。需要缓存的交易对数据包括两个：<strong>symbol</strong> 和 <strong>price</strong>，即标识和价格。关于价格，每次产生新的成交记录时，价格也需要同步更新，因此价格的更新会非常频繁。而标识基本无需更新，因此两者最好分开缓存。</p>
+<p>所有交易对的 symbol 可以统一缓存到一个 set 里。我们可以将 key 值设置为 <strong>matching:symbols</strong>，用 Redis 的 <strong>sadd</strong> 和 <strong>srem</strong> 命令将不同的 symbol 缓存到该 key 值里或从 key 中删除。而 price 则可以保存为 string 类型，为不同交易对的价格设置不同的 key，key 值可以设置为 <strong>matching:price:{symbol}</strong>，{symbol} 为具体交易对的 symbol 值。</p>
+<p>每个委托单也需要缓存和更新，为了能够从缓存中最快地读取和更新委托单数据，最好为每个委托单都设置一个单独的 key，key 值可以设置为 <strong>matching:order:{symbol}:{orderId}:{action}</strong>，而 value 值建议设置为 hash 类型，因为 hash 类型特别适合存储结构化的对象。</p>
+<p>交易对和委托单数据都缓存了，就能够解决去重问题和程序重启后重新启动各交易对的撮合引擎了，但其实还有一个问题，撮合引擎里的交易委托账本如何恢复？该问题先留给大伙去思考，后续章节我再来讲解我的方案。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>撮合引擎里涉及到的数据结构其实并不多，最复杂的也只有交易委托账本，其设计还会直接关系到撮合的速度。Redis 缓存的设计也有些学问在里面，设计得不好也一样会影响整体的撮合性能。本小节完成了数据结构的设计，下一小节我们就开始深入到代码实现。</p>
+<p>最后，请抽时间研究下遗留的思考题：撮合引擎里的交易委托账本如何恢复？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191119/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191118/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/matching/20191118/" class="post-title-link" itemprop="url">撮合引擎开发:MVP版本</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-18 20:21:14" itemprop="dateCreated datePublished" datetime="2019-11-18T20:21:14+08:00">2019-11-18</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-19 20:52:43" itemprop="dateModified" datetime="2019-11-19T20:52:43+08:00">2019-11-19</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191118"><strong>http://keeganlee.me/post/matching/20191118</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-18</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a></p>
+<hr>
+<p>开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直接将我的撮合引擎和国家级撮合引擎作对比了。如果我的撮合引擎达到上交所级别，那就不止值5万了，估计至少值500万了。不过，我的撮合引擎随着不断升级迭代，以后能达到国家级别也说不定。为了避免再次出现这种尴尬，我还是先说明清楚对此撮合引擎的定位。</p>
+<h2 id="MVP版本需求"><a href="#MVP版本需求" class="headerlink" title="MVP版本需求"></a>MVP版本需求</h2><p>《精益创业》有个核心概念叫 <strong>MVP</strong>(Minimum Viable Product)，即<strong>最小可行性产品</strong>。我的撮合引擎第一个版本也是一个 MVP，只实现最基础的功能。所谓最基础的功能，即是说，如果移除了该功能，整个系统都无法完成工作。当然，我们还要加上应用场景，应用于一个初创的小交易平台和应用于像火币、币安甚至深交所、上交所这样庞大的交易平台，对基础功能的定义范围是有很大区别的。我所要做的 MVP 版本，只要适用于小交易平台即可。</p>
+<p>这里我要稍微展开聊下产品设计的问题，很多团队——尤其是初创团队，做第一版产品的时候，总觉得这个功能很重要、那个功能很重要，都往第一版的产品里面加。其实，做第一版的时候，更多的应该是做减法，而不是做加法。很多看起来很重要的功能，大部分都是属于那种有了它更好，但没有它也不是整个产品就运行不下去了。</p>
+<p>下面我们就来讨论下 MVP 版本的撮合引擎具体要实现哪些功能。</p>
+<p>我们知道，撮合有<strong>集合竞价</strong>和<strong>连续竞价</strong>两种方式，但对于我们的 MVP 版本来说，是否有必要两种撮合方式都支持呢？其实，在币圈，不管是小交易所还是大交易所，基本只采用连续竞价的方式。我以前从事的贵金属交易平台，也同样没有集合竞价这一步。这也说明，集合竞价对一个交易所来说，其实并不是必需的。既然如此，那第一版的撮合引擎其实就可以先把集合竞价功能砍掉。</p>
+<p>支持下单和撤单则是必需的，这是一个交易所最最基础的功能，没有这两个功能，交易所就没意义了。下委托单一般还分有几种不同的类型，包括<strong>限价</strong>、<strong>市价</strong>、<strong>止盈止损</strong>等，最简单的就是限价，这也是所有交易所都必须支持的交易类型，初创交易所一般也只先支持限价交易，所以我们的 MVP 版本也只先支持限价交易即可。</p>
+<p>下单和撤单的结果还需要通过事件的方式发送出去，其他服务会监听这些事件并做相应的后续处理。</p>
+<p>维护<strong>交易委托账本(OrderBook)</strong>也是必需的，撮合就是和 OrderBook 里的订单进行匹配成交，暂时没成交的就会保存在 OrderBook 里。</p>
+<p>另外，我们也要采用<strong>内存撮合</strong>技术，因此，OrderBook 其实是直接保存在程序的内存中的。那么，如果程序异常退出的话，那保存的数据也被清空了。所以，我们还需要引入缓存用来备份数据。当程序重启时，可以从缓存中重新加载数据。</p>
+<p>MVP 版本还要支持多个交易标的的撮合，因为我们的 MVP 版本撮合引擎只是个单机版的程序，总不能只支持一个交易标的吧。</p>
+<p>还要支持开启和关闭指定交易标的撮合的功能，开启撮合时需要做一些初始化的操作，包括初始化开盘价，而关闭撮合后则会删除数据、释放资源等。</p>
+<p>汇总一下，我们的 MVP 版本要实现以下这些功能：</p>
+<ol>
+<li>支持连续竞价的撮合方式；</li>
+<li>支持限价交易、支持撤单；</li>
+<li>支持下单和撤单结果的下发；</li>
+<li>采用内存撮合技术，在内存里维护交易委托账本；</li>
+<li>需要缓存数据，当程序重启时，可以恢复数据；</li>
+<li>支持多个交易标的的撮合；</li>
+<li>支持开启和关闭指定交易标的的撮合功能。</li>
+</ol>
+<h2 id="技术选型"><a href="#技术选型" class="headerlink" title="技术选型"></a>技术选型</h2><p>需求确定了，接下来就要确定技术方案了，先聊下一些技术选型吧。</p>
+<p>首先是开发语言，我的选择是 <strong>Golang</strong>，原因很简单，Golang 有着接近 C/C++ 的执行性能，但比 C/C++ 有着更高的开发效率，既能满足撮合引擎对性能的要求，也能满足我们快速实现产品的需求。当然，用其他语言也能实现，毕竟，设计思路是通用的。</p>
+<p>下单和撤单，开启和关闭撮合，以及结果的下发，都涉及到与其他服务的通信。服务间的通信主要就两种可选方案：同步调用的 <strong>RPC</strong> 和异步调用的 <strong>MQ</strong>。同步调用能使请求得到即时的响应，通信相对高效且可靠性较高，但只适用于一对一的通信，且如果并发请求出现超负荷时可能会引发大量的请求超时甚至服务宕机。而 MQ 支持一对多的通信，也因为有缓存队列，能避免并发请求达到峰值时出现服务不可用的情况，但也因为多了个消息中间件，传输有延迟，且请求无法得到即时的应答，还存在丢消息的可能，因此可靠性就比不上同步的 RPC 方式。</p>
+<p>对于我们的应用场景来说，结果的下发只能使用 MQ，因为我们并不清楚有多少个下游服务会消费我们的结果消息，也无法要求下游服务提供统一的 RPC 接口供我们调用。下单和撤单请求，则最好采用 RPC 同步方式调用，一是可以对一些无效的请求即时返回响应，二是能减少 MQ 的传输延迟，三是能保证可靠性。对于并发请求超负荷的问题，应该在更上层的网关服务就做好负载均衡，而不应该丢给撮合引擎来处理。</p>
+<p>不过，RPC 和 MQ 也有多种具体的实现方案。RPC 方案有 <strong>REST</strong>、<strong>gRPC</strong>、<strong>Thrift</strong>、<strong>rpcx</strong> 等，MQ 方案有 <strong>Kafka</strong>、<strong>RocketMQ</strong>、<strong>RabbitMQ</strong>、<strong>Redis</strong>等。这些不同的具体方案之间的差异性我就不展开了，感兴趣的读者们可以自己去百度或 Google。RPC 方案我们选择最简单的 REST 即可，开发、对接和测试都比较方便。MQ 方案则选定 Redis，因为 Redis 从 5.0 版本开始引入了 <strong>Stream</strong> 数据结构，提供了类似Kafka的消息队列功能，但由于 Redis 的数据是存储在内存中的，其处理速度相比其他 MQ 快很多。另外，我们还要用 Redis 做缓存，用同一个中间件也更方便。</p>
+<h2 id="软件结构"><a href="#软件结构" class="headerlink" title="软件结构"></a>软件结构</h2><img src="/post/matching/20191118/v1.0-architecture.png">
+
+<p>上图就是我们 MVP 版本的撮合服务的软件结构设计图，很简单吧。其实，就是按照业务流程进行了分层而已。分层是最简单的一种架构方式，其实任何庞大复杂的系统，第一步拆解都可以按业务流程进行分层。</p>
+<p><strong>Handler</strong> 接收由上游服务发过来的 HTTP 请求，我们只需定义三个接口：</p>
+<ul>
+<li><strong>OpenMatching</strong>：开启撮合，只需接收两个参数：交易标的（交易对）和开盘价。</li>
+<li><strong>CloseMatching</strong>：关闭撮合，只需一个参数：交易标的（交易对）。</li>
+<li><strong>HandleOrder</strong>：接收委托单，会有一个参数 <strong>Action</strong> 表示动作是下单还是撤单，其他参数则是委托单的数据了，包括订单 ID、交易对、买卖方向、委托数量、委托价格等。</li>
+</ul>
+<p>Handler 对请求做一些常规的校验之后，就会转发给相应的 Process 做处理，我们也定义了对应的三个 <strong>Process</strong>：</p>
+<ul>
+<li><strong>NewEngine</strong>：创建一个新的协程/线程，作为指定交易对的撮合引擎。</li>
+<li><strong>CloseEngine</strong>：将指定交易对的撮合引擎关闭。</li>
+<li><strong>Dispatch</strong>：将不同交易对的委托单分发到相应的撮合引擎。</li>
+</ul>
+<p><strong>Engine</strong> 即是每个交易对的撮合引擎协程或线程了。由于每个交易对的撮合引擎对委托单的处理必须是串行的，因此，Dispatch 时需将委托单先扔到不同交易对的有序队列里去，再由 Engine 从各自的队列中消费取出委托单进行撮合处理。</p>
+<p><strong>Redis</strong> 既用来做数据缓存，也用来做消息队列。缓存的数据主要是当前开启了撮合的交易对，以及撮合引擎里的交易委托账本。为了保证数据的一致性，账本里每个委托单的每一次变化，都需要更新到 Redis 中去。当撮合引擎重启时，就需要从 Redis 中读取缓存的委托单，重新初始化交易委托账本。这样，就能保证程序退出后重启，能恢复到退出前的状态。消息队列则可用 Redis 的新数据结构 Stream 实现，用来发送成交记录和撤单结果。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>我们第一版先做个 MVP，做个单体版的撮合服务，支持连续竞价、限价委托、撤单、开启和关闭撮合、支持多交易对等功能，采用内存撮合技术。软件结构上主要分为 Handler、Process、Engine 三个层级，底层用 Redis 做数据缓存和消息队列。下一篇我们来设计数据结构。</p>
+<p>留一个思考题：Dispatch 分发委托单到 Engine 时，有序队列可以如何实现？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191118/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191117/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/matching/20191117/" class="post-title-link" itemprop="url">撮合引擎开发:开篇</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-17 20:21:14" itemprop="dateCreated datePublished" datetime="2019-11-17T20:21:14+08:00">2019-11-17</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-11-19 20:52:07" itemprop="dateModified" datetime="2019-11-19T20:52:07+08:00">2019-11-19</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191117"><strong>http://keeganlee.me/post/matching/20191117</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-17</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a></p>
+<hr>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自从有人在微信群里开价5万求购Golang版的撮合引擎之后，我就想自己开发一款，毕竟，以我的经验来说，开发个高性能的撮合引擎并没什么难度。</p>
+<p>说干就干，于是，利用业余时间慢慢开发出了一款<strong>Golang</strong>版的高性能撮合引擎，前前后后花了大概一个月的时间。再想想自己好久没更新文章了，我的个人IP都已经生锈了，也应该发大招磨一磨了。因此决定，干脆就以连载的方式，分享下我是如何设计与实现这款价值超5万的撮合引擎的。</p>
+<p>本来，想发成掘金小册，收点稿费，毕竟这是个具有很大商业价值的软件，但问了掘金的人员，他们目前不接收这类主题。最终决定免费发布，还可以多发几个渠道，说不定还能给我多带来些关注量。</p>
+<p>好了，下面开始进入撮合引擎系列的正题。</p>
+<h2 id="撮合引擎简介"><a href="#撮合引擎简介" class="headerlink" title="撮合引擎简介"></a>撮合引擎简介</h2><p>撮合引擎是所有撮合交易系统的核心组件，不管是股票交易系统——包括现货交易、期货交易、期权交易等，还是数字货币交易系统——包括币币交易、合约交易、杠杆交易等，以及各种不同的贵金属交易系统、大宗商品交易系统等，虽然各种不同交易系统的交易标的不同，但只要都是采用撮合交易模式，都离不开撮合引擎。</p>
+<p>撮合引擎是可以具有通用性的，一套具有通用性的撮合引擎实现理论上可以应用到任何撮合交易系统中，而无需做任何代码上的调整。即是说，同一套撮合引擎实现，既可以应用在股票交易系统，也可以应用在数字货币交易系统，可以用于现货交易，也可以用于合约交易等。</p>
+<p>那么，一套具有通用性的撮合引擎应该具备哪些功能呢？确定该问题的答案之前，我们先简单梳理一下一个完整的交易流程是怎样的？一般会包括以下步骤：</p>
+<ol>
+<li>系统开放某个交易标的的交易功能。</li>
+<li>用户提交该交易标的的买卖申报，即<strong>委托单</strong>。</li>
+<li>系统验证委托单是否有效，包括交易标的是否处于可交易的状态、订单的价格和数量是否符合要求等。</li>
+<li>确定该委托单的<strong>挂单(Maker)</strong>费率和<strong>吃单(Taker)</strong>费率。</li>
+<li>检查用户的资产账户情况，包括账户状态是否交易受限，是否有足够资金用于下单等。</li>
+<li>将详细的委托单数据持久化到数据库，并冻结用户账户中相应数量的资金。</li>
+<li>将委托单进行撮合处理，即在<strong>交易委托账本(OrderBook)</strong>中寻找能与该委托单匹配成交的订单，匹配的结果可能是：全部成交、部分成交或无匹配。全部成交或部分成交时，可能在交易委托账本中存在一个或多个匹配的订单，即会产生一条或多条成交记录。当无匹配或部分成交时，委托单的部分数据包括剩余未成交的数量会暂时保存到交易委托账本中，等待与后续的委托单匹配撮合。</li>
+<li>将撮合产生的成交记录持久化到数据库，并根据历史成交记录生成市场数据，如K线数据、今日涨跌幅等。</li>
+<li>更新数据库中所有成交订单的委托单数据，以及更新订单用户的资产账户余额。</li>
+<li>将更新的订单数据、市场数据等发送给到前台。</li>
+</ol>
+<p>整个交易流程中涉及到多个服务，包括用户服务、账户服务、订单服务、撮合服务、市场数据服务等。其中，只有第7步是撮合引擎处理的。从单一职责原则来说，撮合引擎就应该只做一件事，那就是<strong>负责撮合订单</strong>。撮合之前的委托单持久化、冻结资金等，以及撮合之后生成K线数据等，都不应该属于撮合引擎的职责。</p>
+<h2 id="撮合竞价方式"><a href="#撮合竞价方式" class="headerlink" title="撮合竞价方式"></a>撮合竞价方式</h2><p>撮合竞价方式一般有两种，一是<strong>集合竞价</strong>，二是<strong>连续竞价</strong>。股票交易系统一般会在不同交易时间段采用不同的竞价方式，比如在开盘或收盘时采用集合竞价，从而产生<strong>开盘价</strong>或<strong>收盘价</strong>，其余时间采用连续竞价。而大多数字货币交易系统则没有集合竞价，只有连续竞价，开盘价一般是在开始交易之前就设定好的。</p>
+<h3 id="集合竞价"><a href="#集合竞价" class="headerlink" title="集合竞价"></a>集合竞价</h3><p>所谓集合竞价，是指对一段时间内接收的买卖委托单一次性集中撮合的竞价方式。以深沪的股票交易系统为例，在每个交易日的 9:15~9:25 期间是集合竞价时间。在该时间段内，系统陆续接收到的委托单不会即时成交，而是先将所有委托单按照<strong>价格优先、时间优先</strong>的原则排序，并在此基础上，找出一个基准价格，使它能同时满足以下三个条件：</p>
+<ol>
+<li>可实现<strong>最大成交量</strong>的价格；</li>
+<li>高于该价格的买单与低于该价格的卖单能全部成交的价格；</li>
+<li>与该价格相同的买方或卖方至少有一方全部成交的价格。</li>
+</ol>
+<p>在 9:25 分结束的时候，该基准价格就被确定为<strong>成交价格</strong>，所有高于该价格的买单与低于该价格的卖单都将以该价格成交。未能成交的委托单，则自动转入连续竞价。</p>
+<p>不过，如果满足以上三个条件的价格存在两个或两个以上呢？对此，深交所和上交所的处理方案有所不同，深交所会取距<strong>前收盘价</strong>最近的价格为成交价，而上交所则取使<strong>未成交量</strong>最小的价格为成交价，如果未成交量最小的价格仍不止一个，则取<strong>中间价</strong>为成交价。</p>
+<p>集合竞价的主要目的就是为了确定开盘价或收盘价。</p>
+<h3 id="连续竞价"><a href="#连续竞价" class="headerlink" title="连续竞价"></a>连续竞价</h3><p>所谓连续竞价，也是我们所熟悉的竞价方式，是指对买卖委托单逐笔连续撮合的竞价方式。用户的挂单，只要满足成交条件，就能即时成交。而集合竞价，则要等到最后一刻才会成交。</p>
+<p>连续竞价时，依然要满足价格优先、时间优先的成交原则：</p>
+<ol>
+<li><strong>价格优先</strong>：买单则价格较高者能优先成交，卖单则是价格较低者能优先成交。</li>
+<li><strong>时间优先</strong>：买卖方向和价格相同的委托单，先申报的委托单会比后申报的委托单优先成交。</li>
+</ol>
+<p>另外，买入价必须大于或等于卖出价才能撮合成交。当买入价等于卖出价时，成交价就是买入价或卖出价。当买入价大于卖出价时，则还要参考前一笔成交价来确定最新成交价。假设买入价为 B，卖出价为 S，前一笔成交价为 P，最新成交价为 N，那么：</p>
+<ul>
+<li>如果 P &gt;= B，则 N = B</li>
+<li>如果 P &lt;= S，则 N = S</li>
+<li>如果 B &gt; P &gt; S，则 N = P </li>
+</ul>
+<p>一套通用的撮合引擎应该两种竞价方式都支持，但对于同一交易标的来说，两种竞价方式不能同时进行，因此设计上需要考虑如何在两种竞价方式之间切换，具体的实现思路在后续章节我们再展开来讲。</p>
+<h2 id="质量需求"><a href="#质量需求" class="headerlink" title="质量需求"></a>质量需求</h2><p>我们的撮合引擎除了要满足以上所说的功能需求，还应该满足一些质量需求，尤其对<strong>可用性</strong>、<strong>可伸缩性</strong>和<strong>性能</strong>的要求较高。另外，为了达到通用，也要满足<strong>可复用性</strong>的需求。</p>
+<p>先说下可复用性，我们期望的是该撮合引擎既能用于股票交易系统，也能用于数字货币交易系统，既能用于币币交易，也能用于合约交易。因此，该撮合引擎要避免引入与具体系统强相关的业务逻辑，以加强它的可复用性。</p>
+<p>再看看性能，要衡量一个撮合引擎的性能，就看它处理每个交易对的 <strong>TPS</strong> 有多高，即每秒钟能处理多少笔相同交易对的委托单。以前，基于数据库的撮合技术，TPS 一般只有10笔/秒。而现在基本都是采用内存撮合技术，TPS 很容易就能达到1000笔/秒，如果使用独占的高性能服务器，1万笔/秒甚至更高的 TPS 都不难达到。</p>
+<p>接着谈谈可伸缩性，我们的每一个撮合引擎既可以同时处理多个交易标的，也可以只处理单个交易标的。当交易标的和并发量增多的时候，可以增加服务器，部署成撮合引擎集群，分别用来处理不同的交易标的，从而能够实现负载均衡。</p>
+<p>最后聊聊可用性，高可用主要体现在两点，一是故障率要低，二是对故障维修的时间要短。要降低故障率，那撮合引擎就需要有较高的健壮性，对于可能导致引擎出故障的各种异常情况要考虑好并设计好解决方案。另外，还可以采用多机热备份技术来提高可用性，而且要保证互备服务器之间的数据一致，那就需要引入内存状态机复制方案，实现上会复杂很多。</p>
+<p>不过，我们并非一下子就要达到很高的质量要求，因为要求越高，其架构和实现会越复杂。我们可以先从简单的版本开始，然后不断升级迭代。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>我们目的是实现一套通用的撮合引擎，要支持集合竞价和连续竞价，还要实现一些质量需求，提高系统的可复用性、性能、可伸缩性、可用性等。后续章节会对这些需求不断深入探讨其设计与实现。另外，我们将采用不断升级迭代的方式来设计和实现多个版本的撮合引擎。</p>
+<p>留两个思考题：</p>
+<ol>
+<li>集合竞价结束的时候，如果不存在符合那三个条件的基准价格，那开盘价又将如何确定？</li>
+<li>对于单个交易对，是否可通过横向增加服务器的方式提高其性能？</li>
+</ol>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191117/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180425/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2387,643 +3039,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160509/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160509/" class="post-title-link" itemprop="url">小钢的架构思考:架构规划</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-05-09 14:15:00" itemprop="dateCreated datePublished" datetime="2016-05-09T14:15:00+08:00">2016-05-09</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:31" itemprop="dateModified" datetime="2019-07-02T11:18:31+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160509"><strong>http://keeganlee.me/post/architecture/20160509</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-05-09</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160425">小钢的架构思考:什么是架构</a><br><a href="http://keeganlee.me/post/architecture/20160509">小钢的架构思考:架构规划</a><br><a href="http://keeganlee.me/post/architecture/20160621">小钢的架构思考:架构设计</a></p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160425">上一篇</a>简单聊了下什么是架构，还将架构划分为三个阶段：规划阶段、设计阶段和构建阶段，构建阶段其实也是架构实现的阶段。其实，三个阶段的界限并不明显，而占比最多的是设计阶段；而且，规划和构建阶段其实也会有设计。也可能因此，当我们谈到架构的时候，更多是在谈架构设计。但仔细想想，三个阶段的划分确是合理的。本文先聊聊架构规划。</p>
-<h2 id="架构规划"><a href="#架构规划" class="headerlink" title="架构规划"></a>架构规划</h2><p>架构规划做什么呢？我觉得主要是规划好下个阶段架构设计的边界。而影响架构边界的，其实就是需求。需求形成了对架构的约束条件，从而也对架构设计形成了边界。那么，有哪些需求呢？可以分为三大类：商业需求、功能需求和质量需求。</p>
-<blockquote>
-<h3 id="商业需求"><a href="#商业需求" class="headerlink" title="商业需求"></a>商业需求</h3></blockquote>
-<p>商业需求是最高层次的需求，对其含义，我比较赞同温昱在《软件架构设计》中提到的解释：它关注从客户群、企业现状、未来发展、预算、立项、开发、运营、维护在内的整个软件生命周期涉及的商业因素，包括了商业层面的目标、期望和限制等。商业需求一般对架构的影响比较大，对架构产生限制的商业因素也比较多，在此列举一些比较常见的：</p>
-<ol>
-<li><strong>上市时间</strong>：上市时间限定了系统从设计、开发、测试到上市的时间边界。之前我跟进过一个垂直于大学生市场的应用，上市时间就要求在新生入学前，不然就会错过推广的最佳时期，预留给开发的时间只有两个月。因此，我们只好大部分重用前个项目的元素，包括重用服务端的一些模块，还包括客户端的架构和界面。当然，一般情况下，预留给开发的时间不会这么短，但也不会特别长。架构师需要根据时间长短，平衡各方面需求，做好架构选型。</li>
-<li><strong>成本预算</strong>：成本预算就限定了能使用的资源边界。不同架构的开发成本肯定不同，要满足更多功能需求和更多质量需求的架构成本也更高，在预算有限的情况下，只能权衡各种需求，优先满足重要程度高的需求。</li>
-<li><strong>人力现状</strong>：100人的开发团队和10人的开发团队，软件的架构会有很大不同。另外，开发团队人员所掌握的技术也会对架构选型有影响。例如，团队里还没有人会用React Native，那现阶段就不适合选择React Native作为App架构的技术基础。</li>
-<li><strong>与外围系统的集成</strong>：当需要与外围系统集成时，需要认真考虑集成方法，尤其是外围系统比较老的时候，集成难度可能更高。另外，外围系统的不可控因素一般也比较多，因此，对架构处理这些不可控风险的要求相对也高。</li>
-<li><strong>开放性</strong>：封闭的私有系统和开放式系统对架构的要求也不同，一个系统如果选择了开放，那对架构的质量要求更高，对安全性、扩展性、性能等质量属性都应该比封闭时高。</li>
-<li><strong>目标市场</strong>：目标用户10万、100万、1000万，不同级别的目标市场，架构也是大有不同。另外，大众市场和垂直的专门市场，架构也同样有区别，较大的专门市场一般都采用产品线的规划方案。</li>
-<li><strong>多端支持</strong>：现在移动端普遍支持Android、iOS、Wechat，管理端通常则支持PC Web，如果管理端也要支持Android、iOS、Wechat，或者移动端和管理端还要再支持WindowsPhone、黑莓，甚至再支持VR，则需要投入更多时间和人力，架构上相应也需要做出调整。</li>
-<li><strong>期望的系统生存期</strong>：从主观上说，谁都希望自己的系统可以生存很久，但生存期越长，意味着系统的可修改性、可扩展性、可移植性等需要更高。但是，受上市时间、成本预算等因素的制约，再加上软件本身的变化快，所以，客观上，一般也不会期望其生存期太长。当系统不能满足渐增的需求时，基本通过重构来解决。</li>
-<li><strong>阶段性计划</strong>：每一个大平台系统普遍都是分阶段完成的，因此，前期阶段的架构设计时就需要考虑好重用性、扩展性、伸缩性、移植性等特性。但因为每个阶段经过市场验证后，需求有可能会变化，所以又不能过度设计，否则就会造成设计浪费，还可能加大了后续阶段架构调整的难度。</li>
-<li><strong>国际化</strong>：如果走国际化路线，那架构上就要考虑好对多国语言的支持。</li>
-<li><strong>竞争对手</strong>：产品要比竞争对手优秀，那就要在一些关键的功能或质量上超越对方，也意味着在这些方面的架构需要投入更多。</li>
-<li><strong>法律法规</strong>：比如，对某些关键字要进行过滤屏蔽，这是天朝独有的，大家懂的。</li>
-</ol>
-<p>商业需求多种多样，有些需求还可能会相互矛盾，比如，上市时间和成本预算就会和期望的系统生存期可能产生矛盾，期望的生存期越长其成本就会越高，需要投入的时间就会越多，那么，就有可能拖延上市时间。因此，做架构规划时，必须梳理清楚哪些需求是能够被满足的，能被满足的程度如何，需要在各个需求间权衡利弊。另外，商业需求因为是最高层次的需求，因此，相对于功能需求和质量需求，其优先级一般也比较高。</p>
-<blockquote>
-<h3 id="功能需求"><a href="#功能需求" class="headerlink" title="功能需求"></a>功能需求</h3></blockquote>
-<p>功能需求描述了系统应该提供的服务，包括为用户提供的服务，也包括为其他系统提供的服务。而架构主要就是为功能服务的，而功能需求基本与具体的业务相关。因此，要做好功能需求这块的架构，就必须对该业务领域足够了解，这样才能更好地抽象建模。对功能需求的架构规划，主要就是建立业务领域模型。领域模型定下来后，下个阶段的设计必须与领域模型保持一致。</p>
-<p>而对功能需求进行领域建模之前，还需先梳理下需求的优先级。因为受商业需求的影响，功能需求也需要权衡。比如，上市时间紧、成本预算低、人力资源也不是很充足的情况下，功能需求只能少不能多。而需要与外围系统集成的时候，也意味着这部分功能不需要自己实现了；但是，如果外围系统无法完全满足需求时，则还需要自己再实现缺失的需求。因此，现阶段需要满足哪些功能需求？需要满足到什么程度？这两个问题确定了之后才能更有效地进行领域建模。</p>
-<p>领域建模主要就是要分析清楚每个领域模型和模型之间的关系。还是直接用一个例子来说明吧。假设现在要做一个支持O2O(Online To Offline)的电商平台，以下是经过梳理后的几个关键的功能需求：</p>
-<ol>
-<li>商家可以在平台发布商品，可以是实体类商品，也可以是服务类商品。</li>
-<li>实体类商品支持快递，服务类商品只能到商家门店兑换消费。</li>
-<li>用户购买实体类商品时需提供收货信息。</li>
-<li>用户购买每个商品时对应生成一个订单。</li>
-<li>用户购买的是实体类商品时，可以查看商品的物流信息。</li>
-<li>用户购买的是服务类商品时，可以用订单的兑换码到商家门店兑换消费。</li>
-</ol>
-<p>根据以上需求，可以初步得到相关的领域概念有：商家、商品、实体类商品、服务类商品、物流信息、门店、用户、收货信息、订单、兑换信息。理清这些领域概念之间的关系之后，可以得到类似于下面的领域模型视图：</p>
-<img src="/post/architecture/20160509/13-36-06.jpg">
-<p>当然，这只是一个很小的例子，实际上的领域模型会比这个例子复杂得多。领域模型确定之后，系统中有多少业务领域、各领域概念之间的关系如何就一清二楚了。</p>
-<blockquote>
-<h3 id="质量需求"><a href="#质量需求" class="headerlink" title="质量需求"></a>质量需求</h3></blockquote>
-<p>质量需求是三类需求中，需求层次最低的，但却是大部分架构师最关注的。纵览那么多架构技术，就会发现，大部分都是为了解决某个或某些质量属性优化的问题。</p>
-<p>质量属性常见的有以下这些：</p>
-<ul>
-<li>性能(Performance)：性能无疑是一个非常重要的特性，尤其在计算资源有限的情况下。但也无需过分追求高性能，从而牺牲其他更重要的特性。关于过度关注性能的问题，这篇文章说得很好：<a href="http://www.cnblogs.com/freeflying/p/4788494.html" target="_blank" rel="noopener">架构之路（二）：性能</a>。</li>
-<li>安全性(Security)：安全性一般会和性能相互制约，最明显的例子就是HTTPS，使用HTTPS提高了安全性，但性能就会有所牺牲。很难做到既满足高安全又高性能，因此需要根据具体需求平衡两方面的特性。</li>
-<li>可用性(Availability)：也有人称为有效性，一般定义为：可用性 = 系统正常工作时间 / (系统正常工作时间 + 故障维修时间）。此定义就说明了可用性与系统故障有关，故障率高，可用性就低，故障率低，可用性才高。另外，高可用性还说明了系统对故障维修的时间也很短。</li>
-<li>易用性(Usability)：易用性很容易和可用性混淆，可用性关注的是系统长时间无故障运行的能力，而易用性关注的则是系统易于使用的能力。</li>
-<li>鲁棒性(Robustness)：也称为健壮性、容错性，是指系统在出现了用户非法操作、或软硬件的缺陷导致的异常情况下，系统依然能够正常运行的能力。比如说，系统在输入错误、磁盘故障、网络过载或有意攻击情况下，能否不死机、不崩溃，就是该软件的鲁棒性。</li>
-<li>可伸缩性(Scalability)：可伸缩性是指当用户量和数据量增加时，系统维持高服务质量的能力。比如，当并发量为1W时，系统响应时间为1秒，那如果并发量增加到100W时，只要通过增加服务器数量，而无需对代码进行修改即可达到系统响应时间依然为1秒，就说明该系统的可伸缩性高。</li>
-<li>互操作性(Interoperability)：互操作性反映了本系统与其他系统交换数据和服务的难易程度。</li>
-<li>可扩展性(Extensibility)：也称为灵活性，反映了系统应对变化的能力。在软件开发过程中，需求变更是常有的事，尤其在移动互联网时代，变化是非常频繁的，也因此，可扩展性是移动互联网产品重点考虑的质量需求。</li>
-<li>可理解性(Understandability)：可理解性是指开发人员通过源代码和相关文档，了解程序功能、结构和运行方式的难易程度。遵从好的开发规范一般都可以提高可理解性。另外，单一职责原则运用得好，也能大大提高可理解性，所谓“简单就是美”，简单才容易理解。</li>
-<li>可测试性(Testability)：简单点说，可测试性就是测试和诊断软件错误的难易程度。比如进行单元测试的难易程度。如果程序包含了复杂的处理逻辑、数据结构、模块关系，可测试性的设计更显得尤为重要。</li>
-<li>可复用性(Reusability)：可重用性表明了一个软件组件可以在其他程序中使用的难易程度。一般需要将一个组件抽离成通用性的组件时，对可复用性的要求就会比较高。</li>
-<li>可移植性(Portability)：可移植性表明了将软件系统从一个运行环境转移到另一个不同的运行环境的难易程度。</li>
-<li>可维护性(Maintainability)：可维护性是指理解、改正、改动、改进软件的难易程度。我觉得，可维护性是保证一个软件系统能够长期生存的最重要的特性，没有之一。对一个可维护性差的系统，久而久之，不断变得牵一发而动全身，变得不可维护，慢慢只能宣布灭亡。</li>
-</ul>
-<p>理想情况下，谁都希望所有属性都是高质量的，但谁都清楚这是不可能的事。要提高更多质量属性，实现的难度更大，需要付出的成本更高。而且，不同质量属性之间还存在制约关系，比如，提高安全性，一般就会减低性能；提高了性能，还可能减低了可维护性。因此，在实际做架构规划时，必须根据具体需求在各质量属性间权衡优先级。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>现在有不少公司，尤其是创业型的公司，为了快，直接从需求跳到开发，没有架构规划，也没有架构设计。这样的系统，就等于一栋没有打地基的建筑物，其风险自不用说。架构就是软件系统的地基。有一句话说得好，“基础不牢，地动山摇”。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160509/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160425/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160425/" class="post-title-link" itemprop="url">小钢的架构思考:什么是架构</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-04-25 17:30:00" itemprop="dateCreated datePublished" datetime="2016-04-25T17:30:00+08:00">2016-04-25</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:34" itemprop="dateModified" datetime="2019-07-02T11:18:34+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160425"><strong>http://keeganlee.me/post/architecture/20160425</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-04-25</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160425">小钢的架构思考:什么是架构</a><br><a href="http://keeganlee.me/post/architecture/20160509">小钢的架构思考:架构规划</a><br><a href="http://keeganlee.me/post/architecture/20160621">小钢的架构思考:架构设计</a></p>
-<hr>
-<p>最近在思考架构方面一些最基本的问题，比如什么是架构？如何评价一个架构的好坏？是否有一些通用的基本原则指引架构设计？在面向对象设计方面，有单一职责、里氏替换、依赖倒置、接口隔离、迪米特、开闭原则等等基本原则；那么，在架构设计方面是否也有类似的基本原则呢？本文就先聊聊第一个问题。</p>
-<h2 id="什么是架构"><a href="#什么是架构" class="headerlink" title="什么是架构"></a>什么是架构</h2><p>关于什么是架构，业界从来没有一个统一的定义。Martin Fowler在《企业应用架构模式》中也没有对其给出定义，只是提到能够统一的内容有两点：</p>
-<ol>
-<li>最高层次的系统分解；</li>
-<li>系统中不易改变的决定。</li>
-</ol>
-<p>《软件架构设计》一书则将架构定义总结为组成派和决策派：</p>
-<ul>
-<li>组成派：架构=组件+交互：软件系统的架构将系统描述为计算组件及组件之间的交互。</li>
-<li>决策派：架构=重要决策集：软件架构是在一些重要方面所作出的决策的集合。</li>
-</ul>
-<p>而架构的概念最初来源于建筑，因此，我想从建筑的角度去思考这个问题。Wikipedia中，对架构，即Architecture的定义如下：</p>
-<blockquote>
-<p>Architecture is both the process and the product of planning, designing, and constructing buildings and other physical structures.</p>
-</blockquote>
-<p>简单翻译就是：架构是规划、设计和构建建筑物或其他物理构筑物的过程和结果。</p>
-<p>从上面的定义中可知，首先，架构的最终目标是为了产出建筑物或其他物理构筑物，构筑物可以只是一套房子，也可以是一栋楼盘，抑或是一个小区、商业区，甚至是一个城市。构筑物越大，其架构必然也越复杂。</p>
-<p>其次，产出建筑物之前需要经过三个阶段：规划(planning)、设计(designing)和构建(constructing)。这三个阶段其实也是架构的核心了。比如，开发商要建一个住宅小区，首先肯定要对该小区有一个整体的规划吧：小区的建设选址、建设的规模、建设的内容、投资估算、建设周期等等。接着，就要对小区的各方面进行设计了，最高层次的应该是小区的总体布局设计，拆分开的话就是各楼盘的设计、绿化的设计、各种配套设施的设计等等，再细化下去就是各种户型的设计、楼盘内和小区内各种走道的设计等等。最后，构建阶段也就是施工阶段了，是将之前所有的想法转为实际的建筑物的阶段。</p>
-<p>最后，架构包含了以上的过程和结果。也就是说，对小区总体规划的过程是架构，规划的结果方案也是架构，小区总体布局的设计、楼盘的设计、户型的设计等等的每个过程也都是架构，每个过程产出的设计方案也是架构，构建阶段的施工图也是架构，可以说，产出建筑物期间的每个过程和结果都是架构。</p>
-<p>那么，如果将建筑物换成了软件，那就变成对软件架构的定义了：软件架构是规划、设计和构建软件的过程和结果。</p>
-<p>相应地，软件架构的最终目标就是为了产出软件，可以是一个App，也可以是一个平台，如SaaS、PaaS、BaaS等等，甚至还可以是智慧城市这样庞大的生态系统，地球人都知道，越庞大复杂的系统，架构越难。规划阶段更多考虑的是软件的需求，包括业务上的功能性需求和技术上的非功能性需求，如可靠性、可扩展性、可维护性等；此阶段的架构一般为系统架构。设计阶段的工作更多的就是拆分细化，以满足各种需求；此阶段的架构一般为逻辑架构。构建阶段主要就是对软件的实现和部署了；此阶段的架构一般为物理架构。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>其实，对架构的每种定义都没有错，就像《软件架构设计》一书也说过的，只是每个人所看的角度不同而已。从上面的定义中也可知，架构涵盖了软件研发的方方面面，很难有人能够全部都懂，大部分架构师懂得的只是其中的某些方面。一栋高楼大厦也不是一个人完成的。</p>
-<p>思考完什么是架构之后，那接下来，就要思考架构怎么做了？这个问题留待后文继续思考。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160425/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160404/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160404/" class="post-title-link" itemprop="url">App环境分离的实现:iOS篇</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-04-04 09:00:00" itemprop="dateCreated datePublished" datetime="2016-04-04T09:00:00+08:00">2016-04-04</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:37" itemprop="dateModified" datetime="2019-07-02T11:18:37+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160404"><strong>http://keeganlee.me/post/architecture/20160404</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-04-04</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160329">App环境分离的实现:Android篇</a><br><a href="http://keeganlee.me/post/architecture/20160404">App环境分离的实现:iOS篇</a></p>
-<hr>
-<p>说到App环境分离在iOS的实现，我曾在iOS技术群里问过：如何实现在同一台手机能同时安装同个应用的测试和生产版本？应用名称要有区分，图标也要有所区别。不要手动修改Bundle id和应用名称，也不要手动替换图标，更不要维护两个项目。如何才能简单地实现？</p>
-<p>结果发现很多人都不知道该怎么实现。其实，实现方案很简单，只要建立多个Target即可。当然，有些细节问题要注意，不然会出错。接下来，看如何一步步地实现环境分离。</p>
-<h2 id="复制Target"><a href="#复制Target" class="headerlink" title="复制Target"></a>复制Target</h2><p>关于Xcode中Target的概念，文档中有这么一段说明：</p>
-<blockquote>
-<p>A target specifies a product to build and contains the instructions for building the product from a set of files in a project or workspace. A target defines a single product; it organizes the inputs into the build system—the source files and instructions for processing those source files—required to build that product. Projects can contain one or more targets, each of which produces one product.</p>
-</blockquote>
-<p>即是说，每个Target代表一个编译的产品。每个Target，可以有不同的编译源文件和资源文件。那么，实现环境分离的方案，就是分别建立测试环境和生产环境的两个Target。默认的Target作为生产环境的Target，在此基础上复制多一个Target作为测试环境的Target。</p>
-<p>如下图，选择默认的Target，从右键菜单中选择Duplicate，就可以复制出一个新的Target了。</p>
-<img src="/post/architecture/20160404/21-33-15.jpg">
-
-<p>新Target默认名称为<strong>productname copy</strong>。复制完成后，不只是TARGETS列表中多出了名为<strong>productname copy</strong>的新Target，同时也会为该新Target生成名为<strong>productname copy</strong>的新的scheme，以及在项目的根目录下生成<strong>productname copy-Info.plist</strong>文件。</p>
-<h2 id="更名Target"><a href="#更名Target" class="headerlink" title="更名Target"></a>更名Target</h2><p>不喜欢<strong>productname copy</strong>这样的名字，<strong>productnameBeta</strong>这样的名字才是测试版本该有的名字。那么，需要改名的地方有三处：target名称、scheme名称、plist文件名称。</p>
-<p>修改target名称很简单，只要在TARGETS列表中选中后，再点击一下即可编辑修改名称。修改scheme则可以在Xcode左上角的Run\Stop按钮右边的scheme列表菜单中选择Manage Schemes，打开弹出框，如下图，则可将<strong>productname copy</strong>修改为<strong>productnameBeta</strong></p>
-<img src="/post/architecture/20160404/21-40-10.jpg">
-<img src="/post/architecture/20160404/21-38-25.jpg">
-<p>plist文件则修改为<strong>productnameBeta-Info.plist</strong>，同时，我还将其移到与默认的Info.plist文件在同个目录下。不只是在同一个分组下，也是在同一个物理目录下。改完plist文件后，还需要修改<strong>productnameBeta</strong>的Target的<strong>Info.plist File</strong>设置，该属性设置了相应Target绑定的plist文件是哪个。该属性值本来为<strong>productname copy-Info.plist</strong>，现需要更改为<strong>productname/productnameBeta-Info.plist</strong>。</p>
-<h2 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h2><p>接下来，就要修改Target的配置，实现真正的环境分离了。默认的<strong>productname</strong>的Target，作为生产版本，基本不需要改动，需要改的是作为测试版的<strong>productnameBeta</strong>。</p>
-<p>首先，修改<strong>productnameBeta</strong>的Bundle id，在原有的基础上添加后缀“.beta”，以实现能和生产版同时安装在同一台设备上。</p>
-<p>接着，修改<strong>Bundle display name</strong>，可在原有名称的基础上添加后缀“Beta”，以实现和生产版应用名称上的区分。</p>
-<p>然后，需要更换图标了。默认会使用<strong>AppIcon</strong>这一项Assets，但AppIcon是给生产版设置的图标，既然测试版要使用不同图标，那就需要新建一套新的App Icon，如下图：</p>
-<img src="/post/architecture/20160404/22-32-51.jpg">
-<p>新建的App Icon将其命名为<strong>AppIcon-Beta</strong>，放置测试版的图标。并将<strong>productnameBeta</strong>的App Icons Source指定为新建的<strong>AppIcon-Beta</strong>。至此，图标也与生产版的有所区别了。</p>
-<h2 id="判别Target"><a href="#判别Target" class="headerlink" title="判别Target"></a>判别Target</h2><p>那么，设置了不同Target后，代码上可能需要根据不同Target做不同处理，因此，需要在代码上能判断当前编译的是哪个Target。这可以通过预编译宏来区分。例如，我们在<strong>productnameBeta</strong>的Build Settings中，将<strong>Preprocessor Macros</strong>属性值设置为BETA，也就是为<strong>productnameBeta</strong>定义了一个预编译宏，宏名称为BETA。</p>
-<img src="/post/architecture/20160404/08-42-13.jpg">
-
-<p>然后，在代码中可以通过如下预编译指令判断当前是在哪个Target下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#ifdef BETA</span><br><span class="line">    // 测试版需要执行的代码</span><br><span class="line">#else</span><br><span class="line">    // 默认生产版需要执行的代码</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
-
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>通过多个Target可以实现环境的分离，本文的实现很简单。而关于Target的用法也不只限于此，若想了解Target更多高级用法，可查询相关资料，在此就不展开了。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160404/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3070,7 +3085,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-count">20</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -3093,7 +3108,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">3</span>
+                      
+                    
+                    <span class="site-state-item-count">4</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -3120,7 +3137,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">5</span>
+                      
+                    
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>

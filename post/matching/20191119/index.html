@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191119微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-19  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  交易委托账本交易委托账本(OrderBook)是整个撮合引擎里最核心也是最复杂的数据结构">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:数据结构设计">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191119/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191119微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-19  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  交易委托账本交易委托账本(OrderBook)是整个撮合引擎里最核心也是最复杂的数据结构">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/orderbook.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-orderbook.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-orderqueue.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-order.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-trade.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191119/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-11-19T12:52:23.940Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:数据结构设计">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191119微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-19  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计  交易委托账本交易委托账本(OrderBook)是整个撮合引擎里最核心也是最复杂的数据结构">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191119/orderbook.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191119/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:数据结构设计 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191119/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:数据结构设计
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-19 20:21:14 / 修改时间：20:52:23" itemprop="dateCreated datePublished" datetime="2019-11-19T20:21:14+08:00">2019-11-19</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191119"><strong>http://keeganlee.me/post/matching/20191119</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-19</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a></p>
+<hr>
+<h2 id="交易委托账本"><a href="#交易委托账本" class="headerlink" title="交易委托账本"></a>交易委托账本</h2><p><strong>交易委托账本(OrderBook)</strong>是整个撮合引擎里最核心也是最复杂的数据结构，每个交易对都需要维护一份交易委托账本，账本里保存着指定交易对所有待撮合的委托单。每份账本都有两个队列，一个卖单队列和一个买单队列，两个队列都需要按照<strong>价格优先、时间优先</strong>的原则进行排序。</p>
+<p>所谓价格优先、时间优先，即是说：卖单队列的委托单是按价格由低到高排序，买单队列则相反，按价格由高到低排序；相同价格的委托单，则是按下单时间的先后来排序。</p>
+<img src="/post/matching/20191119/orderbook.png">
+
+<p>如上图，每个小方格表示一个委托单，标 <strong>H</strong> 的是排在头部的委托单，<strong>N</strong>则是与 H 同价格但下单时间上排在 H 后面的委托单，<strong>S</strong>则是下一档位价格的第一个委托单。可以从图中明显看出，横向上，委托单是按时间排序的，竖向上，又是按价格排序的。</p>
+<p>撮合的时候，都是先取出 <strong>H</strong> 委托单与新委托单进行匹配。如果新委托单是<strong>买单</strong>，则获取<strong>卖单队列</strong>的 H 单出来匹配；如果新委托单是<strong>卖单</strong>，则获取<strong>买单队列</strong>的 H 单。如果 <strong>H</strong> 单全部匹配成交了，那标识为 <strong>N</strong> 的委托单就变成了新的 <strong>H</strong> 单。如果第一排的全部委托单都匹配完了，那就 <strong>S</strong> 单会变成新的 <strong>H</strong> 单。</p>
+<p>交易委托账本可支持一些操作方法，包括初始化、增加买卖委托单、移除买卖委托单、获取头部委托单等。交易委托账本的类图大概如下：</p>
+<img src="/post/matching/20191119/class-orderbook.png">
+
+<p>其中，<strong>getHead</strong> 和 <strong>popHead</strong> 方法的区别是：get 只读头部委托单但不会移除它，而 pop 会将头部委托单从队列中移除。</p>
+<h2 id="订单队列"><a href="#订单队列" class="headerlink" title="订单队列"></a>订单队列</h2><p>买单队列和卖单队列可以设计为使用统一的订单队列类型，两者只有价格排序方向不同，那订单队列就可以用一个属性来表示排序方向。队列里的所有订单可以采用二维数组或二维链表来保存，考虑到主要操作是插入和删除，用链表比用数组效率更高。如果想让操作效率更高，那就需要使用更复杂的数据结构了，比如再结合跳表。目前版本为了简单，采用简单的二维链表即可。</p>
+<p>使用二维链表的话，那链表中的每个元素保存的就是横向上按时间排序的订单链表，这些订单链表又组成了竖向上按价格排序的链表。</p>
+<p>另外，还可以保存一个 Map，将价格作为 Key，将同价格的订单链表作为 Value，这样就能加快同价格订单的查询。</p>
+<p>订单队列可支持的操作方法也很简单，包括初始化、新增订单、移除订单、获取头部订单等。其类图大概如下：</p>
+<img src="/post/matching/20191119/class-orderqueue.png">
+
+<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList **保存整个二维链表，第一维以价格排序，第二维以时间排序，</strong>elementMap** 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<h2 id="委托单"><a href="#委托单" class="headerlink" title="委托单"></a>委托单</h2><p>委托单则是撮合引擎里最基本的数据结构了，其数据主要是从上游服务传输过来的，其类图大概如下：</p>
+<img src="/post/matching/20191119/class-order.png">
+
+<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type **表示交易类型，即</strong>限价交易(limit)<strong>或</strong>市价交易(market)<strong>等，我们的 MVP 版本只支持限价交易。</strong>amount <strong>是购买数量，</strong>price** 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
+<p><strong>toJson() *<em>和 *</em>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
+<h2 id="成交记录"><a href="#成交记录" class="headerlink" title="成交记录"></a>成交记录</h2><p>撮合成交的委托单就会生成对应的成交记录，成交记录需要发布到 MQ 给下游服务消费。成交记录的数据结构如下图：</p>
+<img src="/post/matching/20191119/class-trade.png">
+
+<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId *<em>和 *</em>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount **就是成交数量，</strong>price** 指成交价格，*<em>timestamp *</em>是成交时间。</p>
+<h2 id="Redis缓存"><a href="#Redis缓存" class="headerlink" title="Redis缓存"></a>Redis缓存</h2><p>我们需要用 Redis 缓存委托单数据和撮合中的交易对数据，主要有两个作用，一是可以对请求做去重处理，二是程序重启后可以恢复数据。</p>
+<p>由于网络中断或延迟，或其他异常情况，上游服务有可能会重复发送相同请求给到撮合引擎，因此，程序是需要做去重处理的，有了数据缓存就可以解决去重问题了。另外，由于我们采用的是内存撮合，撮合时的数据都是直接保存在程序内存里的，一旦程序退出了，那所有数据也都消失了，重启后就需要从其他地方重新加载数据，采用Redis缓存就可以很快速地缓存数据和加载数据。</p>
+<p>开启一个交易对引擎时需要将交易对缓存，关闭时则从缓存中删除，保证缓存的都是运行中的交易对，当重启时，就可以重新启动这些交易对的撮合引擎了。需要缓存的交易对数据包括两个：<strong>symbol</strong> 和 <strong>price</strong>，即标识和价格。关于价格，每次产生新的成交记录时，价格也需要同步更新，因此价格的更新会非常频繁。而标识基本无需更新，因此两者最好分开缓存。</p>
+<p>所有交易对的 symbol 可以统一缓存到一个 set 里。我们可以将 key 值设置为 <strong>matching:symbols</strong>，用 Redis 的 <strong>sadd</strong> 和 <strong>srem</strong> 命令将不同的 symbol 缓存到该 key 值里或从 key 中删除。而 price 则可以保存为 string 类型，为不同交易对的价格设置不同的 key，key 值可以设置为 <strong>matching:price:{symbol}</strong>，{symbol} 为具体交易对的 symbol 值。</p>
+<p>每个委托单也需要缓存和更新，为了能够从缓存中最快地读取和更新委托单数据，最好为每个委托单都设置一个单独的 key，key 值可以设置为 <strong>matching:order:{symbol}:{orderId}:{action}</strong>，而 value 值建议设置为 hash 类型，因为 hash 类型特别适合存储结构化的对象。</p>
+<p>交易对和委托单数据都缓存了，就能够解决去重问题和程序重启后重新启动各交易对的撮合引擎了，但其实还有一个问题，撮合引擎里的交易委托账本如何恢复？该问题先留给大伙去思考，后续章节我再来讲解我的方案。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>撮合引擎里涉及到的数据结构其实并不多，最复杂的也只有交易委托账本，其设计还会直接关系到撮合的速度。Redis 缓存的设计也有些学问在里面，设计得不好也一样会影响整体的撮合性能。本小节完成了数据结构的设计，下一小节我们就开始深入到代码实现。</p>
+<p>最后，请抽时间研究下遗留的思考题：撮合引擎里的交易委托账本如何恢复？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191119/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191118/" rel="next" title="撮合引擎开发:MVP版本">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:MVP版本
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">20</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#交易委托账本"><span class="nav-number">1.</span> <span class="nav-text">交易委托账本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#订单队列"><span class="nav-number">2.</span> <span class="nav-text">订单队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#委托单"><span class="nav-number">3.</span> <span class="nav-text">委托单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#成交记录"><span class="nav-number">4.</span> <span class="nav-text">成交记录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis缓存"><span class="nav-number">5.</span> <span class="nav-text">Redis缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
