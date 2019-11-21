@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191121微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-21  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱  黑箱引擎我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:对接黑箱">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191121/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191121微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-21  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱  黑箱引擎我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191121/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-11-21T14:46:04.341Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:对接黑箱">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191121微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-21  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱  黑箱引擎我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191121/qrcode_keegan.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191121/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:对接黑箱 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191121/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:对接黑箱
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-21 22:41:26 / 修改时间：22:46:04" itemprop="dateCreated datePublished" datetime="2019-11-21T22:41:26+08:00">2019-11-21</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191121"><strong>http://keeganlee.me/post/matching/20191121</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-21</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a></p>
+<hr>
+<h2 id="黑箱引擎"><a href="#黑箱引擎" class="headerlink" title="黑箱引擎"></a>黑箱引擎</h2><p>我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如果想将它应用到各种不同的交易系统，只要有标准的输入和输出，对接是很容易的。</p>
+<p>写作此文时的撮合引擎为 1.3 版本，我将其编译构建成可在 Linux amd64 环境运行的可执行文件，并与依赖的配置文件一起压缩成一个压缩包 <strong>matching.zip</strong>。这就成为一个黑箱引擎了。</p>
+<p>不过，该黑箱引擎除了对运行系统有要求，还对 Redis 有要求。由于使用了 Redis 的新版 MQ 功能，即 stream 数据结构，要求 Redis 至少是 5.0 版本。</p>
+<p>其实，我也可以编译构建成其他系统环境的可执行文件，如 Windows 或 Mac 系统。但作为一款商业软件以及对性能的一些要求，运行在 Linux 环境更合适。</p>
+<p>后面，我们就来看看，如果要将这个黑箱引擎应用到自己的交易系统中，如何对接？</p>
+<h2 id="安装部署"><a href="#安装部署" class="headerlink" title="安装部署"></a>安装部署</h2><p>安装部署的系统环境需是 Linux amd64 的，另外，如果要让撮合性能更快，建议 Redis 与撮合引擎可以使用同一服务器，这可以减少不同服务器之前的传输耗时。</p>
+<p>按照以下步骤操作就可以将撮合引擎安装部署到运行环境了：</p>
+<ol>
+<li>将 <strong>matching.zip</strong> 压缩包上传到运行环境；</li>
+<li>在运行环境解压 <strong>matching.zip</strong> 压缩包，解压后有一个可执行文件和一个文件夹：<ul>
+<li><strong>matching</strong>：这是撮合引擎程序的可执行文件</li>
+<li><strong>conf</strong>：存放配置文件的目录，里面就一个配置文件 <strong>config.yaml</strong></li>
+</ul>
+</li>
+<li>修改配置文件为自己想要的配置值：</li>
+</ol>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">server:</span></span><br><span class="line"><span class="attr">  port:</span> <span class="string">:9466</span>  <span class="string">//撮合引擎程序启动监听的端口</span></span><br><span class="line"><span class="attr">log:</span>                 <span class="string">//输出日志配置</span></span><br><span class="line"><span class="attr">  fileDir:</span> <span class="string">logs</span>      <span class="string">//输出日志存放的目录</span></span><br><span class="line"><span class="attr">  fileName:</span> <span class="string">matching</span> <span class="string">//日志文件名，会按日期分割</span></span><br><span class="line"><span class="attr">  prefix:</span>            <span class="string">//日志消息前缀</span></span><br><span class="line"><span class="attr">  level:</span> <span class="string">debug</span>       <span class="string">//日志级别，由低到高为：debug、info、warn、error</span></span><br><span class="line"><span class="attr">redis:</span></span><br><span class="line"><span class="attr">  addr:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span><span class="string">:6379</span>  <span class="string">//Redis地址</span></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>如果使用默认配置，请确认运行环境本地已安装并启动了Redis并运行在6379端口；</li>
+<li>如果不用默认配置，依然需要确认Redis能正确连接；</li>
+<li>运行以下命令，后台启动撮合引擎程序：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./matching &amp;</span><br></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>运行以下命令，检查程序是否启动成功：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux|grep matching</span><br></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>程序启动成功后，会在配置的日志目录生成日志文件，默认为与 <strong>matching</strong> 可执行文件同目录下的 logs/matching.log；</li>
+<li>至此，撮合引擎程序安装部署成功。</li>
+</ol>
+<h2 id="对接输入"><a href="#对接输入" class="headerlink" title="对接输入"></a>对接输入</h2><p>接入撮合引擎只需要对接三个 HTTP 接口，接口统一采用 POST 方法，参数统一用 json 格式，传 body。</p>
+<h3 id="1-开启撮合"><a href="#1-开启撮合" class="headerlink" title="1. 开启撮合"></a>1. 开启撮合</h3><p>开启指定交易标的（交易对）的撮合功能。</p>
+<h4 id="HTTP请求"><a href="#HTTP请求" class="headerlink" title="HTTP请求"></a>HTTP请求</h4><ul>
+<li>POST  <em>/openMatching</em></li>
+</ul>
+<h4 id="请求参数"><a href="#请求参数" class="headerlink" title="请求参数"></a>请求参数</h4><ul>
+<li><strong>symbol</strong>：字符串类型，必传字段，交易标的(交易对)的标识，如 BTC_USDT</li>
+<li><strong>price</strong>：数字类型，非必传字段，默认为 0，开盘价</li>
+</ul>
+<h4 id="请求示例"><a href="#请求示例" class="headerlink" title="请求示例"></a>请求示例</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">POST  /openMatching</span><br><span class="line">Body：</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"symbol"</span>: <span class="string">"BTC_USDT"</span>,</span><br><span class="line">  <span class="attr">"price"</span>: <span class="number">8219.85</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="响应数据"><a href="#响应数据" class="headerlink" title="响应数据"></a>响应数据</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"code"</span>:<span class="number">0</span>,<span class="attr">"msg"</span>:<span class="string">"OK"</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-关闭撮合"><a href="#2-关闭撮合" class="headerlink" title="2. 关闭撮合"></a>2. 关闭撮合</h3><p>关闭指定交易标的（交易对）的撮合功能。</p>
+<h4 id="HTTP请求-1"><a href="#HTTP请求-1" class="headerlink" title="HTTP请求"></a>HTTP请求</h4><ul>
+<li>POST  <em>/closeMatching</em></li>
+</ul>
+<h4 id="请求参数-1"><a href="#请求参数-1" class="headerlink" title="请求参数"></a>请求参数</h4><ul>
+<li><strong>symbol</strong>：字符串类型，必传字段，交易标的(交易对)的标识，如 BTC_USDT</li>
+</ul>
+<h4 id="请求示例-1"><a href="#请求示例-1" class="headerlink" title="请求示例"></a>请求示例</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">POST  /closeMatching</span><br><span class="line">Body：</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"symbol"</span>: <span class="string">"BTC_USDT"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="响应数据-1"><a href="#响应数据-1" class="headerlink" title="响应数据"></a>响应数据</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"code"</span>:<span class="number">0</span>,<span class="attr">"msg"</span>:<span class="string">"OK"</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-处理订单"><a href="#3-处理订单" class="headerlink" title="3. 处理订单"></a>3. 处理订单</h3><p>接收下单和撤单请求。</p>
+<h4 id="HTTP请求-2"><a href="#HTTP请求-2" class="headerlink" title="HTTP请求"></a>HTTP请求</h4><ul>
+<li>POST  <em>/handleOrder</em></li>
+</ul>
+<h4 id="请求参数-2"><a href="#请求参数-2" class="headerlink" title="请求参数"></a>请求参数</h4><ul>
+<li><strong>symbol</strong>：字符串类型，必传字段，交易标的(交易对)的标识，如 BTC_USDT</li>
+<li><strong>action</strong>：字符串类型，必传字段，订单动作，下单=create，撤单=cancel</li>
+<li><strong>orderId</strong>：字符串类型，必传字段，订单ID</li>
+<li><strong>side</strong>：字符串类型，必传字段，买卖方向，买入=buy，卖出=sell</li>
+<li><strong>type</strong>：字符串类型，必传字段，订单类型，包括：limit、limit-ioc、market、market-top5、market-top10、market-opponent，说明见下文</li>
+<li><strong>amount</strong>：数字类型，非必传字段，默认为 0，订单交易量，下单时必传，撤单时可不传</li>
+<li><strong>price</strong>：数字类型，非必传字段，默认为 0，委托价格，订单类型为市价时可不传</li>
+</ul>
+<p>订单类型说明：</p>
+<ul>
+<li><strong>limit</strong>：普通限价</li>
+<li><strong>limit-ioc</strong>：IOC限价-即时成交剩余撤销</li>
+<li><strong>market</strong>：默认市价-即时成交剩余撤销</li>
+<li><strong>market-top5</strong>：市价-最优五档即时成交剩余撤销</li>
+<li><strong>market-top10</strong>：市价-最优十档即时成交剩余撤销</li>
+<li><strong>market-opponent</strong>：市价-对手方最优价</li>
+</ul>
+<h4 id="请求示例-2"><a href="#请求示例-2" class="headerlink" title="请求示例"></a>请求示例</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">POST  /handleOrder</span><br><span class="line">Body：</span><br><span class="line">&#123;</span><br><span class="line">  <span class="attr">"symbol"</span>: <span class="string">"BTC_USDT"</span>,</span><br><span class="line">  <span class="attr">"action"</span>: <span class="string">"create"</span>,</span><br><span class="line">  <span class="attr">"orderId"</span>: <span class="string">"a0001"</span>,</span><br><span class="line">  <span class="attr">"side"</span>: <span class="string">"buy"</span>,</span><br><span class="line">  <span class="attr">"type"</span>: <span class="string">"limit"</span>,</span><br><span class="line">  <span class="attr">"amount"</span>: <span class="number">0.012</span>,</span><br><span class="line">  <span class="attr">"price"</span>: <span class="number">8230.74</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="响应数据-2"><a href="#响应数据-2" class="headerlink" title="响应数据"></a>响应数据</h4><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="attr">"code"</span>:<span class="number">0</span>,<span class="attr">"msg"</span>:<span class="string">"OK"</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="对接输出"><a href="#对接输出" class="headerlink" title="对接输出"></a>对接输出</h2><p>撮合引擎有两种输出：<strong>撤单结果</strong>和<strong>成交记录</strong>。统一用 MQ 的方式进行输入，MQ 是保存为 Redis 5.0 版本之后引入的新数据结构 Stream 类型。每个消息队列其实就是一条 stream，关于 stream 的具体用法我就不展开了，大伙自行去网上搜索学习即可。</p>
+<h3 id="1-撤单结果"><a href="#1-撤单结果" class="headerlink" title="1. 撤单结果"></a>1. 撤单结果</h3><p>每个不同的 symbol 设置一个 stream，其 key 的格式为：<strong>matching:cancelresults:{symbol}</strong>，value 包含两个字段：</p>
+<ul>
+<li><strong>orderId</strong>：订单号</li>
+<li><strong>ok</strong>：1=成功；0=失败</li>
+</ul>
+<h3 id="2-成交记录"><a href="#2-成交记录" class="headerlink" title="2. 成交记录"></a>2. 成交记录</h3><p>每个不同的 symbol 也设置一个 MQ，key 的格式为：<strong>matching:trades:{symbol}</strong>，value 包含的字段如下：</p>
+<ul>
+<li><strong>makerId</strong>：maker订单ID</li>
+<li><strong>takerId</strong>：taker订单ID</li>
+<li><strong>takerSide</strong>：taker买卖方向</li>
+<li><strong>amount</strong>：成交数量</li>
+<li><strong>price</strong>：成交价格</li>
+<li><strong>timestamp</strong>：成交时间</li>
+</ul>
+<p>下游服务就可以通过订阅监听这两种输出，之后做后续的处理，比如 K 线行情服务订阅监听成交记录来生成 K 线数据。等撮合引擎完成之后，我下一个要开发的组件就是 K 线行情服务。</p>
+<h2 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h2><p>最后，先给大伙看看我们这个黑箱内部的整个 Go 项目的文件目录结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">├── conf                     # 配置文件存放目录，在1.1版本时增加</span><br><span class="line">│   ├── config.yaml          # 配置文件，在1.1版本时增加</span><br><span class="line">├── engine                   # 引擎包</span><br><span class="line">│   ├── init.go              # 初始化</span><br><span class="line">│   ├── order.go             # 委托单</span><br><span class="line">│   ├── order_book.go        # 交易委托账本</span><br><span class="line">│   ├── order_queue.go       # 订单队列</span><br><span class="line">│   ├── run.go               # 具体交易对的撮合引擎启动入口</span><br><span class="line">│   └── trade.go             # 成交记录</span><br><span class="line">├── enum                     # 枚举类型的包</span><br><span class="line">│   ├── order_action.go      # 订单行为，create为下单，cancel为撤单</span><br><span class="line">│   ├── order_side.go        # 买卖方向，buy为买入，sell为卖出</span><br><span class="line">│   ├── order_type.go        # 订单类型，MVP版本(1.0版本)只支持limit，1.3版本共支持7种类型 </span><br><span class="line">│   └── sort_direction.go    # 排序方向，asc为升序，desc为降序</span><br><span class="line">├── errcode                  #</span><br><span class="line">│   ├── code.go              # 定义了各种不同的错误码</span><br><span class="line">│   └── errcode.go           # 错误码的数据结构，包括code和msg两个字段</span><br><span class="line">├── handler                  #</span><br><span class="line">│   ├── close_matching.go    # 接收关闭撮合的请求</span><br><span class="line">│   ├── handle_order.go      # 接收处理订单的请求</span><br><span class="line">│   └── open_matching.go     # 接收开启撮合的请求</span><br><span class="line">├── log                      # 日志包，在1.2版本增加</span><br><span class="line">│   ├── log.go               # 日志输出，在1.2版本增加</span><br><span class="line">├── main.go                  # Go程序唯一入口</span><br><span class="line">├── middleware               # 中间件的包</span><br><span class="line">│   ├── cache                # 缓存包</span><br><span class="line">│   │   └── cache.go         # 缓存操作</span><br><span class="line">│   ├── mq                   # 消息队列包</span><br><span class="line">│   │   └── mq.go            # MQ操作</span><br><span class="line">│   └── redis.go             # 主要做Redis初始化操作</span><br><span class="line">└── process                  #</span><br><span class="line">    ├── close_engine.go      # 关闭引擎</span><br><span class="line">    ├── dispatch.go          # 分发订单</span><br><span class="line">    ├── init.go              # 初始化</span><br><span class="line">    └── new_engine.go        # 启动新引擎</span><br></pre></td></tr></table></figure>
+
+<p>包括 main 包，整个项目总共划分为了 10 个包和 1 个配置文件目录：</p>
+<ul>
+<li><strong>conf</strong>：存放配置文件的目录。</li>
+<li><strong>main</strong>：main 包只有一个 main.go 文件，定义了程序入口函数。</li>
+<li><strong>enum</strong>：枚举包实现了几个枚举类型的数据结构，包括订单行为、买卖方向、订单类型和排序方向。</li>
+<li><strong>errcode</strong>：存放错误码的包，errcode.go 定义了错误码的数据结构，有 code 和 msg 两个属性；code.go 则定义了一些错误码对象。</li>
+<li><strong>handler</strong>：接收 HTTP 请求的函数都放在这个包里，目前也就只有三个 handler 函数。</li>
+<li><strong>process</strong>：启动、关闭引擎和分发订单的处理过程都在这个包里，包里还维护着不同交易对的订单通道，用来分发不同交易对的订单。</li>
+<li><strong>engine</strong>：引擎包，包含了委托单、交易委托账本、订单队列、成交记录这几个核心的数据结构，以及用于处理交易对撮合的入口函数。</li>
+<li><strong>middleware</strong>：存放中间件的包，目前只用到了 Redis 一个中间件。</li>
+<li><strong>cache</strong>：缓存包，只有一个 cache.go 文件，缓存操作都在这个文件里定义。</li>
+<li><strong>mq</strong>：消息队列包，也只有一个 mq.go 文件，消息的发送就定义在这里。</li>
+<li><strong>log</strong>：日志包，实现了日志消息按日期分割并输出到文件。</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本节我们了解到撮合引擎作为一个通用组件，有标准的输入和输出，而且这输入和输出都非常简单。也开始给大家展示了黑箱内部的文件目录结构，开始探究黑箱的内部逻辑，后续章节将陆续揭露这些内部实现逻辑。</p>
+<p>本节预留的思考题：揣测下为什么我要将下单和撤单定义到同一个接口？而不是分开两个接口？分两个接口和用一个接口各有何优劣？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191121/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191119/" rel="next" title="撮合引擎开发:数据结构设计">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:数据结构设计
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">21</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#黑箱引擎"><span class="nav-number">1.</span> <span class="nav-text">黑箱引擎</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装部署"><span class="nav-number">2.</span> <span class="nav-text">安装部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对接输入"><span class="nav-number">3.</span> <span class="nav-text">对接输入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-开启撮合"><span class="nav-number">3.1.</span> <span class="nav-text">1. 开启撮合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP请求"><span class="nav-number">3.1.1.</span> <span class="nav-text">HTTP请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求参数"><span class="nav-number">3.1.2.</span> <span class="nav-text">请求参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求示例"><span class="nav-number">3.1.3.</span> <span class="nav-text">请求示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#响应数据"><span class="nav-number">3.1.4.</span> <span class="nav-text">响应数据</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-关闭撮合"><span class="nav-number">3.2.</span> <span class="nav-text">2. 关闭撮合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP请求-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">HTTP请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求参数-1"><span class="nav-number">3.2.2.</span> <span class="nav-text">请求参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求示例-1"><span class="nav-number">3.2.3.</span> <span class="nav-text">请求示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#响应数据-1"><span class="nav-number">3.2.4.</span> <span class="nav-text">响应数据</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-处理订单"><span class="nav-number">3.3.</span> <span class="nav-text">3. 处理订单</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTP请求-2"><span class="nav-number">3.3.1.</span> <span class="nav-text">HTTP请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求参数-2"><span class="nav-number">3.3.2.</span> <span class="nav-text">请求参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#请求示例-2"><span class="nav-number">3.3.3.</span> <span class="nav-text">请求示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#响应数据-2"><span class="nav-number">3.3.4.</span> <span class="nav-text">响应数据</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对接输出"><span class="nav-number">4.</span> <span class="nav-text">对接输出</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-撤单结果"><span class="nav-number">4.1.</span> <span class="nav-text">1. 撤单结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-成交记录"><span class="nav-number">4.2.</span> <span class="nav-text">2. 成交记录</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#项目结构"><span class="nav-number">5.</span> <span class="nav-text">项目结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">6.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
