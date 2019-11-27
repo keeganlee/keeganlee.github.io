@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191127微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-27  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程  业务流程前面的几篇文章已经陆续讲到了黑箱">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:解密黑箱流程">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191127/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191127微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-27  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程  业务流程前面的几篇文章已经陆续讲到了黑箱">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191127/开启撮合流程图.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191127/处理订单接口流程.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191127/引擎处理订单流程.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191127/关闭引擎.png">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191127/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-11-27T13:56:40.782Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:解密黑箱流程">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191127微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-27  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程  业务流程前面的几篇文章已经陆续讲到了黑箱">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191127/开启撮合流程图.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191127/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:解密黑箱流程 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191127/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:解密黑箱流程
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-27 22:35:16 / 修改时间：21:56:40" itemprop="dateCreated datePublished" datetime="2019-11-27T22:35:16+08:00">2019-11-27</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191127"><strong>http://keeganlee.me/post/matching/20191127</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-27</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a></p>
+<hr>
+<h2 id="业务流程"><a href="#业务流程" class="headerlink" title="业务流程"></a>业务流程</h2><p>前面的几篇文章已经陆续讲到了黑箱内部的一些设计，包括核心的软件结构、数据结构、目录结构等。而从本小节开始，我们将会更加深入，来解密黑箱内部的更多设计和实现细节。</p>
+<p>解密黑箱的第一步就是要清楚其内部对数据的处理流程是怎样的。当我们要设计一个新系统的时候，也是一样的，第一步要梳理清楚业务流程和数据流向。对撮合引擎来说，就是要了解：<strong>从输入到输出，中间都经过了哪些处理流程</strong>。</p>
+<p>前面的文章已经讲过，本撮合引擎定义了三种输入：<strong>开启撮合、处理订单、关闭撮合</strong>。后面就分别来看看这三种输入背后的流程。</p>
+<h2 id="开启撮合"><a href="#开启撮合" class="headerlink" title="开启撮合"></a>开启撮合</h2><p>开启撮合即是开启某个交易标的（交易对）的撮合引擎，未开启撮合的交易标的是无法处理订单的，而已经开启了撮合的交易标的也无法再次开启，不然就会出现同时有两个引擎处理同个交易标的的订单，这是不合理的，同个交易标的的订单只能由一个引擎串行来处理。</p>
+<p>为什么不能并行呢？如果同一交易标的的订单可以用多个引擎并行处理的话，那至少会产生几个问题：</p>
+<ol>
+<li><strong>成交价以哪个为准？</strong>理论上，每一时刻只能有一个成交价，那并行之后，就会产生多个成交价，那成交价就难以确定了。</li>
+<li><strong>如何维护统一的委托账本？</strong>理论上，每个交易标的有一本保存了所有委托单的委托账本，那并行之后，如何在多个引擎之间维护这个统一的账本呢？如果用数据库统一维护，那无疑会减低撮合性能；如果分为多个子账本，那就很难保证价格优先、时间优先的原则。</li>
+</ol>
+<p>以上这两个问题都不好解决，因此，只能先对所有订单进行定序，然后丢入引擎进行串行处理。</p>
+<p>说到定序，自然就需要一个定序队列，因此开启撮合时需要初始化对应交易标的的订单定序队列。初始化好定序队列后，就可以真正启动对应交易标的的引擎了。在 Go 程序中，每个交易标的的引擎是以独立 goroutine 运行的；而在其他语言，比如 Java，则是以独立线程来运行。</p>
+<p>引擎启动之后，需要先初始化交易委托账本，用来保存委托单。之后就等待定序队列有订单的时候逐个取出来处理了。</p>
+<p>另外，再考虑一个场景，撮合程序重启时会发生什么？对于开启了撮合的交易标的，重启后是否需要恢复呢？需要的话，那如何恢复呢？最简单的方案当然是使用缓存，用 Redis 将开启了撮合的交易标的缓存起来，重启时从 Redis 加载并重新开启这些交易标的即可。</p>
+<p>因此，触发开启撮合的场景其实有两个，一是接口的主动调用触发的，二是程序重启后从 Redis 缓存自动加载启动的。</p>
+<p>最后，开启撮合的结果是同步返回的，因此，它没有异步的输出。</p>
+<p>总结下，开启撮合的内部流程大致如下：</p>
+<img src="/post/matching/20191127/开启撮合流程图.png">
+
+<h2 id="处理订单"><a href="#处理订单" class="headerlink" title="处理订单"></a>处理订单</h2><p>开启撮合之后，就可以接收处理订单的输入了。撮合程序接收到处理订单的请求时，第一步需要做一些检查，包括每个参数是否有效、订单是否重复或存在、对应交易标的的引擎是否已经开启等。通过了检查之后，就可以将整个订单缓存到 Redis，接着添加到对应交易标的的定序队列中去，等待对应交易标的的引擎消费它进行撮合处理。这个流程如下图：</p>
+<img src="/post/matching/20191127/处理订单接口流程.png">
+
+<p>当订单成功添加到定序队列中后，接口就可以同步返回成功的响应结果了。后续的处理结果则是通过异步的 MQ 进行输出了。交易标的的引擎接收到订单后，根据不同情况会产生不同的输出结果。</p>
+<p>我们知道，处理订单有两种 <strong>action</strong>：<strong>下单</strong>和<strong>撤单</strong>。撤单的业务逻辑很简单，就是从交易委托账本中查询该订单是否存在，若存在则从委托账本中删除该订单，然后输出撤单成功的撤单结果；若不存在则输出撤单失败的撤单结果。下单的业务逻辑则比较复杂，还要根据不同的订单类型作不同处理。写作此文时的撮合程序版本支持 6 种不同的 <strong>type</strong>，包括两种<strong>限价</strong>类型和四种<strong>市价</strong>类型。下面就来分别讲解不同订单类型的下单在不同条件下会有怎样的结果。</p>
+<ul>
+<li><strong>limit</strong>：普通限价。当委托账本里存在能与该订单匹配成交的委托单时，则可能生成一条或多条成交记录，每条成交记录都将产生异步输出；当委托账本里没有可匹配的委托单时，则将该订单(全部数量或剩余数量)添加到委托账本中，这时不会产生任何输出。</li>
+<li><strong>limit-ioc</strong>：IOC限价-即时成交剩余撤销。当委托账本里存在能与该订单匹配成交的委托单时，则可能生成一条或多条成交记录，每条成交记录都将产生异步输出；当委托账本里没有可匹配的委托单时，则将该订单(全部或剩余数量)进行撤单处理，这时会产生一条撤单成功的输出。</li>
+<li><strong>market</strong>：默认市价-即时成交剩余撤销。和 IOC 限价一样，当委托账本里与该订单相反方向的订单队列里（也称对手方）存在委托单时，则可能生成一条或多条成交记录，每条成交记录都将产生异步输出；当委托账本里对手方没有委托单时，则将该订单(全部或剩余数量)进行撤单处理，这时会产生一条撤单成功的输出。与 IOC 限价不同的在于：IOC 限价订单是由用户指定了委托价格的，而市价则无需指定委托价格，会直接与对手方的头部委托单成交，直到该订单已全部成交或对手方再无委托单为止。</li>
+<li><strong>market-top5</strong>：市价-最优五档即时成交剩余撤销。market 可以与对手方所有价格档位的订单成交，但 market-top5 最多只会和对手方的五个价格档位内的订单成交，超出五档外的订单将不会成交。剩余未成交的都将做撤单处理并产生一条撤单成功的输出。</li>
+<li><strong>market-top10</strong>：市价-最优十档即时成交剩余撤销。最多只会和对手方的十个价格档位内的订单成交。</li>
+<li><strong>market-opponent</strong>：市价-对手方最优价。如果对手方没有订单，则直接对该订单进行撤单处理并产生一条撤单成功的输出；如果对手方有订单，那最多只会成交一档，如果还剩有未成交的量，那将以对手方一档的价格转为限价单并添加到委托账本中，此时不会产生输出。</li>
+</ul>
+<p>用图可表示如下：</p>
+<img src="/post/matching/20191127/引擎处理订单流程.png">
+
+<p>另外，每个处理订单的请求——不管是下单还是撤单，也都会缓存到 Redis 里，产生变更时还会更新缓存。这样，程序重启后就可以恢复订单了。</p>
+<h2 id="关闭撮合"><a href="#关闭撮合" class="headerlink" title="关闭撮合"></a>关闭撮合</h2><p>当某个交易标的准备下架、或取消交易、或暂停交易时，都需要关闭引擎。关闭引擎之前，上游服务最好先停止调用处理订单的接口，不然可能会出现一些非预期的错误，虽然程序已经做了容错处理。</p>
+<p>关闭引擎时，同样也有些简单的判断，比如判断该交易标的的引擎是否已经开启，未开启的引擎自然无法关闭。</p>
+<p>关闭引擎时，如果定序队列中还存在未处理的订单，那应该等这些订单处理完才真正关闭引擎。</p>
+<p>最后，也要清除缓存，将该交易标的的所有订单都从缓存中清除。</p>
+<p>关闭引擎的结果也是同步返回的，所有也没有异步的输出。</p>
+<p>流程图也比较简答：</p>
+<img src="/post/matching/20191127/关闭引擎.png">
+
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本小节讲解了撮合黑箱内部的核心业务流程，包括开启撮合、处理订单、关闭撮合三个输入各自的内部逻辑。理解了这些流程之后，下一篇我们开始来讲代码实现。</p>
+<p>惯例留几个思考题：如果关闭撮合的同时还有下单的并发请求，是否容易产生问题？如果有，哪里会产生？什么问题？能如何解决？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191127/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191121/" rel="next" title="撮合引擎开发:对接黑箱">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:对接黑箱
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">22</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#业务流程"><span class="nav-number">1.</span> <span class="nav-text">业务流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#开启撮合"><span class="nav-number">2.</span> <span class="nav-text">开启撮合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理订单"><span class="nav-number">3.</span> <span class="nav-text">处理订单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关闭撮合"><span class="nav-number">4.</span> <span class="nav-text">关闭撮合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

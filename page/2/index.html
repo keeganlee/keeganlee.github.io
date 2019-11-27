@@ -322,6 +322,455 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/reading/20160629/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/reading/20160629/" class="post-title-link" itemprop="url">读《图解密码技术》(一):密码</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-06-29 10:50:00" itemprop="dateCreated datePublished" datetime="2016-06-29T10:50:00+08:00">2016-06-29</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 12:15:18" itemprop="dateModified" datetime="2019-07-02T12:15:18+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/reading/" itemprop="url" rel="index"><span itemprop="name">reading</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/reading/20160629"><strong>http://keeganlee.me/post/reading/20160629</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-06-29</p>
+<hr>
+<p><a href="http://keeganlee.me/post/reading/20160629">读《图解密码技术》(一):密码</a><br><a href="http://keeganlee.me/post/reading/20160705">读《图解密码技术》(二):认证</a><br><a href="http://keeganlee.me/post/reading/20160722">读《图解密码技术》(三):密钥、随机数和应用技术</a></p>
+<hr>
+<p>以前，对一些密码技术，虽然懂得怎么用，但对其原理却一直不甚了解，比如，用公钥加密后，为什么用私钥就可以解密？DES和AES加密时为什么需要一个初始化向量？想要了解这些密码技术的基本原理，而最近买书时看到了《图解密码技术》这本书，刚好可以解答到我的这些问题，于是，就买回来看了。</p>
+<p>而从现在开始，每读一本书，我都会尽量分享我的读书笔记，有两个目的：一是为自己做总结整理，加强记忆和理解；二是可以给还没看过该书的读者提供摘要和指引。好了，接下来进入正文。</p>
+<hr>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>《图解密码技术》的目标读者主要包括以下人群：</p>
+<ul>
+<li>对密码相关知识感兴趣的人</li>
+<li>希望理解公钥密码、数字签名等密码技术原理的人（我就属于此类）</li>
+<li>对信息安全感兴趣的人</li>
+</ul>
+<p>本书的结构分为三部分：</p>
+<ul>
+<li>密码：内容主要包括对密码技术整体性的讲解，以及历史密码、对称密码、公钥密码等保证机密性的密码技术。</li>
+<li>认证：内容包括单向散列函数、消息认证码、数字签名、证书等密码技术。</li>
+<li>密钥、随机数和应用技术：内容包括密钥、随机数相关的知识，以及PGP、SSL/TLS等应用技术。</li>
+</ul>
+<p>本篇文章是关于第一部分的笔记。</p>
+<h2 id="密码技术"><a href="#密码技术" class="headerlink" title="密码技术"></a>密码技术</h2><p>密码技术的目的很明确，就是为了解决信息安全问题。信息安全可分为四类特性：</p>
+<ul>
+<li><strong>机密性</strong>：为了防止信息被窃听，对应的密码技术有<strong>对称密码</strong>和 <strong>公钥密码</strong>。</li>
+<li><strong>完整性</strong>：为了防止信息被篡改，对应的密码技术有<strong>单向散列函数</strong>、 <strong>消息认证码</strong>、 <strong>数字签名</strong>。</li>
+<li><strong>认证</strong>：为了防止攻击者伪装成真正的发送者，对应的密码技术有<strong>消息认证码</strong>和 <strong>数字签名</strong>。</li>
+<li><strong>不可否认性</strong>：为了防止发送者事后否认自己没有做过，对应的密码技术为<strong>数字签名</strong>。</li>
+</ul>
+<p>信息安全和密码技术之间的关系可以用下图来表示：</p>
+<img src="/post/reading/20160629/09-38-10.jpg">
+
+<p>接下来就简单了解下这些密码技术：</p>
+<ul>
+<li><strong>对称密码</strong>：也称为共享密钥密码、私钥密码等，是指在加密和解密时使用同一密钥的方式。</li>
+<li><strong>公钥密码</strong>：也称为非对称密码，是指在加密和解密时使用不同密钥的方式。对称密码和公钥密码可以保证数据的机密性。</li>
+<li><strong>单向散列函数</strong>：MD5、SHA-1，就是单向散列函数的例子，使用单向散列函数可以计算出散列值，散列值也称为哈希值、密码校验和、指纹、消息摘要。使用单向散列函数可以保证数据的完整性。</li>
+<li><strong>消息认证码</strong>：消息认证码是一种确认完整性并进行认证的技术，英文名称为message authentication code，简称为MAC。</li>
+<li><strong>数字签名</strong>：数字签名相当于现实世界中的盖章、签字的功能，使用数字签名可以识别篡改和伪装，还可以防止否认。</li>
+<li><strong>伪随机数生成器</strong>：伪随机数生成器并不直接解决信息安全问题，但它承担了密钥生成的重要职责。而密钥的重要性就不用多说了。</li>
+</ul>
+<h2 id="一次性密码本"><a href="#一次性密码本" class="headerlink" title="一次性密码本"></a>一次性密码本</h2><p>曾经以为，理论上应该没有任何密码是无法破译的。只要通过暴力破解法，无论任何密文总有一天都能够被破译。如今才知道，特例是存在的。这个特例就是<strong>一次性密码本</strong>。即使用暴力破解法，就算破解到世界末日，也破译不了一次性密码本。</p>
+<p>一次性密码本其实非常简单，它的原理就是：<strong>将明文与一串随机的比特序列进行XOR运算，即异或运算</strong>。随机的比特序列也称为<strong>密钥</strong>，密钥的长度需与明文等长。而解密时，则将密文与密钥再进行一次XOR运算，就可以得到明文了。</p>
+<p>举例，现在要对midnight这个字符串进行加密，对其进行ASCII编码后得到一串比特序号：</p>
+<img src="/post/reading/20160629/11-09-16.jpg">
+
+<p>以上为64比特，然后，随机生成一个同样64比特长的密钥：</p>
+<img src="/post/reading/20160629/11-10-14.jpg">
+
+<p>接着，将明文和密钥进行XOR运算：</p>
+<img src="/post/reading/20160629/11-11-45.jpg">
+
+<p>这样，密文就产生了。而解密则是反向运算，即将密文与密钥进行XOR运算：</p>
+<img src="/post/reading/20160629/11-13-39.jpg">
+
+<p>一次性密码本，就是这么简单。那么，为什么它不可破译呢？用暴力破解，尝试所有可能的密钥组合，总能得到midnight啊。问题就在于，即使解密出了midnight这个字符串，也无法判断它是否是正确的明文。因为，所有64比特的排列组合都会出现，那么，解密出来的，除了midnight，还会有onenight、lastnight，以及aaaaaaaa、abcdefgh、ZZZZZZZZ等各种字符串，根本无法判断哪个才是正确的明文。</p>
+<p>虽然一次性密码本无法被破译，但它并不实用。最大的缺点就在于每一次通信都需要使用不同的密钥，所以密钥就无法重用了，“一次性”也正是由此而来。而且，每次密钥的生成都必须是无重现性的真正随机数，而不是伪随机数。其他的，密钥的配送、保存、同步也都是比较麻烦。所以，能够使用一次性密码本的，只有机密性重于一切，且可以花费大量财力和人力来生成并配送密钥的场合。据说，大国之间的热线就用了一次性密码本，密钥应该是通过特工直接送到对方手上的。</p>
+<h2 id="对称密码"><a href="#对称密码" class="headerlink" title="对称密码"></a>对称密码</h2><p>对称密码使用相同的密钥进行加密和解密，作为标准的对称密码主要有<strong>DES</strong>、 <strong>三重DES</strong>和 <strong>AES</strong>，它们都属于<strong>分组密码</strong>，即以分组为单位进行处理的密码算法。DES和三重DES的分组长度都是64比特，而AES的分组长度可以为128比特、192比特和256比特中的一种。那么，如果要加密的明文比较长，就需要对密码算法进行迭代，而迭代的方法就称为分组密码的<strong>模式</strong>。具体有哪些模式，后面再说。</p>
+<blockquote>
+<h3 id="DES"><a href="#DES" class="headerlink" title="DES"></a>DES</h3></blockquote>
+<p>DES(Data Encryption Standard)是一种将64比特的明文加密成64比特的密文的对称密码算法，它的密钥长度是56比特，即7个字节。DES的结构采用的是<strong>Feistel网络</strong>。Feistel网络中，加密的各个步骤称为<strong>轮</strong>(round)，整个加密过程就是进行若干次轮的循环。下图是Feistel网络中一轮的计算流程。DES是一种16轮循环的Feistel网络。</p>
+<img src="/post/reading/20160629/21-44-33.jpg">
+
+<p>一轮的具体计算步骤如下：</p>
+<ol>
+<li>将输入的数据等分为左右两部分；</li>
+<li>将输入的右侧直接发送到输出的右侧；</li>
+<li>将输入的右侧发送到轮函数；</li>
+<li>轮函数根据右侧数据和子密钥，计算出一串看上去是随机的比特序列；</li>
+<li>将上一步得到的比特序列与左侧数据进行XOR运算，并将结果作为加密后的左侧。</li>
+</ol>
+<p>其中，<strong>子密钥</strong>指的是本轮加密使用的密钥。每一轮的子密钥都是不同的。<strong>轮函数</strong>的作用则是根据“右侧”和子密钥生成对“左侧”进行加密的比特序列，它是密码系统的核心。</p>
+<p>但是，这样一来“右侧”根据没有被加密，因此需要用不同子密钥对一轮的处理重复若干次，并在没两轮之间将左侧和右侧的数据对调。下图展示了一个3轮的Feistel网络：</p>
+<img src="/post/reading/20160629/22-01-06.jpg">
+
+<p>那么，Feistel如何解密呢？很简单，只要按照相同的顺序来使用子密钥就可以完成解密了。即将上图中的子密钥1换成了子密钥3，而子密钥3则换成子密钥1，输入的为密文，输出的则为明文了。</p>
+<p>无论是任何轮数、任何轮函数，Feistel网络都可以用相同的结构实现加密和解密，且加密的结果必定能够正确解密。因为Feistel网络具有如此方便的特性，因此，被许多分组密码算法使用，包括5个AES最终候选算法中的其中3个算法：MARS、RC6、Twofish。</p>
+<blockquote>
+<h3 id="三重DES"><a href="#三重DES" class="headerlink" title="三重DES"></a>三重DES</h3></blockquote>
+<p>现在DES已经可以在短时间内被暴力破解，因此，其强度大不如前了。为了增强DES的强度，因此出现了三重DES(triple-DES)，将DES重复3次所得到的一种密码算法，通常缩写为3DES，其机制如下图所示：</p>
+<img src="/post/reading/20160629/22-28-53.jpg">
+
+<p>明文经过三次DES处理才能变成最后的密文，而由于DES的密钥长度为56比特，因此三重DES的密钥长度则为56<em>3=128比特。另外，从图中也可以发现，三重DES并不是进行3次DES加密，而是加密-&gt;*</em>解密**-&gt;加密的过程。这是为了向下兼容，即使用DES加密的密文，也可以通过三重DES进行解密。</p>
+<p>三重DES的解密过程和加密相反，是以密钥3、密钥2、密钥1的顺序执行解密-&gt;加密-&gt;解密的操作。即将上图从明文到密文的箭头反过来就是解密的流程了。</p>
+<blockquote>
+<h3 id="AES"><a href="#AES" class="headerlink" title="AES"></a>AES</h3></blockquote>
+<p>AES(Advanced Encryption Standard)是取代其前任标准(DES)而成为新标准的一种对称密码算法。AES最终候选算法名单中，总共有5种算法，分为为：MARS、RC6、Rijndael、Serpent、Twofish。但最终被选定为AES的是<strong>Rijndael</strong>算法。</p>
+<p>Rijndael使用的并不是Feistel网络，而是<strong>SPN结构</strong>。Rijndael加密中的一轮如下图所示，其分组为128比特，即16字节，加密过程经过4个步骤：SubBytes、ShiftRows、MixColumns、AddRoundKey。</p>
+<img src="/post/reading/20160629/22-48-28.jpg">
+
+<p><strong>SubBytes</strong>就是根据一张替换表(S-Box)，将输入中每个字节的值替换成另一个字节的值。<strong>ShiftRows</strong>即将SubBytes的输出以字节为单位进行打乱出路，当然，这种打乱处理也是有规律的。<strong>MixColumns</strong>即对一个4字节的值进行比特运算，将其变成另外一个4字节的值。<strong>AddRoundKey</strong>就是将MixColumns的输出与轮密钥进行XOR处理。至此，一轮就结束了。实际上，在Rijndael中需要重复进行10~14轮计算。</p>
+<p>而下图则是一轮解密的流程图，基本也是反向操作，加密时的SubBytes、ShiftRows、MixColumns，解密时分别为反向运算的InvSubBytes、InvShiftRows、InvMixColumns。这是因为Rijndael不像Feistel网络一样能够用同一种结构实现加密和解密。</p>
+<img src="/post/reading/20160629/23-30-28.jpg">
+
+<p>对于三种对称密码，DES因为已经很容易被暴力破解，因此不建议再使用；三重DES目前还被银行等机构使用，但其处理速度不高，而且在安全性方面也逐渐显现出了一些问题；AES作为最新标准，安全、快速，而且可以在各种平台上工作，可以算是目前最佳的选择。另外，其他AES最终候选算法也可以作为AES的备份。和Rijndael一样，这些密码算法也都经过了严格的测试，且没有发现任何弱点。</p>
+<h2 id="分组模式"><a href="#分组模式" class="headerlink" title="分组模式"></a>分组模式</h2><p>DES、AES都属于分组密码，它们只能加密固定长度的明文。如果需要加密任意长度的明文，就需要对分组密码进行迭代，而迭代方法就称为分组密码的“模式”。分组密码有很多种模式，主要有：ECB、CBC、CFB、OFB、CTR。如果模式选择不恰当，就无法保证机密性。</p>
+<blockquote>
+<h3 id="ECB模式"><a href="#ECB模式" class="headerlink" title="ECB模式"></a>ECB模式</h3></blockquote>
+<p><strong>ECB</strong>全称为Electronic CodeBook，<strong>电子密码本模式</strong>，是最简单的一种模式，它直接将明文分割成多个分组并逐个加密，如下图，其中，加密和解密是指用分组密码算法加密和解密，其中也省略了密钥的描述。</p>
+<img src="/post/reading/20160629/21-42-05.jpg">
+
+<p>当最后一个明文分组的内容小于分组长度时，需要用一些特定的数据进行填充。</p>
+<p>这种模式的优点就是简单、快速，加密和解密都支持并行计算。而缺点也比较明显，因为每个明文分组都各自独立地进行加密和解密，如果明文中存在多个相同的明文分组，则这些分组最终会被转换为相同的密文分组。这样一来，只要观察一下密文，就可以知道明文中存在怎样的重复组合，并可以以此为线索来破译密码。另外，攻击者可以通过改变密文分组的顺序，或删除密文分组，或替换掉密文分组，就可以达到对明文操纵的目的，而无需破译密码。</p>
+<blockquote>
+<h3 id="CBC模式"><a href="#CBC模式" class="headerlink" title="CBC模式"></a>CBC模式</h3></blockquote>
+<p><strong>CBC</strong>全称为Cipher Block Channing，<strong>密文分组链接模式</strong>，是将前一个密文分组与当前明文分组的内容混合起来进行加密的。在CBC模式中，首先将明文分组与前一个密文分组进行XOR运算，然后再进行加密。加密第一个明文分组时，由于不存在“前一个密文分组”，因此需要事先准备一个长度为一个分组的比特序列来代替“前一个密文分组”，这个比特序列称为<strong>初始化向量</strong>(initialization vector)，通常缩写为IV。一般来说，每次加密时都会随机产生一个不同的比特序列来作为初始化向量。CBC模式的加解密流程如下图：</p>
+<img src="/post/reading/20160629/21-43-28.jpg">
+
+<p>CBC模式避免了ECB模式的弱点，明文的重复排列不会反映在密文中。这是推荐使用的一种模式。</p>
+<blockquote>
+<h3 id="CFB模式"><a href="#CFB模式" class="headerlink" title="CFB模式"></a>CFB模式</h3></blockquote>
+<p><strong>CFB</strong>全称为Cipher FeedBack，<strong>密文反馈模式</strong>，前一个密文分组会被送回到密码算法的输入端，如下图：</p>
+<img src="/post/reading/20160629/13-13-14.jpg">
+
+<p>CFB模式中，由密码算法所生成的比特序列称为<strong>密钥流</strong>(key stream)。需要注意的是，CFB模式解密时，密码算法执行的是加密操作，因为密钥流是通过加密操作来生成的。</p>
+<p>CFB模式无法抵御重放攻击。因此，一般不建议使用了，推荐用CTR模式代替。</p>
+<blockquote>
+<h3 id="OFB模式"><a href="#OFB模式" class="headerlink" title="OFB模式"></a>OFB模式</h3></blockquote>
+<p><strong>OFB</strong>全称为Output-FeedBack，<strong>输出反馈模式</strong>，密码算法的输出会反馈到密码算法的输入中，如下图：</p>
+<img src="/post/reading/20160629/13-24-29.jpg">
+
+<p>OFB模式有个缺陷，如果对密钥流的一个分组进行加密后其结果碰巧和加密前是相同的，那么这一分组之后的密钥流就会变成同一值的不断反复。因此，一般不建议使用了，推荐用CTR模式代替。</p>
+<blockquote>
+<h3 id="CTR模式"><a href="#CTR模式" class="headerlink" title="CTR模式"></a>CTR模式</h3></blockquote>
+<p><strong>CTR</strong>全称为CountTeR，<strong>计数器模式</strong>，是一种通过逐次累加的计数器进行加密来生成密钥流的流密码，如下图：</p>
+<img src="/post/reading/20160629/13-28-45.jpg">
+
+<p>CTR模式中，每个分组对应一个逐次累加的计数器，并通过对计数器进行加密来生成密钥流。计数器分为两部分，前部分为<strong>nonce</strong>，这和初始化向量一样，也是一个随机比特序列；后部分为分组序号。</p>
+<p>从图中还可以知道，CTR模式对每个分组的处理是相对独立的，这就意味着加密和解密都能够实现并行计算。</p>
+<p>CTR模式在错误和机密性方面都具有不错的性质，也没有上面提到的CFB和OFB的弱点，因此，现在都推荐使用CTR了。</p>
+<blockquote>
+<h3 id="关于初始化向量问题"><a href="#关于初始化向量问题" class="headerlink" title="关于初始化向量问题"></a>关于初始化向量问题</h3></blockquote>
+<p>前面讲到的几种模式中，CBC、CFB、OFB都用到了初始化向量IV，而CTR则使用了计数器，计数器的<strong>nonce</strong>部分和初始化向量IV是一样的，只是叫法不同而已。关于初始化向量IV，是一个随机比特序列，为了提高安全性，建议每次加密时都使用不同的值，这样的话，即使有两条相同的明文信息，加密后的密文也是不同的。但是，每一次发送端使用IV对明文加密后，接收端也需要使用同样的IV才能够解密，那么，发送端和接收端如何同步这个IV呢？关于这个问题，书中没有提到。于是，只好自己寻找解决方案。</p>
+<p>最简单的方式可能就是，发送端每次发送信息时，将IV和加密后的密文一起发送给接收端。接收端收到信息后，就可以将收到的IV用于解密收到的密文了。而这种方式最明显的缺陷就是IV直接暴露给攻击者了，攻击者就可以利用IV发起攻击，比如使用CBC模式时，攻击者将IV进行比特反转，就可达到操纵明文的目的。攻击者将IV中的任意比特进行反转(1变0，0变1)，则解密后的明文分组中相应的比特也会被反转。</p>
+<p>为了避免将IV直接暴露，那将IV进行加密后再发送呢？因为IV的长度和一个分组的长度是等长的，这就不需要考虑分组迭代的问题，即不需要考虑使用什么模式了，直接用密码算法进行加密即可。加密后，攻击者再想通过比特反转IV来操纵明文就困难多了。</p>
+<h2 id="密钥配送问题"><a href="#密钥配送问题" class="headerlink" title="密钥配送问题"></a>密钥配送问题</h2><p>对称密码中，由于加密和解密都使用同一个密钥，因此就必须向接收者配送密钥，这个问题就称为密钥配送问题。而解决密钥配送问题的方法有几种：</p>
+<ul>
+<li>通过事先共享密钥来解决</li>
+<li>通过密钥分配中心来解决</li>
+<li>通过Diffie-Hellman密钥交换来解决</li>
+<li>通过公钥密码来解决</li>
+</ul>
+<blockquote>
+<h3 id="通过事先共享密钥来解决"><a href="#通过事先共享密钥来解决" class="headerlink" title="通过事先共享密钥来解决"></a>通过事先共享密钥来解决</h3></blockquote>
+<p>事先用安全的方式将密钥交给对方，就称为密钥的事先共享。这是密钥配送问题最简单的一种解决方法，但有其局限性。公司内部开发的应用产品，客户端和服务端都是自己开发的，事先共享密钥就很简单，服务端人员生成密钥后直接给到客户端的开发人员就可以了。但这种情况又会带来其他问题，比如密钥在客户端如何才能安全的保存。一般，密钥都是通过硬编码或存为文件的形式保存在客户端的，那么客户端应用一旦被反编译，就很容易窃取到密钥了。</p>
+<p>而如果是开放性平台，像微博开放平台、微信开放平台等，要做到事先共享密钥就很有难度了。开发者在开放平台注册的应用，其密钥都是通过平台的管理端给到开发者的，也就是通过了网络，那就存在被窃听的风险了。</p>
+<blockquote>
+<h3 id="通过密钥分配中心来解决"><a href="#通过密钥分配中心来解决" class="headerlink" title="通过密钥分配中心来解决"></a>通过密钥分配中心来解决</h3></blockquote>
+<p>当使用密钥分配中心时，需要通信的双方可以事先在密钥分配中心注册，然后密钥分配中心给每个注册方发送一个密钥，不同注册方的密钥是不同的。那么，当某个发送端需要向某个接收端发送消息时，通信流程如下：</p>
+<ol>
+<li>发送端向密钥分配中心发起希望与接收端通信的请求；</li>
+<li>密钥分配中心随机生成一个会话密钥，该会话密钥是供发送端和接收端在本次通信中使用的临时密钥，我们简称为<strong>TempKey</strong>；</li>
+<li>密钥分配中心查询出发送端的密钥，即发送端注册时分配的密钥，我们简称为<strong>SenderKey</strong>；</li>
+<li>密钥分配中心使用<strong>SenderKey</strong>对<strong>TempKey</strong>进行加密，加密后的密文称为<strong>CipherTempKeyToSender</strong>，并发送给发送端；</li>
+<li>密钥分配中心用同样的方式查询出接收端的密钥，简称为<strong>ReceiverKey</strong>；</li>
+<li>密钥分配中心再用<strong>ReceiverKey</strong>对<strong>TempKey</strong>进行加密，加密后的密文称为<strong>CipherTempKeyToReceiver</strong>，并发送给接收端；</li>
+<li>发送端对来自密钥分配中心的<strong>CipherTempKeyToSender</strong>，用自己的密钥即<strong>SenderKey</strong>进行解密，得到<strong>TempKey</strong>；</li>
+<li>发送端将要发送给接收端的消息用<strong>TempKey</strong>进行加密，然后发送给接收端；</li>
+<li>接收端对来自密钥分配中心的<strong>CipherTempKeyToReceiver</strong>，用自己的密钥即<strong>ReceiverKey</strong>进行解密，也得到<strong>TempKey</strong>；</li>
+<li>接收端收到发送端的密文后，用<strong>TempKey</strong>对密文进行解密；</li>
+<li>通信完毕，发送端和接收端都删除<strong>TempKey</strong>。</li>
+</ol>
+<p>这个通信过程还挺复杂的，总的来说就是，发送端和接收端通信时是使用密钥分配中心分配的临时密钥进行加密和解密的。这种方案，密钥分配中心的安全性就显得非常重要了。如果攻击者入侵了密钥分配中心，盗取到所有密钥，则后果很严重。</p>
+<blockquote>
+<h3 id="通过Diffie-Hellman密钥交换来解决"><a href="#通过Diffie-Hellman密钥交换来解决" class="headerlink" title="通过Diffie-Hellman密钥交换来解决"></a>通过Diffie-Hellman密钥交换来解决</h3></blockquote>
+<p>在Diffie-Hellman密钥交换中，进行加密通信的双方需要交换一些信息，而这些信息即便被窃听者窃听到也没有问题。根据所交换的信息，双方可以各自生成相同的密钥，而窃听者却无法生成相同的密钥。</p>
+<p>虽然这种方法叫“密钥交换”，但实际上双方并没有真正交换密钥，而是通过计算生成出了一个相同的共享密钥。因此，这种方法也称为<strong>Diffie-Hellman密钥协商</strong>。支撑Diffie-Hellman密钥交换算法的是有限群的离散对数问题的复杂度。</p>
+<blockquote>
+<h3 id="通过公钥密码来解决"><a href="#通过公钥密码来解决" class="headerlink" title="通过公钥密码来解决"></a>通过公钥密码来解决</h3></blockquote>
+<p>公钥密码类似于投币寄物柜。首先，将物品放入寄物柜中。然后，投入硬币并拔出钥匙，就可以将寄物柜关闭了。关闭后的寄物柜，没有钥匙是无法打开的。只要有硬币，任何人都可以关闭寄物柜，但寄物柜一旦被关闭，再怎么投币也无法打开。要打开寄物柜只能使用钥匙，而不是硬币。因此可以说，硬币是<strong>关闭寄物柜的密钥</strong>，而钥匙是<strong>打开寄物柜的密钥</strong>。</p>
+<p>在公钥密码中，加密和解密的密钥是不同的。只要拥有加密密钥，任何人都可以进行加密，但没有解密密钥是无法解密的。接收者事先将加密密钥发送给发送者，这个加密密钥即便被窃听者获取也没有问题。发送者使用加密密钥对通信内容进行加密并发送给接收者，而只有拥有解密密钥的人（即接收者本人）才能够进行解密。这样一来，就用不着将解密密钥配送给接收者了，也就是说，不存在密钥配送问题了。</p>
+<h2 id="公钥密码"><a href="#公钥密码" class="headerlink" title="公钥密码"></a>公钥密码</h2><p>公钥密码中，密钥分为加密密钥和解密密钥两种。加密密钥一般是公开的，因此也被称为<strong>公钥</strong>(public key)。解密密钥则绝对不能公开，因此也称为<strong>私钥</strong>(private key)。公钥和私钥是一一对应的，一对公钥和私钥统称为<strong>密钥对</strong>(key pair)。由公钥加密的密文，只有配对的私钥才能够解密。</p>
+<p>使用公钥密码通信时，流程如下：</p>
+<img src="/post/reading/20160629/14-53-35.jpg">
+
+<p>那么，密钥对是如何生成的呢？为什么用公钥加密的密文能用私钥解密呢？要理解公钥密码的原理，需要先理解一些数学上的问题，mod运算是基础。</p>
+<p>公钥密码是基于数学上困难的问题来保证机密性的，比如利用质因数分解的困难度、mod运算下求离散对数的困难度、mod运算下求平方根的困难度，等等。现在使用最广泛的公钥密码算法RSA就是利用了大整数质因数分解问题的困难度。</p>
+<blockquote>
+<h3 id="数学原理"><a href="#数学原理" class="headerlink" title="数学原理"></a>数学原理</h3></blockquote>
+<p>要理解RSA算法的原理，就要先理解一些mod运算方面的知识。mod运算，其实就是“除法求余数的运算”，比如：</p>
+<ul>
+<li>27 mod 12 = 3  表示27除以12的余数等于3</li>
+</ul>
+<p>加法和乘法都非常简单，比如：</p>
+<ul>
+<li>(6 + 7) mod 12 = 13 mod 12 = 1</li>
+<li>7 * 7 mod 12 = 49 mod 12 = 1 </li>
+</ul>
+<p>减法和除法则可以看成加法和乘法的逆运算，比如：</p>
+<ul>
+<li>(7 + N) mod 12 = 0  7加上几除以12的余数为0？</li>
+<li>7 * M mode 12 = 1  7乘以几除以12的余数为1？</li>
+</ul>
+<p>这里，N 和 M 都要求大于等于 0 小于 12。N 还是很容易算出来的，答案是5。而 M 一下子就比较难算出来，可以用暴力破解把0~11都代入 M 计算一下结果，最终可以得到 M = 7。接着，看另一个算式：</p>
+<ul>
+<li>N * M mod 12 = 1</li>
+</ul>
+<p>如果没有 mod 12，那 N 和 M 就是互为倒数。此处的话，我们还要加上“在以12为模的世界中”这个条件。在一般的算术中，互为倒数可以写成：</p>
+<ul>
+<li>N * 1/N = 1</li>
+</ul>
+<p>那么，在以12为模的世界中，在0到11的数字中，是不是每一个数都存在相应的倒数呢？实际上，mod运算中“某个数是否存在倒数”这个问题，与RSA中“一个公钥是否存在相对应的私钥”这个问题是直接相关的。下表列出了结果：</p>
+<img src="/post/reading/20160629/21-54-45.jpg">
+
+<p>存在倒数的只有1、5、7、11，这些数有怎样的性质呢？其实，在 mod 12 的世界中，存在倒数的数，它们和12之间的最大公约数都是1，也可以说是和12互质的数。那么，如果是在 mod 14 的世界中，存在倒数的则有1、3、5、9、11、13。</p>
+<p>接着，看看乘方的mod运算又是怎样的。比如，现在要求 7^4 mod 12，最笨的方法就是将7^4直接算出结果，然后除以12求余。而快速的计算方法则是在计算的中间步骤求mod，如下：</p>
+<ul>
+<li>7^4 mod 12 = 7<em>7</em>7<em>7 mod 12 = ((7*7 mod 12)</em>(7<em>7 mod 12)) mod 12 = ((49 mod 12)</em>(49 mod 12)) mod 12 = 1*1 mod 12 = 1</li>
+</ul>
+<p>在中间步骤求mod，可以避免计算大整数的乘积。这种在计算过程中求mod来计算乘方的方法，也是RSA的加密和解密算法中所使用的方法。</p>
+<p>接着，再看看对数，即乘方的逆运算。mod运算中的对数称为离散对数，比如：</p>
+<ul>
+<li>7^N mod 13 = 8</li>
+</ul>
+<p>这里N应该等于几呢？像下面这样依次尝试一遍，可以得到 N = 9：</p>
+<img src="/post/reading/20160629/22-17-21.jpg">
+
+<p>当数字很大时，求离散对数就会非常困难，而且非常耗时。到现在也还没有发现能够快速求出离散对数的算法。也因此，有很多公钥算法都运用了离散对数。</p>
+<blockquote>
+<h3 id="RSA"><a href="#RSA" class="headerlink" title="RSA"></a>RSA</h3></blockquote>
+<p>RSA是现在使用最广泛的公钥密码算法，但RSA不只用于公钥密码，也用于数字签名。关于数字签名下一篇文章再讲。</p>
+<p>在RSA中，明文、密钥和密文都是数字。RSA的加密过程可以用下列公式来表达，其中，Plaintext 指明文，Cipher 指密文：</p>
+<ul>
+<li><strong>Cipher = Plaintext^E mod N （RSA加密）</strong></li>
+</ul>
+<p>RSA的密文是对明文的数字的 E 次方求 mod N 的结果。换句话说，就是将明文和自己做 E 次乘法，然后将其结果除以 N 求余数，这个余数就是密文。因此，只要知道 E 和 N 这两个数，任何人都可以完成加密的运算。所以说，E 和 N 是RSA加密的密钥，也就是说，E 和 N 的组合就是密钥。另外，E 是加密(Encryption)的首字母，N 是数字(Number)的首字母。</p>
+<p>RSA的解密和加密一样简单，可以用下面的公式来表达，其中，Plaintext 指明文，Cipher 指密文：</p>
+<ul>
+<li><strong>Plaintext = Cipher^D mod N （RSA解密）</strong></li>
+</ul>
+<p>对表示密文的数字的 D 次方求 mod N 就可以得到明文。换句话说，将密文和自己做 D 次乘法，再对其结果除以 N 求余数，就可以得到明文。这里的数字 N 和加密时的 N 是相同的。D 和 N 组合起来就是RSA的解密密钥，因此，D 和 N 的组合就是私钥。另外，D 是解密(Decryption)的首字母。</p>
+<p>整理一下，RSA的加密和解密如下图：</p>
+<img src="/post/reading/20160629/17-04-34.jpg">
+
+<p>由于 E 和 N 是公钥，D 和 N 是私钥，因此求 E、D 和 N 这三个数就是生成密钥对。密钥对的生成步骤如下：</p>
+<ol>
+<li>求N：N = p * q<br>其中，p、q 是需要事先准备的两个很大的质数。p 和 q 太小的话，密码会变得容易破译，但太大的话计算时间又会变得很长。一般来说，p 和 q 的长度都是512比特以上，N 的长度为1024以上。</li>
+<li>求L：L = lcm(p-1, q-1)<br>L 是仅在生成密钥对的过程中使用的数，它是 p-1 和 q-1 的最小公倍数。</li>
+<li>求E：1 &lt; E &lt; L &amp;&amp; gcd(E, L) = 1<br>E 是一个比 1 大、比 L 小的数。此外，E 和 L 的最大公约数必须为 1，即 E 和 L 互质，这样可以保证一定存在解密时需要使用的数 D。</li>
+<li>求D：1 &lt; D &lt; L &amp;&amp; E * D mod L = 1<br>D 也是是一个比 1 大、比 L 小的数，而且是由数 E 计算得到的。从 E * D mod L = 1 这条公式得知，要保证存在满足条件的 D，就需要保证 E 和 L 的最大公约数为 1。简单来说，E * D mod L = 1 保证了对密文进行解密时能够得到原来的明文。</li>
+</ol>
+<blockquote>
+<h3 id="公钥密码的问题"><a href="#公钥密码的问题" class="headerlink" title="公钥密码的问题"></a>公钥密码的问题</h3></blockquote>
+<p>公钥密码虽然可以避免密钥配送问题，但也存在两个很大的问题：</p>
+<ol>
+<li>公钥密码的处理速度远远低于对称密码；</li>
+<li>公钥密码难以抵御中间人攻击。</li>
+</ol>
+<p>如果用公钥密码去处理很长的消息，那么，公钥密码速度慢的缺点就会显露无疑。所以，一般，不会用公钥密码直接处理消息。而是和对称密码相结合，采用混合密码系统。关于混合密码系统，下面再说。</p>
+<p>对于第二个问题，是因为公钥是公开的，任何人都可以获取，也包括攻击者。所谓中间人攻击，就是攻击者混入发送者和接收者中间，对发送者伪装成接收者，对接收者伪装成发送者的攻击方式。如下图所示：</p>
+<img src="/post/reading/20160629/09-55-25.jpg">
+
+<p>在这种情况下，就没有机密性可言了，因为发送者用来加密的其实是攻击者的公钥，攻击者拦截到信息后就可以用自己的私钥解密出来，再用之前拦截到的接收者的公钥对伪造的消息加密后发给接收者。</p>
+<p>仅靠公钥密码本身，是无法防御中间人攻击的。要防御中间人攻击，还需要一种手段来确认所收到的公钥是否真的属于接收者，这种手段称为认证。针对上面的情况，我们可以使用公钥的证书。关于认证和证书，下一篇文章再讲。</p>
+<h2 id="混合密码系统"><a href="#混合密码系统" class="headerlink" title="混合密码系统"></a>混合密码系统</h2><p>混合密码系统是将对称密码和公钥密码的优势相结合的方法，加密消息使用快速的对称密码，而用公钥密码来加密对称密码的密钥。因为对称密码的密钥一般比消息本身要短，因此公钥密码速度慢的问题就可以忽略了。另外，对称密码使用的密钥是临时生成的会话密钥。混合密码系统的加密过程如下图：</p>
+<img src="/post/reading/20160629/10-18-43.jpg">
+
+<p>从图中就可得知：</p>
+<ol>
+<li>会话密钥是随机生成的，因此，每次加密的会话密钥都会不同；</li>
+<li>混合密码系统的明文是用对称密码加密的，而加密使用的密钥就是上一步生成的会话密钥；</li>
+<li>用公钥密码对会话密钥进行加密，形成了加密后的会话密钥；</li>
+<li>将加密后的会话密钥和加密后的消息组合在一起，就是混合密码系统的密文。</li>
+</ol>
+<p>而解密过程则如下图所示：</p>
+<img src="/post/reading/20160629/10-25-49.jpg">
+
+<p>从图中也可得知：</p>
+<ol>
+<li>将已加密的会话密钥和消息进行分离；</li>
+<li>用公钥密码对已加密的会话密钥进行解密，得到会话密钥明文；</li>
+<li>用对称密码对已加密的消息进行解密，而解密密钥就是上一步解密出来的会话密钥。</li>
+</ol>
+<p>那么，怎样才算是一个高强度的混合密码系统呢？混合密码系统运用了伪随机数生成器、对称密码和公钥密码，因此其中每一种技术要素的强度都必须很高，而且，这些技术要素之间的强度平衡也非常重要。</p>
+<p>如果伪随机数生成器的算法很差，生成的会话密钥就有可能被攻击者推测出来。会话密钥中哪怕只有部分比特被推测出来也是很危险的，因为会话密钥的密钥空间不大，很容易通过暴力破解来发动攻击。</p>
+<p>对称密码被用于加密消息，我们需要使用高强度的对称密码算法，并确保密钥具有足够的长度。此外，还要选择使用合适的分组密码模式。</p>
+<p>公钥密码被用于加密会话密钥，同样需要使用高强度的公钥密码算法，并确保密钥具有足够的长度。</p>
+<p>另外，公钥密码的强度应该要高于对称密码，因为对称密码的会话密钥被破译只会影响本次通信的内容，而公钥密码一旦被破译，从过去到未来的（用相同公钥加密的）所以通信内容就都能够被破译了。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>本篇文章只是本书第一部分的读书笔记，虽然也有加入了一点自己的看法。第一部分的内容主要是关于保证机密性的密码技术。但信息安全还包括消息完整性、进行认证以及防止否认的技术，这些下面的文章再做总结。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/reading/20160629/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160621/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2300,221 +2749,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160114/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160114/" class="post-title-link" itemprop="url">App架构设计经验谈:技术选型</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-01-14 15:00:00" itemprop="dateCreated datePublished" datetime="2016-01-14T15:00:00+08:00">2016-01-14</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:40" itemprop="dateModified" datetime="2019-07-02T11:18:40+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160114"><strong>http://keeganlee.me/post/architecture/20160114</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-01-14</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160107">App架构设计经验谈:接口的设计</a><br><a href="http://keeganlee.me/post/architecture/20160114">App架构设计经验谈:技术选型</a><br><a href="http://keeganlee.me/post/architecture/20160120">App架构设计经验谈:数据层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160214">App架构设计经验谈:业务层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160222">App架构设计经验谈:展示层的设计</a></p>
-<hr>
-<p>当你做架构设计时，必然会面临技术选型的抉择，不同的技术方案，架构也可能完全不同。有哪些技术选型需要做决策呢？比如，App是纯原生开发，还是Web App，抑或Hybrid App？iOS开发，语言上是选择Objective-C还是Swift？架构模式用MVC，还是MVP，或者MVVM？下面根据我的一些经验对某些方面做点总结分享。</p>
-<h2 id="原生-H5"><a href="#原生-H5" class="headerlink" title="原生/H5"></a>原生/H5</h2><p>关于用原生好，还是用H5好的争论从没间断过。但我觉得，脱离了实际场景来讨论孰好孰坏意义不大。就说我们目前正在做的项目，先说明下背景：</p>
-<ol>
-<li>不止要做Android和iOS App，也要做微信公众号；</li>
-<li>H5人员缺乏，只有一两个兼职的可用，而且不可控因素很高；</li>
-<li>我们对原生比较熟；</li>
-<li>开发时间只有半个月。</li>
-</ol>
-<p>首先，需求上来说，大部分页面用H5实现，可以减少很多工作量。但因为不可控因素太高，而时间又短，风险太大。而我们对原生比较熟，开发效率比较高，很多东西我也控制得了，风险相对比较低。而且，我们的主推产品是App，微信属于辅助性产品，所以，微信要求也没那么高。因此，我决定以原生为主，H5为辅，App大部分页面用原生完成，小部分用WebView加载H5。</p>
-<p>另外，WebView加载H5也有两种模式，一种是加载服务器的H5页面，一种是加载本地的H5页面。加载服务器的H5页面比较简单，WebView只要load一下URL就可以了。加载本地的H5页面，则需要将H5文件存放在本地，包括关联的CSS和JS文件。这种方式相对比较复杂，不过，加载速度会比第一种快很多。我们当前项目基于上面考虑，只能选择第一种方案。</p>
-<p>如果人员和时间资源充足的话，那又如何选型呢？毫无疑问，我会以H5为主，微信和App都有的页面统一用H5，App专有的部分，比如导航栏、标题栏、登录等，才用原生实现。另外，WebView里的H5有点击事件时，也许是URL链接，也许是调用JS的，都不会让它直接在该WebView里做跳转，需要拦截下来做些原生处理后跳转到一个新的原生页面，原生页面也许嵌入另一个WebView，用来展示新的H5页面。这是简单的例子，关于Hybrid App详细的设计，以后再讲。另外，关于H5，绝对是大趋势，强烈建议所有App开发人员都去学习。</p>
-<h2 id="Objective-C-Swift"><a href="#Objective-C-Swift" class="headerlink" title="Objective-C/Swift"></a>Objective-C/Swift</h2><p>我在项目中选择了Swift，主要基于三个原因：</p>
-<ol>
-<li>Swift真的很简洁，生产效率很高；</li>
-<li>Swift取代Objective-C是必然的趋势；</li>
-<li>目前iOS只有我一个人开发，不需要顾虑到团队里没人懂Swift。</li>
-</ol>
-<p>如果你的团队里没人懂Swift，那还是乖乖用Objective-C吧；如果有一两个懂Swift的，那可以混合开发，并让不懂的人尽快学会Swift；如果都懂了，不用想了，直接上Swift吧。</p>
-<p>当语言上选择了Swift，相应的一些第三方库也面临着选型。比如，依赖库管理，Objective-C时代大部分用CocoaPods，Swift时代，我更喜欢Carthage。Carhage是用Swift写的，和CocoaPods相比，轻耦合，也更灵活。我个人也不太喜欢CocoaPods，使用起来比较麻烦，耦合性也较高，我使用过程中也经常出问题，而且还总是不知道该怎么解决，要移除时也是非常麻烦。</p>
-<p>再推荐几个关于Swift的第三方库：</p>
-<ol>
-<li>Alamofire：Swift版本的网络基础库，和AFNetworking是同一个作者</li>
-<li>AlamofireImage：基于Alamofire的图片加载库</li>
-<li>ObjectMapper：Swift版本的Json和Model转换库</li>
-<li>AlamofireObjectMapper：Alamofire的扩展库，结合了ObjectMapper，自动将JSON的Response数据转换为了Swift对象</li>
-</ol>
-<h2 id="MVC-MVP-MVVM"><a href="#MVC-MVP-MVVM" class="headerlink" title="MVC/MVP/MVVM"></a>MVC/MVP/MVVM</h2><p>先分别简单介绍下这三个架构模式吧：</p>
-<ul>
-<li>MVC：Model-View-Controller，经典模式，很容易理解，主要缺点有两个：<ol>
-<li>View对Model的依赖，会导致View也包含了业务逻辑；</li>
-<li>Controller会变得很厚很复杂。</li>
-</ol>
-</li>
-<li>MVP：Model-View-Presenter，MVC的一个演变模式，将Controller换成了Presenter，主要为了解决上述第一个缺点，将View和Model解耦，不过第二个缺点依然没有解决。</li>
-<li>MVVM：Model-View-ViewModel，是对MVP的一个优化模式，采用了双向绑定：View的变动，自动反映在ViewModel，反之亦然。</li>
-</ul>
-<p>架构模式上，我不会推崇说哪种模式好，每种模式都各有优点，也各有极限性。越高级的模式复杂性越高，实现起来也越难。最近火热的微服务架构，比起MVC，复杂度不知增加了多少倍。</p>
-<p>我在实际项目中思考架构时，也不会想着要用哪种模式，我只思考现阶段，以现有的人力资源和时间资源，如何才能更快更好地完成需求，适当考虑下如何为后期扩展或重构做准备。就说我前段时间分享的<a href="http://keeganlee.me/post/android/20150605">Android项目重构之路</a>系列中讲的那个架构，确切地说，都不属于上面三种架构模式之一。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>技术选型，决策关键不在于每种技术方案的优劣如何，而在于你团队的水平、资源的多寡，要根据实际情况选择最适合你们当前阶段的架构方案。当团队拓展了，资源也充足了，肯定也是需要再重构的，到时再思考其他更合适更优秀的方案。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160114/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2561,7 +2795,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">21</span>
+                    <span class="site-state-item-count">22</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
