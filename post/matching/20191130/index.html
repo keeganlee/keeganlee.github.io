@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191130微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-30  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现  程序入口我们">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:流程的代码实现">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191130/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191130微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-30  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现  程序入口我们">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191130/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-11-30T15:18:09.441Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:流程的代码实现">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191130微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-30  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现  程序入口我们">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191130/qrcode_keegan.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191130/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:流程的代码实现 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191130/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:流程的代码实现
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-30 12:19:26 / 修改时间：23:18:09" itemprop="dateCreated datePublished" datetime="2019-11-30T12:19:26+08:00">2019-11-30</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191130"><strong>http://keeganlee.me/post/matching/20191130</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-30</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a></p>
+<hr>
+<h2 id="程序入口"><a href="#程序入口" class="headerlink" title="程序入口"></a>程序入口</h2><p>我们要开始聊代码实现逻辑了，如果不记得之前讲的目录结构，请回去翻看<a href="http://keeganlee.me/post/matching/20191121">前文</a>。聊代码实现的第一步自然从程序入口开始，核心就两个函数：<strong>init()</strong> 和 <strong>main()</strong>，其代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line">... <span class="comment">//other codes</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	initViper()</span><br><span class="line">	initLog()</span><br><span class="line"></span><br><span class="line">	engine.Init()</span><br><span class="line">	middleware.Init()</span><br><span class="line">	process.Init()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line">	mux.HandleFunc(<span class="string">"/openMatching"</span>, handler.OpenMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/closeMatching"</span>, handler.CloseMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/handleOrder"</span>, handler.HandleOrder)</span><br><span class="line"></span><br><span class="line">	log.Printf(<span class="string">"HTTP ListenAndServe at port %s"</span>, viper.GetString(<span class="string">"server.port"</span>))</span><br><span class="line">	<span class="keyword">if</span> err := http.ListenAndServe(viper.GetString(<span class="string">"server.port"</span>), mux); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>init() 函数做了一些初始化的操作，我来简单介绍这几个初始化函数：</p>
+<ul>
+<li><strong>initViper()</strong>：配置文件初始化，使用了第三方配置库 viper，这是一个被广泛使用的配置库，其 github 地址为 <a href="https://github.com/spf13/viper" target="_blank" rel="noopener">https://github.com/spf13/viper</a>。</li>
+<li><strong>initLog()</strong>：日志初始化，程序主要使用自己定义的日志包用来输出日志文件，该日志包的实现后续文章再单独讲。</li>
+<li><strong>engine.Init()</strong>：引擎包的初始化，只是初始化了一个 map，用来保存不同交易标的的订单 channel，作为各交易标的的定序队列来用。</li>
+<li><strong>middleware.Init()</strong>：中间件的初始化，我们用到的中间件就只有 Redis，所以这里其实就是初始化 Redis 连接。Redis 客户端库方面我选择的是 <a href="https://github.com/go-redis/redis" target="_blank" rel="noopener">go-redis/redis</a>。</li>
+<li><strong>process.Init()</strong>：这一步主要是从缓存加载和恢复各交易标的引擎的启动和所有订单数据。</li>
+</ul>
+<p>viper 和 redis 的初始化都是参照官方 demo 写的，这里就不展开说明了。log 后续再单独讲。engine 包和 process 包的初始化就需要好好讲讲。</p>
+<p>其中，引擎包的初始化虽然非常简单，但很关键，其代码写在 <strong>engine/init.go</strong> 文件中，完整代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> engine</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> ChanMap <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">chan</span> Order</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ChanMap = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">chan</span> Order)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个保存通道的 map，其 Key 是各交易标的的 symbol，即是说每个交易标的各有一个订单通道，这些订单通道将作为每个交易标的的定序队列。</p>
+<p>process 包的初始化则如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	symbols := cache.GetSymbols()</span><br><span class="line">	<span class="keyword">for</span> _, symbol := <span class="keyword">range</span> symbols &#123;</span><br><span class="line">		price := cache.GetPrice(symbol)</span><br><span class="line">		NewEngine(symbol, price)</span><br><span class="line"></span><br><span class="line">		orderIds := cache.GetOrderIdsWithAction(symbol)</span><br><span class="line">		<span class="keyword">for</span> _, orderId := <span class="keyword">range</span> orderIds &#123;</span><br><span class="line">			mapOrder := cache.GetOrder(symbol, orderId)</span><br><span class="line">			order := engine.Order&#123;&#125;</span><br><span class="line">			order.FromMap(mapOrder)</span><br><span class="line">			engine.ChanMap[order.Symbol] &lt;- order</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单讲解下实现逻辑：</p>
+<ol>
+<li>从缓存读取所有 symbol，即程序重启之前，已经开启了撮合的所有交易标的的 symbol；</li>
+<li>从缓存读取每个 symbol 对应的价格，这是程序重启前的最新成交价格；</li>
+<li>启动每个 symbol 的撮合引擎；</li>
+<li>从缓存读取每个 symbol 的所有订单，这些订单都是按时间顺序排列的；</li>
+<li>按顺序将这些订单添加到对应 symbol 的订单通道里去。</li>
+</ol>
+<p>如果对这里面有些设计逻辑还不太明白的话，也没关系，后面讲到对应模块时会再详细说明。</p>
+<p>main() 函数里，定义了我们之前所说的三个接口，分别交由对应的 handler 去处理具体的请求，之后就启动 http 服务了。</p>
+<h2 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h2><p>因为只有几个接口，而且也很简单，因此，并没有引入第三方 web 框架，handler 都是用原生实现的。先来看看 <strong>OpenMatching</strong> 的完整实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> handler</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"encoding/json"</span></span><br><span class="line">	<span class="string">"io/ioutil"</span></span><br><span class="line">	<span class="string">"net/http"</span></span><br><span class="line">	<span class="string">"strings"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"matching/errcode"</span></span><br><span class="line">	<span class="string">"matching/process"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"github.com/shopspring/decimal"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> openMatchingParams <span class="keyword">struct</span> &#123;</span><br><span class="line">	Symbol <span class="keyword">string</span>          <span class="string">`json:"symbol"`</span></span><br><span class="line">	Price  decimal.Decimal <span class="string">`json:"price"`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">OpenMatching</span><span class="params">(w http.ResponseWriter, r *http.Request)</span></span> &#123;</span><br><span class="line">	w.Header().Set(<span class="string">"Content-Type"</span>, <span class="string">"application/json"</span>)</span><br><span class="line">	<span class="keyword">if</span> r.Method != http.MethodPost &#123;</span><br><span class="line">		w.WriteHeader(http.StatusMethodNotAllowed)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	body, err := ioutil.ReadAll(r.Body)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		w.WriteHeader(http.StatusBadRequest)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> params openMatchingParams</span><br><span class="line">	<span class="keyword">if</span> err := json.Unmarshal(body, &amp;params); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		w.WriteHeader(http.StatusBadRequest)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> strings.TrimSpace(params.Symbol) == <span class="string">""</span> &#123;</span><br><span class="line">		w.Write(errcode.BlankSymbol.ToJson())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> params.Price.IsNegative() &#123;</span><br><span class="line">		w.Write(errcode.InvalidPrice.ToJson())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> e := process.NewEngine(params.Symbol, params.Price); !e.IsOK() &#123;</span><br><span class="line">		w.Write(e.ToJson())</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	w.Write(errcode.OK.ToJson())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>逻辑非常简单，先判断是否为 POST 请求，再读取 body 里的数据并转为结构体对象，接着对参数做个简单的检查，最后就调用 <strong>process.NewEngine(symbol, price)</strong> 进入下一步的业务逻辑，如果结果返回是 OK，也返回 OK 作为请求的响应。</p>
+<p>另外，用到了第三方的 <strong>decimal.Decimal</strong> 类型用来表示价格，整个程序都统一用 decimal 来表示浮点数和做精确计算。</p>
+<p><strong>CloseMatching</strong> 和 <strong>HandleOrder</strong> 的实现逻辑也是同理，CloseMatching 最后会调用 <strong>process.CloseEngine(symbol)</strong> 函数进入下一步的处理，HandleOrder 最后则调用 <strong>process.Dispatch(order)</strong> 进入下一步。不过，Order 结构体是定义在 engine 包的，其结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Order <span class="keyword">struct</span> &#123;</span><br><span class="line">	Action    enum.OrderAction <span class="string">`json:"action"`</span></span><br><span class="line">	Symbol    <span class="keyword">string</span>           <span class="string">`json:"symbol"`</span></span><br><span class="line">	OrderId   <span class="keyword">string</span>           <span class="string">`json:"orderId"`</span></span><br><span class="line">	Side      enum.OrderSide   <span class="string">`json:"side"`</span></span><br><span class="line">	Type      enum.OrderType   <span class="string">`json:"type"`</span></span><br><span class="line">	Amount    decimal.Decimal  <span class="string">`json:"amount"`</span></span><br><span class="line">	Price     decimal.Decimal  <span class="string">`json:"price"`</span></span><br><span class="line">	Timestamp <span class="keyword">int64</span>            <span class="string">`json:"timestamp"`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，其中的字段，除了有 Decimal 类型，还有 enum 包的几个类型，这几个其实是我们程序中自己定义的枚举类型。Golang 语言本身并没有提供和其他语言一样的 enum 关键字来定义枚举类型，所以一般采用<strong>类型定义+常量</strong>来模拟枚举类型，以 enum.OrderAction 为例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> OrderAction <span class="keyword">string</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	ActionCreate OrderAction = <span class="string">"create"</span></span><br><span class="line">	ActionCancel OrderAction = <span class="string">"cancel"</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>其他几个枚举类型也是这样定义的。</p>
+<p>另外，为了方便转为字符串和检验参数是否有效，程序中还为每个枚举类型分别提供了两个函数，还是以 OrderAction 为例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o OrderAction)</span> <span class="title">String</span><span class="params">()</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> o &#123;</span><br><span class="line">	<span class="keyword">case</span> ActionCreate:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">"create"</span></span><br><span class="line">	<span class="keyword">case</span> ActionCancel:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">"cancel"</span></span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">"unknown"</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(o OrderAction)</span> <span class="title">Valid</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> o.String() == <span class="string">"unknown"</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其他几个枚举类型也都定义了类似的两个函数，就不再贴代码了。</p>
+<h2 id="process-包"><a href="#process-包" class="headerlink" title="process 包"></a>process 包</h2><p>来回顾下 process 包有哪些文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">└── process                  #</span><br><span class="line">    ├── close_engine.go      # 关闭引擎</span><br><span class="line">    ├── dispatch.go          # 分发订单</span><br><span class="line">    ├── init.go              # 初始化</span><br><span class="line">    └── new_engine.go        # 启动新引擎</span><br></pre></td></tr></table></figure>
+
+<p>init.go 就一个初始化函数，上文已经讲了。其他三个文件分别定义了上文三个 handler 对应的下一步逻辑实现。</p>
+<h3 id="启动新引擎"><a href="#启动新引擎" class="headerlink" title="启动新引擎"></a>启动新引擎</h3><p>先来看看 <strong>new_engine.go</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> process</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"matching/engine"</span></span><br><span class="line">	<span class="string">"matching/errcode"</span></span><br><span class="line">	<span class="string">"matching/middleware/cache"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"github.com/shopspring/decimal"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewEngine</span><span class="params">(symbol <span class="keyword">string</span>, price decimal.Decimal)</span> *<span class="title">errcode</span>.<span class="title">Errcode</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> engine.ChanMap[symbol] != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errcode.EngineExist</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	engine.ChanMap[symbol] = <span class="built_in">make</span>(<span class="keyword">chan</span> engine.Order, <span class="number">100</span>)</span><br><span class="line">	<span class="keyword">go</span> engine.Run(symbol, price)</span><br><span class="line"></span><br><span class="line">	cache.SaveSymbol(symbol)</span><br><span class="line">	cache.SavePrice(symbol, price)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> errcode.OK</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>逻辑也是比较简单的，第一步先判断 ChanMap[symbol] 是否为空，该 ChanMap 就是上文所说的引擎包初始化时用来保存订单通道的 map。如果 ChanMap[symbol] 不为空，说明该 symbol 的撮合引擎已经启动过了，那就返回错误。如果为空，那就初始化这个 symbol 的通道，从代码可知，ChanMap[symbol] 初始化为一个缓冲大小为 100 的订单通道。</p>
+<p>接着，就调用 engine.Run() 启动一个 goroutine 了，这行代码即表示用 goroutine 的方式启动指定 symbol 的撮合引擎了。</p>
+<p>然后，就将 symbol 和 price 都缓存起来了。</p>
+<p>最后，返回 OK，搞定。</p>
+<h3 id="2-分发订单"><a href="#2-分发订单" class="headerlink" title="2. 分发订单"></a>2. 分发订单</h3><p>接着，来看看 Dispatch 的实现又是怎样的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Dispatch</span><span class="params">(order engine.Order)</span> *<span class="title">errcode</span>.<span class="title">Errcode</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> engine.ChanMap[order.Symbol] == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errcode.EngineNotFound</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> order.Action == enum.ActionCreate &#123;</span><br><span class="line">		<span class="keyword">if</span> cache.OrderExist(order.Symbol, order.OrderId, order.Action.String()) &#123;</span><br><span class="line">			<span class="keyword">return</span> errcode.OrderExist</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> !cache.OrderExist(order.Symbol, order.OrderId, enum.ActionCreate.String()) &#123;</span><br><span class="line">			<span class="keyword">return</span> errcode.OrderNotFound</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	order.Timestamp = time.Now().UnixNano() / <span class="number">1e3</span></span><br><span class="line">	cache.SaveOrder(order.ToMap())</span><br><span class="line">	engine.ChanMap[order.Symbol] &lt;- order</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> errcode.OK</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第一步，判断 ChanMap[order.Symbol] 是否为空，如果为空，表示引擎没开启，那就无法处理订单。</p>
+<p>第二步，判断订单是否存在。如果是 create 订单，那缓存中就不应该查到订单，否则说明是重复请求。如果是 cancel 订单，那缓存中如果也查不到订单，那说明该订单已经全部成交或已经成功撤单过了。</p>
+<p>第三步，将订单时间设为当前时间，时间单位是 100 纳秒，这可以保证时间戳长度刚好为 16 位，保存到 Redis 里就不会有精度失真的问题。这点后续文章讲到 Redis 详细设计时再说。</p>
+<p>第四步，将订单缓存。</p>
+<p>第五步，将订单传入对应的订单通道，对应引擎会从该通道中获取该订单进行处理。这一步就实现了订单的分发。</p>
+<p>第六步，返回 OK。</p>
+<h3 id="3-关闭引擎"><a href="#3-关闭引擎" class="headerlink" title="3. 关闭引擎"></a>3. 关闭引擎</h3><p>关闭引擎的实现就非常简单了，请看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CloseEngine</span><span class="params">(symbol <span class="keyword">string</span>)</span> *<span class="title">errcode</span>.<span class="title">Errcode</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> engine.ChanMap[symbol] == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errcode.EngineNotFound</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">close</span>(engine.ChanMap[symbol])</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> errcode.OK</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>核心代码就一行，将对应 symbol 的订单通道关闭。后续的处理其实是在引擎里完成的，待会我们再结合引擎里的代码来讲解这个设计。</p>
+<h2 id="引擎入口的实现"><a href="#引擎入口的实现" class="headerlink" title="引擎入口的实现"></a>引擎入口的实现</h2><p>交易引擎 goroutine 的启动入口就是 <strong>engine.Run()</strong> 函数，来看看其代码实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Run</span><span class="params">(symbol <span class="keyword">string</span>, price decimal.Decimal)</span></span> &#123;</span><br><span class="line">	lastTradePrice := price</span><br><span class="line"></span><br><span class="line">	book := &amp;orderBook&#123;&#125;</span><br><span class="line">	book.init()</span><br><span class="line"></span><br><span class="line">	log.Info(<span class="string">"engine %s is running"</span>, symbol)</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		order, ok := &lt;-ChanMap[symbol]</span><br><span class="line">		<span class="keyword">if</span> !ok &#123;</span><br><span class="line">			log.Info(<span class="string">"engine %s is closed"</span>, symbol)</span><br><span class="line">			<span class="built_in">delete</span>(ChanMap, symbol)</span><br><span class="line">			cache.Clear(symbol)</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		log.Info(<span class="string">"engine %s receive an order: %s"</span>, symbol, order.ToJson())</span><br><span class="line">		<span class="keyword">switch</span> order.Action &#123;</span><br><span class="line">		<span class="keyword">case</span> enum.ActionCreate:</span><br><span class="line">			dealCreate(&amp;order, book, &amp;lastTradePrice)</span><br><span class="line">		<span class="keyword">case</span> enum.ActionCancel:</span><br><span class="line">			dealCancel(&amp;order, book)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第一步，先定义和初始化了一个 book 变量，该变量就是用来保存整个<strong>交易委托账本</strong>。</p>
+<p>接着，就是一个 <strong>for</strong> 循环了，for 循环里的第一行就是从对应 <strong>symbol</strong> 的订单通道里读取出一个订单，读取到订单时，<strong>order</strong> 变量就会有值，且 <strong>ok</strong> 变量为 <strong>true</strong>。如果通道里暂时没有订单，那就会阻塞在这行代码，直到从通道中获取到订单或通道已关闭的消息。</p>
+<p>当通道被关闭之后，最后，从通道中读取到的 <strong>ok</strong> 变量则为 <strong>false</strong>，当然，在这之前，会先依序读取完通道里剩下的订单。当 ok 为 false 时，引擎里会执行两步操作：一是从 ChanMap 中删除该 symbol 对应的记录，二是清空该 symbol 对应的缓存数据。最后用 <strong>return</strong> 来退出 for 循环，这样，整个 Run() 函数就结束退出了，意味着该引擎也真正关闭了。</p>
+<p>当每读取到一个订单，就会判断是下单还是撤单，然后进行相应的逻辑处理了。</p>
+<p>我们先来看看撤单的逻辑，这个比较简单：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealCancel</span><span class="params">(order *Order, book *orderBook)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> ok <span class="keyword">bool</span></span><br><span class="line">	<span class="keyword">switch</span> order.Side &#123;</span><br><span class="line">	<span class="keyword">case</span> enum.SideBuy:</span><br><span class="line">		ok = book.removeBuyOrder(order)</span><br><span class="line">	<span class="keyword">case</span> enum.SideSell:</span><br><span class="line">		ok = book.removeSellOrder(order)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	cache.RemoveOrder(order.ToMap())</span><br><span class="line">	mq.SendCancelResult(order.Symbol, order.OrderId, ok)</span><br><span class="line">	log.Info(<span class="string">"engine %s, order %s cancel result is %s"</span>, order.Symbol, order.OrderId, ok)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>核心就三个步骤：</p>
+<ol>
+<li>从委托账本中移除该订单；</li>
+<li>从缓存中移除该订单；</li>
+<li>发送撤单结果到 MQ。</li>
+</ol>
+<p>下单逻辑就比较复杂了，需要根据不同的订单类型做不同的逻辑处理，请看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealCreate</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> order.Type &#123;</span><br><span class="line">	<span class="keyword">case</span> enum.TypeLimit:</span><br><span class="line">		dealLimit(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.TypeLimitIoc:</span><br><span class="line">		dealLimitIoc(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.TypeMarket:</span><br><span class="line">		dealMarket(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.TypeMarketTop5:</span><br><span class="line">		dealMarketTop5(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.TypeMarketTop10:</span><br><span class="line">		dealMarketTop10(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.TypeMarketOpponent:</span><br><span class="line">		dealMarketOpponent(order, book, lastTradePrice)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个类型再分买卖方向处理，以 dealLimit() 为例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealLimit</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal)</span></span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> order.Side &#123;</span><br><span class="line">	<span class="keyword">case</span> enum.SideBuy:</span><br><span class="line">		dealBuyLimit(order, book, lastTradePrice)</span><br><span class="line">	<span class="keyword">case</span> enum.SideSell:</span><br><span class="line">		dealSellLimit(order, book, lastTradePrice)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后，再来看看 dealBuyLimit() 的处理逻辑：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyLimit</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal)</span></span> &#123;</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder == <span class="literal">nil</span> || order.Price.LessThan(headOrder.Price) &#123;</span><br><span class="line">		book.addBuyOrder(order)</span><br><span class="line">		log.Info(<span class="string">"engine %s, a order has added to the orderbook: %s"</span>, order.Symbol, order.ToJson())</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我来解析下这个处理流程：</p>
+<ol>
+<li>从委托账本中读取出卖单队列的头部订单；</li>
+<li>如果头部订单为空，或新订单(买单)价格小于头部订单(卖单)，则无法匹配成交，那就将新订单添加到委托账本的买单队列中去；</li>
+<li>如果头部订单不为空，且新订单(买单)价格大于等于头部订单(卖单)，则两个订单可以匹配成交，那就对这两个订单进行成交处理；</li>
+<li>如果上一步的成交处理完之后，新订单的剩余数量还不为零，那就继续重复第一步。</li>
+</ol>
+<p>其中，匹配成交的记录会作为一条输出记录发送到 MQ。</p>
+<p>对其他类型的处理也是类似的，就不再一一讲解了。</p>
+<p>那引擎包的实现就先讲到这里，后续文章再聊其他部分的实现。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本小节主要还是通过代码梳理清楚整个数据流程，包括一些细节上的设计。理解了本文所列举的这些代码，也就对整个撮合服务的实现理解一大半了。</p>
+<p>这次的思考题：ChanMap 保存的订单通道是否可以改用无缓冲的通道？用无缓冲的通道和用有缓冲的通道处理逻辑有哪些不同？两种方案各自的优缺点是什么？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191130/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191127/" rel="next" title="撮合引擎开发:解密黑箱流程">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:解密黑箱流程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">23</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#程序入口"><span class="nav-number">1.</span> <span class="nav-text">程序入口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#handler"><span class="nav-number">2.</span> <span class="nav-text">handler</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#process-包"><span class="nav-number">3.</span> <span class="nav-text">process 包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#启动新引擎"><span class="nav-number">3.1.</span> <span class="nav-text">启动新引擎</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-分发订单"><span class="nav-number">3.2.</span> <span class="nav-text">2. 分发订单</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-关闭引擎"><span class="nav-number">3.3.</span> <span class="nav-text">3. 关闭引擎</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引擎入口的实现"><span class="nav-number">4.</span> <span class="nav-text">引擎入口的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
