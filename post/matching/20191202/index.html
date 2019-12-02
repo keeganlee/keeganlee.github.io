@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191202微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-02  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta name="keywords" content="撮合引擎">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:缓存和MQ">
+<meta property="og:url" content="https://keeganlee.me/post/matching/20191202/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191202微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-02  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/matching/20191202/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-12-02T12:31:44.863Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:缓存和MQ">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191202微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-02  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta name="twitter:image" content="https://keeganlee.me/post/matching/20191202/qrcode_keegan.jpg">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/matching/20191202/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:缓存和MQ | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191202/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:缓存和MQ
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-02 15:06:14 / 修改时间：20:31:44" itemprop="dateCreated datePublished" datetime="2019-12-02T15:06:14+08:00">2019-12-02</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191202"><strong>http://keeganlee.me/post/matching/20191202</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-02</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<hr>
+<h2 id="中间件"><a href="#中间件" class="headerlink" title="中间件"></a>中间件</h2><p>先来回顾下我们撮合程序项目中关于中间件的目录结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">├── middleware               # 中间件的包</span><br><span class="line">│   ├── cache                # 缓存包</span><br><span class="line">│   │   └── cache.go         # 缓存操作</span><br><span class="line">│   ├── mq                   # 消息队列包</span><br><span class="line">│   │   └── mq.go            # MQ操作</span><br><span class="line">│   └── redis.go             # 主要做Redis初始化操作</span><br></pre></td></tr></table></figure>
+
+<p>虽然现在只用到了 Redis 一个中间件，但设计个 middleware 包，会方便以后扩展添加其他中间件，如 Kafka 或 RocketMQ 等。</p>
+<p>再将缓存和消息队列分包，职责上就很分明，应用时也很明确。</p>
+<p><strong>redis.go</strong> 就只是做初始化的连接，我们来看看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> middleware</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"matching/log"</span></span><br><span class="line"></span><br><span class="line">	<span class="string">"github.com/go-redis/redis"</span></span><br><span class="line">	<span class="string">"github.com/spf13/viper"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> RedisClient *redis.Client</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	addr := viper.GetString(<span class="string">"redis.addr"</span>)</span><br><span class="line">	RedisClient = redis.NewClient(&amp;redis.Options&#123;</span><br><span class="line">		Addr:     addr,</span><br><span class="line">		Password: <span class="string">""</span>, <span class="comment">// no password set</span></span><br><span class="line">		DB:       <span class="number">0</span>,  <span class="comment">// use default DB</span></span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	_, err := RedisClient.Ping().Result()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		log.Printf(<span class="string">"Connected to redis: %s"</span>, addr)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，viper 是前文说过的第三方配置库，通过 <strong>viper.GetString(“redis.addr”)</strong> 从配置文件读取出要连接的 Redis 的地址，之后就新建一个 Redis 客户端并连接上 Redis 服务器了。</p>
+<h2 id="缓存的设计"><a href="#缓存的设计" class="headerlink" title="缓存的设计"></a>缓存的设计</h2><p>讲数据结构设计时，我们已经说过，使用缓存的目的主要有两个：</p>
+<ol>
+<li><strong>请求去重</strong>，避免重复提交相同订单；</li>
+<li><strong>恢复数据</strong>，即程序重启后能恢复所有数据。</li>
+</ol>
+<p>还记得上一篇文章讲 Dispatch 的实现时，有个判断订单是否存在的逻辑吗？就是读取缓存中是否已经存在该订单，从而判别是否为重复请求或无效请求。以及，还记得 process 包的初始化？就是从缓存中恢复数据的过程。</p>
+<p>先了解下，我们总共缓存了哪些数据：</p>
+<ul>
+<li><p>开启撮合的交易标的 symbol；</p>
+</li>
+<li><p>这些交易标的的最新价格；</p>
+</li>
+<li><p>所有有效的订单请求，包括下单和撤单请求。</p>
+</li>
+</ul>
+<h3 id="1-缓存symbol"><a href="#1-缓存symbol" class="headerlink" title="1. 缓存symbol"></a>1. 缓存symbol</h3><p>开启撮合的交易标的 symbol 会有多个，且不能重复，那其实就可以保存为集合 set 类型。我将该 set 的 key 设计为 <strong>matching:symbols</strong>，之后，每有一个 symbol 开启撮合时，就可以用 Redis 的 <strong>sadd</strong> 命令将该 symbol 添加进这个集合里去了。而关闭撮合时，则需用 <strong>srem</strong> 命令将关闭撮合的 symbol 从集合中移除。读取所有 symbol 则可用 <strong>smembers</strong> 命令操作。</p>
+<p>程序里对 symbol 的操作提供了三个函数，分别用来保存 symbol、移除 symbol 和获取所有 symbol，以下是实现的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SaveSymbol</span><span class="params">(symbol <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:symbols"</span></span><br><span class="line">	RedisClient.SAdd(key, symbol)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">RemoveSymbol</span><span class="params">(symbol <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:symbols"</span></span><br><span class="line">	RedisClient.SRem(key, symbol)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetSymbols</span><span class="params">()</span> []<span class="title">string</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:symbols"</span></span><br><span class="line">	<span class="keyword">return</span> RedisClient.SMembers(key).Val()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-缓存价格"><a href="#2-缓存价格" class="headerlink" title="2. 缓存价格"></a>2. 缓存价格</h3><p>交易标的的最新价格则是每个 symbol 会有一个价格，且无需缓存历史价格，那我就直接用字符串类型来保存价格，而每个价格的 key 则包含有各自的 symbol，key 的格式设计为 <strong>matching:price:{symbol}</strong>，假如要保存的 symbol = “BTCUSD”，那对应的 key 值就是 <strong>matching:price:BTCUSD</strong>，保存的 value 值就是 BTCUSD 的最新价格。</p>
+<p>我们也同样提供了保存价格、获取价格和删除价格的三个函数，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SavePrice</span><span class="params">(symbol <span class="keyword">string</span>, price decimal.Decimal)</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:price:"</span> + symbol</span><br><span class="line">	RedisClient.Set(key, price.String(), <span class="number">0</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetPrice</span><span class="params">(symbol <span class="keyword">string</span>)</span> <span class="title">decimal</span>.<span class="title">Decimal</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:price:"</span> + symbol</span><br><span class="line">	priceStr := RedisClient.Get(key).Val()</span><br><span class="line">	result, err := decimal.NewFromString(priceStr)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		result = decimal.Zero</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> result</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">RemovePrice</span><span class="params">(symbol <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:price:"</span> + symbol</span><br><span class="line">	RedisClient.Del(key)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-缓存订单"><a href="#3-缓存订单" class="headerlink" title="3. 缓存订单"></a>3. 缓存订单</h3><p>对订单的缓存设计则没那么简单了，需要满足两点要求：</p>
+<ol>
+<li>既能缓存下单请求，也能缓存撤单请求；</li>
+<li>订单要符合定序要求。</li>
+</ol>
+<p>先说下第一点，为什么需要缓存订单？且为什么下单和撤单请求都需要缓存？</p>
+<p>先来解答第一个问题，我们是在内存中撮合的，每个交易标的引擎里各自维护了一个交易委托账本，程序运行时，这些账本是直接保存在程序内存里的。那如果程序退出了，这些账本都被清空了。如果没有缓存，那程序重启后就无法恢复账本数据。要满足该需求，就需要缓存账本里的所有委托单。</p>
+<p>关于第二个问题，我们来考虑这样一个场景：假如订单通道里有撤单请求在排队，而程序并没有对撤单请求做缓存，这时程序重启了，那么订单通道里的所有订单还没被引擎接收处理之前就被清空了，撤单请求也就无法恢复了。</p>
+<p>因此，程序需要缓存好订单，且下单和撤单都需要缓存。</p>
+<p>再来看第二个要求，为什么要符合定序？我们知道，订单通道里的订单是定序的，交易委托账本里同价格的订单也是按时间排序的，那缓存时如果不定序，程序重启后就难以保证按原有的顺序恢复订单。</p>
+<p>那具体要怎么来设计这个订单的缓存呢？我的方案是分两类缓存，第一类保存每个独立的订单请求，包括下单和撤单；第二类分交易标的保存对应 symbol 所有订单请求的订单 ID 和 action。</p>
+<p>第一类，我设计的 Key 格式为 <strong>matching:order:{symbol}:{orderId}:{action}</strong>，symbol、orderId 和 action 则是对应订单的三个变量值。比如，某订单 symbol = “BTCUSD”，orderId = “12345”，action = “cancel”，那该订单保存到 Redis 的 Key 值就是 <strong>matching:order:BTCUSD:12345:cancel</strong>。该 Key 对应的 Value 则是保存整个订单对象，可以用 <strong>hash</strong> 类型存储。</p>
+<p>第二类，我设计的 Key 格式为 <strong>matching:orderids:{symbol}</strong>，Value 保存的是 <strong>sorted set</strong> 类型的数据，保存对应 symbol 的所有订单请求，每条记录保存的值为 <strong>{orderId}:{action}</strong>，而 <strong>score</strong> 值设为对应订单的 <strong>{timestamp}</strong>。用订单时间作为 score 就可以保证定序了。还记得之前文章我们将订单时间的单位设为 100 纳秒，保证时间戳长度刚好为 16 位吗？这是因为，如果超过 16 位，那 score 将转为科学计数法表示，那将会导致数字失真。</p>
+<p>根据这样的设计，那保存订单时的实现逻辑就如以下代码所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SaveOrder</span><span class="params">(order <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	symbol := order[<span class="string">"symbol"</span>].(<span class="keyword">string</span>)</span><br><span class="line">	orderId := order[<span class="string">"orderId"</span>].(<span class="keyword">string</span>)</span><br><span class="line">	timestamp := order[<span class="string">"timestamp"</span>].(<span class="keyword">float64</span>)</span><br><span class="line">	action := order[<span class="string">"action"</span>].(<span class="keyword">string</span>)</span><br><span class="line"></span><br><span class="line">	key := <span class="string">"matching:order:"</span> + symbol + <span class="string">":"</span> + orderId + <span class="string">":"</span> + action</span><br><span class="line">	RedisClient.HMSet(key, order)</span><br><span class="line"></span><br><span class="line">	key = <span class="string">"matching:orderids:"</span> + symbol</span><br><span class="line">	z := &amp;redis.Z&#123;</span><br><span class="line">		Score:  timestamp,</span><br><span class="line">		Member: orderId + <span class="string">":"</span> + action,</span><br><span class="line">	&#125;</span><br><span class="line">	RedisClient.ZAdd(key, z)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外，还提供了 GetOrder()、UpdateOrder()、RemoveOrder()、OrderExist()、GetOrderIdsWithAction() 等函数。再给大伙看看 GetOrderIdsWithAction() 函数的实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetOrderIdsWithAction</span><span class="params">(symbol <span class="keyword">string</span>)</span> []<span class="title">string</span></span> &#123;</span><br><span class="line">	key := <span class="string">"matching:orderids:"</span> + symbol</span><br><span class="line">	<span class="keyword">return</span> RedisClient.ZRange(key, <span class="number">0</span>, <span class="number">-1</span>).Val()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该函数得到的结果是根据 score 值排好序的，这就是我们想要的结果。理解了这个设计之后，再翻回去看看 process 包的初始化，你就会明白那些代码的逻辑了。</p>
+<h2 id="MQ的设计"><a href="#MQ的设计" class="headerlink" title="MQ的设计"></a>MQ的设计</h2><p>我们选择了使用 Redis 的 Stream 数据结构来作为 MQ 输出，Stream 数据结构采用了类似 Kafka 的设计，应用起来很方便。但由于 Redis 运行于内存的特性，相比 Kafka 快速很多，这也是我选择它来作为撮合程序的输出 MQ 的主要原因。</p>
+<p>我们只有两类 MQ，撤单结果和成交记录，发送消息的实现如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SendCancelResult</span><span class="params">(symbol, orderId <span class="keyword">string</span>, ok <span class="keyword">bool</span>)</span></span> &#123;</span><br><span class="line">	values := <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;&#123;<span class="string">"orderId"</span>: orderId, <span class="string">"ok"</span>: ok&#125;</span><br><span class="line">	a := &amp;redis.XAddArgs&#123;</span><br><span class="line">		Stream:       <span class="string">"matching:cancelresults:"</span> + symbol,</span><br><span class="line">		MaxLenApprox: <span class="number">1000</span>,</span><br><span class="line">		Values:       values,</span><br><span class="line">	&#125;</span><br><span class="line">	RedisClient.XAdd(a)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">SendTrade</span><span class="params">(symbol <span class="keyword">string</span>, trade <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	a := &amp;redis.XAddArgs&#123;</span><br><span class="line">		Stream:       <span class="string">"matching:trades:"</span> + symbol,</span><br><span class="line">		MaxLenApprox: <span class="number">1000</span>,</span><br><span class="line">		Values:       trade,</span><br><span class="line">	&#125;</span><br><span class="line">	RedisClient.XAdd(a)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，<strong>matching:cancelresults:{symbol}</strong> 就是撤单结果的 MQ 所属的 Key，<strong>matching:trades:{symbol}</strong> 则是成交记录的 MQ 所属的 Key。可以看到，我们还根据不同 symbol 分不同 MQ，这样还方便下游服务可以根据需要实现分布式订阅不同 symbol 的 MQ。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本小节讲解了缓存和 MQ 的设计与实现，理解了这部分的设计之后，对整个撮合引擎的核心设计也基本能理解了。</p>
+<p>最后，依然留几个思考题：是否可以不用缓存？如果不用缓存可以如何解决去重和数据恢复的问题？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191202/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+        
+          
+        
+        <div class="post-tags">
+          
+            <a href="/tags/撮合引擎/" rel="tag"># 撮合引擎</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191130/" rel="next" title="撮合引擎开发:流程的代码实现">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:流程的代码实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">24</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#中间件"><span class="nav-number">1.</span> <span class="nav-text">中间件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#缓存的设计"><span class="nav-number">2.</span> <span class="nav-text">缓存的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-缓存symbol"><span class="nav-number">2.1.</span> <span class="nav-text">1. 缓存symbol</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-缓存价格"><span class="nav-number">2.2.</span> <span class="nav-text">2. 缓存价格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-缓存订单"><span class="nav-number">2.3.</span> <span class="nav-text">3. 缓存订单</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MQ的设计"><span class="nav-number">3.</span> <span class="nav-text">MQ的设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

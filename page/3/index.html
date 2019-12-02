@@ -322,6 +322,191 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160214/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/architecture/20160214/" class="post-title-link" itemprop="url">App架构设计经验谈:业务层的设计</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2016-02-14 12:45:00" itemprop="dateCreated datePublished" datetime="2016-02-14T12:45:00+08:00">2016-02-14</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 11:18:45" itemprop="dateModified" datetime="2019-07-02T11:18:45+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160214"><strong>http://keeganlee.me/post/architecture/20160214</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-02-14</p>
+<hr>
+<p><a href="http://keeganlee.me/post/architecture/20160107">App架构设计经验谈:接口的设计</a><br><a href="http://keeganlee.me/post/architecture/20160114">App架构设计经验谈:技术选型</a><br><a href="http://keeganlee.me/post/architecture/20160120">App架构设计经验谈:数据层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160214">App架构设计经验谈:业务层的设计</a><br><a href="http://keeganlee.me/post/architecture/20160222">App架构设计经验谈:展示层的设计</a></p>
+<hr>
+<p>业务层其实并不复杂，但是大部分开发人员对其职责并没有理解清楚，从而使其沦落为一个数据中转站。我之前分享过的<a href="http://keeganlee.me/post/android/20150605">Android项目重构之路</a>系列中提到的核心层，其实就是这里所讲的业务层。但有不少读者反映，他们在实际项目中就只是做一下参数检查，然后直接调用API，与展示层对接的接口基本也与API的接口一致的。这样，业务层无疑就已经变为了一个数据中转站。</p>
+<h2 id="业务层的职责"><a href="#业务层的职责" class="headerlink" title="业务层的职责"></a>业务层的职责</h2><p>所以，设计业务层之前，对业务层的职责要先真正理解清楚。这里，我举两个栗子说明一下。</p>
+<p>第一个是新用户注册的例子。注册时，界面上一般都会要求用户输入手机号、验证码、密码和确认密码。但是，API接口一般只会有三个参数：手机号、验证码和密码，不会有确认密码。因此，调用接口之前，密码和确认密码的一致性检查是必须的。同时，也要检查这些数据是否为空、手机号是否符合规范、验证码是否有效、密码有没有包含了特殊字符等。正确姿势就是当所有检查都通过了之后，才调用API接口。最后，调用注册接口成功后，可能还要再调用一次登录接口，并可能将用户登录信息缓存起来，方便用户下次启动应用时自动登录。所有这些都属于业务逻辑处理，也就是业务层的工作。</p>
+<p>第二个是涉及用户验证的例子。比如，在一个电商App，当用户浏览某个商品，点击购买时，App首先会判断用户是否已经登录，如未登录，则会跳转到登录页面让用户先登录。如果已经登录，但token已经过期，那需要先去获取新的token，之后才能进行下一步的购物操作。这些逻辑处理，也是业务层的工作。</p>
+<p>因此，简单点说，业务层就是处理业务逻辑，包括数据的检查、业务分支的处理等。比如上面第二个例子，可能很多人就会将用户是否已经登录的判断直接在界面上做处理，当确认登录后，token也是有效的之后，才调用业务层做购买商品的操作，这就是导致业务层沦落为API的数据中转站的直接表现。</p>
+<h2 id="业务层的交互"><a href="#业务层的交互" class="headerlink" title="业务层的交互"></a>业务层的交互</h2><p>只有真正理解了业务层的职责之后，才能有效地设计业务层与外层的交互接口。</p>
+<p>业务层向下，与数据层交互；向上，与展示层交互。</p>
+<p>与数据层交互只是调用数据层的接口获取数据，而与展示层交互则需要提供接口给展示层调用。因为业务处理一般属于比较耗时的操作，主要在于底层的网络请求比较耗时，所以提供给展示层的接口数据结果应该以异步的方式提供，因此，接口上就需要提供个回调参数，返回业务处理之后的结果。我之前分享过的<a href="http://keeganlee.me/post/android/20150629">Android项目重构之路:实现篇</a>有讲到一种实现方式，可参考。</p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>业务层可以说是一个数据加工场，处理核心的业务逻辑。其实，只要理解清楚了业务层的职责，业务层就不难实现。</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/architecture/20160214/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160120/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1027,7 +1212,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">23</span>
+                    <span class="site-state-item-count">24</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
