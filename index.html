@@ -322,7 +322,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191202/">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191203/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Keegan小钢">
@@ -342,7 +342,7 @@
           <h1 class="post-title" itemprop="name headline">
                 
                 
-                <a href="/post/matching/20191202/" class="post-title-link" itemprop="url">撮合引擎开发:缓存和MQ</a>
+                <a href="/post/matching/20191203/" class="post-title-link" itemprop="url">撮合引擎开发:日志输出</a>
               
             
           </h1>
@@ -367,7 +367,7 @@
                 
               
 
-              <time title="创建时间：2019-12-02 15:06:14 / 修改时间：20:31:44" itemprop="dateCreated datePublished" datetime="2019-12-02T15:06:14+08:00">2019-12-02</time>
+              <time title="创建时间：2019-12-03 10:32:34 / 修改时间：10:38:58" itemprop="dateCreated datePublished" datetime="2019-12-03T10:32:34+08:00">2019-12-03</time>
             </span>
           
 
@@ -426,9 +426,232 @@
       
         
           
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191203"><strong>http://keeganlee.me/post/matching/20191203</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-03</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<hr>
+<h2 id="日志需求"><a href="#日志需求" class="headerlink" title="日志需求"></a>日志需求</h2><p>我们都知道日志在一个程序中有着重要的作用，但我们的撮合引擎目前还没有添加完善的日志输出功能。现在，我们就来增加此功能，以方便调试和查询数据。</p>
+<p>对一个撮合引擎来说，需要输出的日志主要有以下几类：</p>
+<ol>
+<li>程序启动的日志，包括连接 Redis 成功的日志、Web 服务启动成功的日志；</li>
+<li>接口请求和响应数据的日志；</li>
+<li>启动了某引擎的日志；</li>
+<li>关闭了某引擎的日志；</li>
+<li>订单被添加到 orderBook 的日志；</li>
+<li>成交记录的日志；</li>
+<li>撤单结果的日志。</li>
+</ol>
+<p>另外，撮合引擎产生的日志会非常多，所以还应该做日志分割，按日期分割是最常用的日志分割方式，所以我们也同样将不同日期的日志分割到不同日志文件保存。</p>
+<h2 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h2><p>首先，我们都知道日志是有分级别的，多的比如 log4j 定义了 8 种级别的日志。不过，最常用的就 4 种级别，优先级从低到高分别为：<strong>DEBUG、INFO、WARN、ERROR</strong>。一般，不同环境会设置不同的日志级别，如 DEBUG 级别一般只在开发和测试环境才设置，生产环境则会设置为 INFO 或更高级别。当设置为高级别时，低级别的日志消息是不会打印出来的。那为了打印不同级别的日志消息，可以提供不同级别的打印函数，比如提供 <strong>log.Debug()、log.Info()</strong> 等函数。</p>
+<p>其次，日志需要输出到文件保存，因此，就需要指定文件保存的目录、文件名和文件对象。一般，保存的文件目录和运行程序应该放在一起，所以，指定的文件目录最好是相对路径。</p>
+<p>另外，文件还要根据日期做分割，即不同日期的日志消息要保存到不同的日志文件，那么，自然要记录下当前日志的日期。以及需要定时监控，当检测到最新日期跟当前日志的日期相比已经跨日了，说明需要进行日志分割了，那就将当前的日志文件进行备份，并创建新文件用来保存新日期的日志消息。</p>
+<p>最后，日志消息写入文件的话，那就少不了耗时的 I/O 操作，如果用同步方式写日志，无疑会减低撮合性能，因此，最好选用异步方式写日志，可以用带缓冲的通道实现。</p>
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h2><p>我重新自定义了一个 log 包，并创建了 log.go 文件，所有代码都写在该文件中。</p>
+<p>第一步，先定义几种日志等级，直接定义成枚举类型，如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> LEVEL <span class="keyword">byte</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	DEBUG LEVEL = <span class="literal">iota</span></span><br><span class="line">	INFO</span><br><span class="line">	WARN</span><br><span class="line">	ERROR</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>第二步，定义日志的结构体，其包含的字段比较多，如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FileLogger <span class="keyword">struct</span> &#123;</span><br><span class="line">	fileDir        <span class="keyword">string</span>         <span class="comment">// 日志文件保存的目录</span></span><br><span class="line">  fileName       <span class="keyword">string</span>         <span class="comment">// 日志文件名（无需包含日期和扩展名）</span></span><br><span class="line">	prefix         <span class="keyword">string</span>         <span class="comment">// 日志消息的前缀</span></span><br><span class="line">  logLevel       LEVEL          <span class="comment">// 日志等级</span></span><br><span class="line">  logFile        *os.File       <span class="comment">// 日志文件</span></span><br><span class="line">	date           *time.Time     <span class="comment">// 日志当前日期</span></span><br><span class="line">	lg             *log.Logger    <span class="comment">// 系统日志对象</span></span><br><span class="line">	mu             *sync.RWMutex  <span class="comment">// 读写锁，在进行日志分割和日志写入时需要锁住</span></span><br><span class="line">	logChan        <span class="keyword">chan</span> <span class="keyword">string</span>    <span class="comment">// 日志消息通道，以实现异步写日志</span></span><br><span class="line">  stopTickerChan <span class="keyword">chan</span> <span class="keyword">bool</span>      <span class="comment">// 停止定时器的通道</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第三步，为了能将日志应用到程序中任何地方，就需要定义一个全局的日志对象，并要对该日志对象进行初始化。初始化操作有一点复杂，我们先来看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> DATE_FORMAT = <span class="string">"2006-01-02"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fileLog *FileLogger</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Init</span><span class="params">(fileDir, fileName, prefix, level <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	CloseLogger()</span><br><span class="line"></span><br><span class="line">	f := &amp;FileLogger&#123;</span><br><span class="line">		fileDir:       fileDir,</span><br><span class="line">		fileName:      fileName,</span><br><span class="line">		prefix:        prefix,</span><br><span class="line">		mu:            <span class="built_in">new</span>(sync.RWMutex),</span><br><span class="line">		logChan:       <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>, <span class="number">5000</span>),</span><br><span class="line">		stopTikerChan: <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>, <span class="number">1</span>),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> strings.ToUpper(level) &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"DEBUG"</span>:</span><br><span class="line">		f.logLevel = DEBUG</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"WARN"</span>:</span><br><span class="line">		f.logLevel = WARN</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"ERROR"</span>:</span><br><span class="line">		f.logLevel = ERROR</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		f.logLevel = INFO</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t, _ := time.Parse(DATE_FORMAT, time.Now().Format(DATE_FORMAT))</span><br><span class="line">	f.date = &amp;t</span><br><span class="line"></span><br><span class="line">	f.isExistOrCreateFileDir()</span><br><span class="line"></span><br><span class="line">	fullFileName := filepath.Join(f.fileDir, f.fileName+<span class="string">".log"</span>)</span><br><span class="line">	file, err := os.OpenFile(fullFileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, <span class="number">0666</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	f.logFile = file</span><br><span class="line"></span><br><span class="line">	f.lg = log.New(f.logFile, prefix, log.LstdFlags|log.Lmicroseconds)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> f.logWriter()</span><br><span class="line">	<span class="keyword">go</span> f.fileMonitor()</span><br><span class="line"></span><br><span class="line">	fileLogger = f</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个初始化的逻辑有点多，我来进行拆分讲解。首先，第一步，调用了 <strong>CloseLogger()</strong> 函数，该函数主要是关闭文件、关闭通道等操作。为了停止一个不断循环的 goroutine，关闭通道是一个常用的方案，这在之前的文章也有说过。那么，由于初始化函数可以会被调用多次，以实现配置的变更，那如果不先结束旧的 goroutine ，那同样功能的 goroutine 将不止一个在同时运行，这无疑将会出问题。因此，需要先关闭 Logger，关闭 Logger 的代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CloseLogger</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> fileLogger != <span class="literal">nil</span> &#123;</span><br><span class="line">		fileLogger.stopTikerChan &lt;- <span class="literal">true</span></span><br><span class="line">		<span class="built_in">close</span>(fileLogger.stopTikerChan)</span><br><span class="line">		<span class="built_in">close</span>(fileLogger.logChan)</span><br><span class="line">		fileLogger.lg = <span class="literal">nil</span></span><br><span class="line">		fileLogger.logFile.Close()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>关闭 Logger 之后，就是对一些字段的初始化赋值了，其中，<strong>f.date</strong> 设置为了当前日期，后面判断是否需要分割就以这个日期为条件。<strong>f.isExistOrCreateFileDir()</strong> 则会判断日志目录是否存在，如果不存在则会创建该目录。接着，将目录、设置的文件名和添加的 .log 文件扩展名拼接在一起，拼接出文件的完整名字并打开文件。之后就是用该文件来初始化系统日志对象 <strong>f.lg</strong> 了，将日志消息写入文件时其实就是调用该对象的 <strong>Output()</strong> 函数。后面启动了两个 goroutine：一个用来监听 logChan，实现将日志消息写入文件；一个用来定时监听文件是否需要分割，需要分割时则实现分割。 </p>
+<p>接着，我们就来看看这两个 goroutine 的实现：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *FileLogger)</span> <span class="title">logWriter</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; <span class="built_in">recover</span>() &#125;()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		str, ok := &lt;-f.logChan</span><br><span class="line">		<span class="keyword">if</span> !ok &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		f.mu.RLock()</span><br><span class="line">		f.lg.Output(<span class="number">2</span>, str)</span><br><span class="line">		f.mu.RUnlock()</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *FileLogger)</span> <span class="title">fileMonitor</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123; <span class="built_in">recover</span>() &#125;()</span><br><span class="line">	ticker := time.NewTicker(<span class="number">30</span> * time.Second)</span><br><span class="line">	<span class="keyword">defer</span> ticker.Stop()</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="keyword">select</span> &#123;</span><br><span class="line">		<span class="keyword">case</span> &lt;-ticker.C:</span><br><span class="line">			<span class="keyword">if</span> f.isMustSplit() &#123;</span><br><span class="line">				<span class="keyword">if</span> err := f.split(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">					Error(<span class="string">"Log split error: %v\n"</span>, err)</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		<span class="keyword">case</span> &lt;-f.stopTikerChan:</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 <strong>logWriter()</strong> 循环从 logChan 通道读取日志消息，当通道被关闭则退出，否则就调用 <strong>f.lg.Output()</strong> 将日志输出。<strong>fileMonitor()</strong> 里则创建了一个每隔 30 秒发送一次的 <strong>ticker</strong>，当从 <strong>ticker.C</strong> 接收到数据之后，就判断是否需要分割，如果需要则调用分割函数 <strong>f.split()</strong>。而从 <strong>f.stopTikerChan</strong> 收到数据时，说明该定时器也要结束了。</p>
+<p>接着，再来看看 <strong>isMustSplit()</strong> 和 <strong>split()</strong> 函数了。isMustSplit() 非常简单，就两行代码，如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *FileLogger)</span> <span class="title">isMustSplit</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	t, _ := time.Parse(DATE_FORMAT, time.Now().Format(DATE_FORMAT))</span><br><span class="line">	<span class="keyword">return</span> t.After(f.date)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>split() 则复杂些，首先对日志要先加写锁，避免分割时依然有日志写入，接着对当前的日志文件进行重命名备份，然后生成新文件用来记录新的日志消息，并将当前的全局日志对象指向新文件、新日期和新的系统日志对象。实现代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(f *FileLogger)</span> <span class="title">split</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	f.mu.Lock()</span><br><span class="line">	<span class="keyword">defer</span> f.mu.Unlock()</span><br><span class="line"></span><br><span class="line">	logFile := filepath.Join(f.fileDir, f.fileName)</span><br><span class="line">	logFileBak := logFile + <span class="string">"-"</span> + f.date.Format(DATE_FORMAT) + <span class="string">".log"</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> f.logFile != <span class="literal">nil</span> &#123;</span><br><span class="line">		f.logFile.Close()</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	err := os.Rename(logFile, logFileBak)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t, _ := time.Parse(DATE_FORMAT, time.Now().Format(DATE_FORMAT))</span><br><span class="line">	f.date = &amp;t</span><br><span class="line"></span><br><span class="line">	f.logFile, err = os.OpenFile(logFile, os.O_RDWR|os.O_APPEND|os.O_CREATE, <span class="number">0666</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	f.lg = log.New(f.logFile, f.prefix, log.LstdFlags|log.Lmicroseconds)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，就剩下定义一些接收日志消息的函数了，实现都很简单，以 <strong>Info()</strong> 为例：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Info</span><span class="params">(format <span class="keyword">string</span>, v ...<span class="keyword">interface</span>&#123;&#125;)</span></span> &#123;</span><br><span class="line">	_, file, line, _ := runtime.Caller(<span class="number">1</span>)</span><br><span class="line">	<span class="keyword">if</span> fileLogger.logLevel &lt;= INFO &#123;</span><br><span class="line">		fileLogger.logChan &lt;- fmt.Sprintf(<span class="string">"[%v:%v]"</span>, filepath.Base(file), line) + fmt.Sprintf(<span class="string">"[INFO]"</span>+format, v...)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Debug()、Warn()、Error() 等函数都类似的，照猫画虎即可。</p>
+<p>至此，我们这个能够实现按日期分割日志文件的日志包就完成了，剩下的，就在对应需要添加日志输出的地方调用响应的日志等级函数即可。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>本小结的核心其实是增加了一个通用的日志包，该日志包不仅可以用在我们的撮合引擎，也能用于其他项目。如果再将其扩展，还可以改为按其他条件分割，比如按小时分割，或按文件大小分割。有兴趣的小伙伴可以自己去尝试一下。</p>
+<p>今日的思考题：要实现接口的请求和响应数据进行统一的日志输出，有哪些方案？</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191203/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191202/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/matching/20191202/" class="post-title-link" itemprop="url">撮合引擎开发:缓存和MQ</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-02 15:06:14" itemprop="dateCreated datePublished" datetime="2019-12-02T15:06:14+08:00">2019-12-02</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-12-03 10:40:58" itemprop="dateModified" datetime="2019-12-03T10:40:58+08:00">2019-12-03</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191202"><strong>http://keeganlee.me/post/matching/20191202</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-02</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="中间件"><a href="#中间件" class="headerlink" title="中间件"></a>中间件</h2><p>先来回顾下我们撮合程序项目中关于中间件的目录结构：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">├── middleware               # 中间件的包</span><br><span class="line">│   ├── cache                # 缓存包</span><br><span class="line">│   │   └── cache.go         # 缓存操作</span><br><span class="line">│   ├── mq                   # 消息队列包</span><br><span class="line">│   │   └── mq.go            # MQ操作</span><br><span class="line">│   └── redis.go             # 主要做Redis初始化操作</span><br></pre></td></tr></table></figure>
@@ -607,7 +830,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:32:51" itemprop="dateModified" datetime="2019-12-02T20:32:51+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:42:18" itemprop="dateModified" datetime="2019-12-03T10:42:18+08:00">2019-12-03</time>
               </span>
             
           
@@ -663,7 +886,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191130"><strong>http://keeganlee.me/post/matching/20191130</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-30</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="程序入口"><a href="#程序入口" class="headerlink" title="程序入口"></a>程序入口</h2><p>我们要开始聊代码实现逻辑了，如果不记得之前讲的目录结构，请回去翻看<a href="http://keeganlee.me/post/matching/20191121">前文</a>。聊代码实现的第一步自然从程序入口开始，核心就两个函数：<strong>init()</strong> 和 <strong>main()</strong>，其代码如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line">... <span class="comment">//other codes</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	initViper()</span><br><span class="line">	initLog()</span><br><span class="line"></span><br><span class="line">	engine.Init()</span><br><span class="line">	middleware.Init()</span><br><span class="line">	process.Init()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line">	mux.HandleFunc(<span class="string">"/openMatching"</span>, handler.OpenMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/closeMatching"</span>, handler.CloseMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/handleOrder"</span>, handler.HandleOrder)</span><br><span class="line"></span><br><span class="line">	log.Printf(<span class="string">"HTTP ListenAndServe at port %s"</span>, viper.GetString(<span class="string">"server.port"</span>))</span><br><span class="line">	<span class="keyword">if</span> err := http.ListenAndServe(viper.GetString(<span class="string">"server.port"</span>), mux); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -889,7 +1112,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:32:16" itemprop="dateModified" datetime="2019-12-02T20:32:16+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:41:11" itemprop="dateModified" datetime="2019-12-03T10:41:11+08:00">2019-12-03</time>
               </span>
             
           
@@ -945,7 +1168,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191127"><strong>http://keeganlee.me/post/matching/20191127</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-27</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="业务流程"><a href="#业务流程" class="headerlink" title="业务流程"></a>业务流程</h2><p>前面的几篇文章已经陆续讲到了黑箱内部的一些设计，包括核心的软件结构、数据结构、目录结构等。而从本小节开始，我们将会更加深入，来解密黑箱内部的更多设计和实现细节。</p>
 <p>解密黑箱的第一步就是要清楚其内部对数据的处理流程是怎样的。当我们要设计一个新系统的时候，也是一样的，第一步要梳理清楚业务流程和数据流向。对撮合引擎来说，就是要了解：<strong>从输入到输出，中间都经过了哪些处理流程</strong>。</p>
@@ -1110,7 +1333,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:32:03" itemprop="dateModified" datetime="2019-12-02T20:32:03+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:40:45" itemprop="dateModified" datetime="2019-12-03T10:40:45+08:00">2019-12-03</time>
               </span>
             
           
@@ -1166,7 +1389,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191121"><strong>http://keeganlee.me/post/matching/20191121</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-21</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="黑箱引擎"><a href="#黑箱引擎" class="headerlink" title="黑箱引擎"></a>黑箱引擎</h2><p>我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如果想将它应用到各种不同的交易系统，只要有标准的输入和输出，对接是很容易的。</p>
 <p>写作此文时的撮合引擎为 1.3 版本，我将其编译构建成可在 Linux amd64 环境运行的可执行文件，并与依赖的配置文件一起压缩成一个压缩包 <strong>matching.zip</strong>。这就成为一个黑箱引擎了。</p>
@@ -1405,7 +1628,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:33:04" itemprop="dateModified" datetime="2019-12-02T20:33:04+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:42:39" itemprop="dateModified" datetime="2019-12-03T10:42:39+08:00">2019-12-03</time>
               </span>
             
           
@@ -1461,7 +1684,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191119"><strong>http://keeganlee.me/post/matching/20191119</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-19</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="交易委托账本"><a href="#交易委托账本" class="headerlink" title="交易委托账本"></a>交易委托账本</h2><p><strong>交易委托账本(OrderBook)</strong>是整个撮合引擎里最核心也是最复杂的数据结构，每个交易对都需要维护一份交易委托账本，账本里保存着指定交易对所有待撮合的委托单。每份账本都有两个队列，一个卖单队列和一个买单队列，两个队列都需要按照<strong>价格优先、时间优先</strong>的原则进行排序。</p>
 <p>所谓价格优先、时间优先，即是说：卖单队列的委托单是按价格由低到高排序，买单队列则相反，按价格由高到低排序；相同价格的委托单，则是按下单时间的先后来排序。</p>
@@ -1615,7 +1838,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:33:16" itemprop="dateModified" datetime="2019-12-02T20:33:16+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:42:51" itemprop="dateModified" datetime="2019-12-03T10:42:51+08:00">2019-12-03</time>
               </span>
             
           
@@ -1671,7 +1894,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191118"><strong>http://keeganlee.me/post/matching/20191118</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-18</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <p>开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直接将我的撮合引擎和国家级撮合引擎作对比了。如果我的撮合引擎达到上交所级别，那就不止值5万了，估计至少值500万了。不过，我的撮合引擎随着不断升级迭代，以后能达到国家级别也说不定。为了避免再次出现这种尴尬，我还是先说明清楚对此撮合引擎的定位。</p>
 <h2 id="MVP版本需求"><a href="#MVP版本需求" class="headerlink" title="MVP版本需求"></a>MVP版本需求</h2><p>《精益创业》有个核心概念叫 <strong>MVP</strong>(Minimum Viable Product)，即<strong>最小可行性产品</strong>。我的撮合引擎第一个版本也是一个 MVP，只实现最基础的功能。所谓最基础的功能，即是说，如果移除了该功能，整个系统都无法完成工作。当然，我们还要加上应用场景，应用于一个初创的小交易平台和应用于像火币、币安甚至深交所、上交所这样庞大的交易平台，对基础功能的定义范围是有很大区别的。我所要做的 MVP 版本，只要适用于小交易平台即可。</p>
@@ -1836,7 +2059,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-02 20:32:32" itemprop="dateModified" datetime="2019-12-02T20:32:32+08:00">2019-12-02</time>
+                <time title="修改时间：2019-12-03 10:41:22" itemprop="dateModified" datetime="2019-12-03T10:41:22+08:00">2019-12-03</time>
               </span>
             
           
@@ -1892,7 +2115,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191117"><strong>http://keeganlee.me/post/matching/20191117</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-17</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
 <hr>
 <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自从有人在微信群里开价5万求购Golang版的撮合引擎之后，我就想自己开发一款，毕竟，以我的经验来说，开发个高性能的撮合引擎并没什么难度。</p>
 <p>说干就干，于是，利用业余时间慢慢开发出了一款<strong>Golang</strong>版的高性能撮合引擎，前前后后花了大概一个月的时间。再想想自己好久没更新文章了，我的个人IP都已经生锈了，也应该发大招磨一磨了。因此决定，干脆就以连载的方式，分享下我是如何设计与实现这款价值超5万的撮合引擎的。</p>
@@ -2427,216 +2650,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180224/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/blockchain/20180224/" class="post-title-link" itemprop="url">从微观到宏观理解区块链</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2018-02-24 00:09:49" itemprop="dateCreated datePublished" datetime="2018-02-24T00:09:49+08:00">2018-02-24</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:28" itemprop="dateModified" datetime="2019-07-02T11:18:28+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/blockchain/" itemprop="url" rel="index"><span itemprop="name">blockchain</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180224"><strong>http://keeganlee.me/post/blockchain/20180224</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-02-24</p>
-<hr>
-<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
-<hr>
-<p>最近区块链异常火爆，而且就只是在这一两个月内的事情，无疑，今年应该会成为区块链爆发元年，相应地，对区块链技术人员的需求将会大幅度增加，为了让大家早日入门区块链开发领域，以取得先发优势，从而在这场区块链革命浪潮中立于不败之地，因此，我决定提前编写系列文章，跟大家聊聊区块链技术。</p>
-<h2 id="微观区块链"><a href="#微观区块链" class="headerlink" title="微观区块链"></a>微观区块链</h2><p>相信不少人都听到说<strong>区块链</strong>是分布式账本、分布式数据库、去中心化的等等，有了一些大概的认知，但也只是一些碎片化的认知，还无法形成体系，所以也还不能理解区块链的本质。下面，我将从微观到宏观简单讲解区块链，力求让大伙更容易理解区块链的真正本质。</p>
-<p>那么，从微观上理解区块链，就要从理解区块链最底层的数据结构开始。<strong>区块链(Blockchain)</strong>，简单来说就是按时间顺序将数据区块通过哈希指针的方式连接起来的一个链表。<strong>哈希指针</strong>是区块链里最常用的数据结构，其实就是一串数据的<strong>哈希值</strong>，我们知道，一串数据的哈希值就是这串数据的<strong>指纹/摘要</strong>，因此就可以用这个哈希值来指向这串数据，如下图：</p>
-<img src="/post/blockchain/20180224/2018-02-07-12-50-00.jpg">
-<p>区块链里的每一个区块都有对应本区块的哈希指针，而除了创世区块（即第一个区块）之外，其他每个区块都存储了前一个区块的哈希指针，从而形成如下所示的一个链条，即区块链：</p>
-<img src="/post/blockchain/20180224/blockchain.png">
-<p>这样的数据结构可以保证数据无法篡改，因为一旦篡改了任何区块的数据，对应的哈希指针就会出错，因此一旦有恶意篡改就能校验到。数据的无法篡改也是区块链本质上最核心的一个特性。</p>
-<p>接着，再来看看区块链的基本单元——<strong>区块(block)</strong>，以比特币为例，每个区块的数据结构大致如下：</p>
-<img src="/post/blockchain/20180224/block.png">
-<p>其中，<strong>Tx0 ~ Tx3</strong> 表示每一笔交易数据，<strong>Hash0</strong> 则是 <strong>Tx0</strong> 这笔交易数据的哈希指针，<strong>Hash01</strong> 则是 <strong>Hash0 + Hash1</strong> 的哈希指针，这样层层叠加上去，得到最后的 <strong>Root Hash</strong>。从图中也可以看出，从Hash0 到 Root Hash 是一个三层的二叉树，由于这颗树的所有节点都是 Hash 值，所以也称为 Hash Tree，但更专业的名称叫 <strong>Merkle Tree</strong>。不过 Merkle Tree 不一定是二叉树，也可以是多叉树。Merkle Tree 的叶子节点（即Hash0 ~ Hash3）是数据块的 Hash 值，而非叶子节点的 value 则是根据下面的叶子节点的 Hash 值串联起来后再计算 Hash 得出的。通过 Merkle Tree 结构，底层的每一笔交易也都无法篡改，一旦篡改，Root Hash 就会不一致。</p>
-<p>另外，该结构也简化了支付校验，比如，我们要校验 Tx3 这笔交易的有效性，那只要校验从 Tx3 到  Root Hash 的分支 Hash 值即可，如下图所示，计算 Tx3 的 Hash值得到 Hash3，再结合 Hash2，计算出 Hash23，再拼上 Hash01 计算出 Merkle Root，只要计算出来的 Merkle Root 和实际存储的 Root Hash 一致，则表明该该笔交易是有效的。</p>
-<img src="/post/blockchain/20180224/2018-02-20-23-20-02.jpg">
-<p>Root Hash 会保存在区块头里，区块头里一般会保存有以下信息：</p>
-<ul>
-<li><strong>Version</strong>：版本号</li>
-<li><strong>Prev Block</strong>：上一个区块的 Hash 值</li>
-<li><strong>Merkle Root</strong>：即上面所说的 Merkle Tree 的 Root Hash</li>
-<li><strong>Time</strong>：区块的时间</li>
-<li><strong>Difficulty</strong>：区块难度</li>
-<li><strong>Nonce</strong>：随机数</li>
-</ul>
-<p>这是比特币的一个区块：<a href="https://btc.com/0000000000000000005b8d4d2508c14f6ea5cbbb3f1104566612dfb29d281b7a" target="_blank" rel="noopener">https://btc.com/0000000000000000005b8d4d2508c14f6ea5cbbb3f1104566612dfb29d281b7a</a>。比特币的每一笔交易，可以有多个输入和多个输出。比如说，我们要做一笔转账，从 A 转 3.3 个 BTC 到 B，假设 A 的钱包地址上原本有 10 个 BTC。那这笔转账，会有一个输入，即 A 的地址有 10 个 BTC，交易完成后变成两个输出，一个是 B 的地址增加 3.3 个 BTC，一个是 A 的地址变成 6.7 个 BTC。这样子，每一个地址的所有交易其实都是可以追溯的，每一个比特币的转账记录也是可以追溯的。</p>
-<p>不过，以太坊的区块结构则复杂得多，每个区块并非只有一颗 Merkle Tree，而是有三颗 Merkle Tree，除了<strong>交易树</strong>，还有<strong>状态树</strong>和<strong>收据树</strong>。另外，使用的 Merkle Tree 也是复杂得多，叫 <strong>Merkle Patricia Tree</strong>。详细结构就不展开了，感兴趣的读者自行去搜索了解即可。</p>
-<p>简而言之，从微观上来说，区块链就是一种哈希链条，其核心本质特征是<strong>不可篡改且可追踪溯源</strong>。</p>
-<h2 id="宏观区块链"><a href="#宏观区块链" class="headerlink" title="宏观区块链"></a>宏观区块链</h2><p>如果只是从微观上理解区块链，那就像井底之蛙，是看不到区块链即将改变世界的未来的。毕竟，从微观上来看的话，要实现不可篡改且可追踪溯源的特性，并不一定需要使用区块链技术。所以，还要看懂区块链宏观上的本质，才能预见到区块链真实的未来。</p>
-<p>当然，宏观上来说，区块链的本质是什么，不同人会有不同观点，不少人认为其本质特征是<strong>去中心化的</strong>，另一帮人认为其本质就是<strong>分布式数据库/分布式公共账本</strong>，而在我看来，其核心本质就是一种<strong>自信任的新一代互联网基础协议</strong>。下面我将逐步剖析我的观点。</p>
-<p>首先，宏观上的区块链就是一种基础协议，而不是指代具体的技术。作为一种基础协议，有几个基本特征是必备的，那就是<strong>分布式存储、P2P 网络和共识机制</strong>，当然，还有微观层面的<strong>不可篡改且可追踪溯源</strong>，如果不具备这几个特征，哪怕只缺了一个，都不能称为区块链。</p>
-<p>先来聊聊第一个基本特征——<strong>分布式存储</strong>。前面我们已经了解到，区块链最底层的数据结构就是一种哈希链条，是用来存储数据的，当然，采用哪种具体的数据库来存储区块链数据则是由各区块链的开发团队自己决定的，比如，比特币和以太坊就选择了 LevelDB。分布式存储，就是说，区块链数据的存储是分布式的，也因此很多人将区块链称为分布式数据库，但区块链的分布式存储与传统的分步式存储有所不同。传统的分布式存储是将数据分散存储到多个服务器上，每个存储服务器上的数据只是全量数据的一部分。但区块链的分布式存储，每个数据节点存储的都是全量数据。不过，区块链的节点可分为<strong>全节点</strong>和<strong>轻节点</strong>，全节点存储了整条区块链的所有数据，包括所有区块头和所有交易数据，而轻节点则只存储了整条链的所有区块头。那如果要在轻节点查询某笔交易的有效性，就需要转去全节点查询了，那节点之间如何通信呢？这就涉及到第二个基本特征——<strong>P2P 网络</strong>。另外，既然是分布式存储，那就还要解决数据一致性的问题，就这涉及到第三个基本特征——<strong>共识机制</strong>。</p>
-<p><strong>P2P 网络</strong>，即<strong>对等网络</strong>，也称<strong>点对点网络</strong>或<strong>端对端网络</strong>，是区块链系统中不同节点之间通信的方式，也是一种分布式的网络结构。通过 P2P 网络，不同节点之间可以直接交互，而且彼此连接的每个节点都处于对等的地位。每个节点既充当服务器，为其他节点提供服务，同时也享用其他节点提供的服务。那么，既然每个节点的地位都是对等的，那不同节点之间出现分歧时，要如何达成一致共识呢？这也是<strong>共识机制</strong>所解决的问题。</p>
-<p><strong>共识机制</strong>是区块链的一个核心特征，是保证区块链系统在分布式架构下的一致性方案。要理解共识机制，我们先来了解下交易写入区块链的简要过程。首先，当你在某个节点发起一笔交易时，比如从地址 A 转 0.1 个 BTC 到地址 B，该节点接收到交易信息后就对其进行校验，如果地址 A 上的未消费 BTC 的余额大于 0.1 个则可认为该笔交易是合法的，那就会将这笔交易信息放入本节点的 pending 池（待写入区块的交易池），并将这笔交易信息<strong>广播</strong>给其他已建立连接的节点，其他节点接收到交易信息后也做同样的校验并广播，当其中某个节点获得记账权时则可将它<strong>当前的区块（包含上面那笔交易）</strong>写入本节点存储的区块链中并将这个区块广播出去，其他大部分节点校验了此区块为有效，也同样写入它们自己存储的区块链中，这样，你的这笔交易就算真正写入到区块链中了。那如果你同时向 B 和 C 地址分别转 0.1 个 BTC，但你的地址 A 的未消费 BTC 余额只有 0.1 个的情况下，假设有些节点可能只接收到转给 B 的交易，而有些节点则只接收到转到 C 的交易，这些节点分别校验通过并写入了它们的 pending 池，但最终只有其中一笔交易能被写入区块链，取决于哪个节点先获得记账权并被其他大部分节点所接受，而另一笔交易就算已经被那些将其写入了 pending 池的节点所接受，其他节点再次校验后也不会通过。所以，一笔交易是否合法，以及一个新增区块是否有效，不是由某一个节点说了算，而是需要经过多数节点的最终一致共识。</p>
-<p>根据区块链的这几个基本特征，明显可以看出，区块链的确是<strong>分布式</strong>的：<strong>分布式存储、分布式网络、分布式共识</strong>。分布式的确是一个重要的特征，但分布式只是一种手段，而不是目的。区块链之所以能被称为革命性的技术，是因为它改变了传统的信任机制。传统的信任机制是怎样的呢？其实就是有一个中间机构为信任背书，比如银行、淘宝、滴滴等，我们通过信任这些中间机构和其他人进行交易。而区块链则没有中间机构这一层了，用户之间直接点对点交易，区块链的数据结构、分布式存储特性和共识机制结合在一起，保证了数据是可靠且不可篡改的，从而实现了一个不需要中间机构的<strong>自信任系统</strong>。也由于没有了中间机构，所以也可以说区块链是<strong>去中心化</strong>的，但这里更准确的说法可能是<strong>去中介化</strong>。但<strong>去中介化</strong>和<strong>分布式</strong>一样，只是手段，而不是目的，核心目的还是构建一个<strong>自信任系统</strong>。</p>
-<p>那自信任系统相比有中间机构的信任机制有什么好处呢？我们就举个跨境支付的栗子就明白了。传统的交易支付都要经过银行体系，要经过开户行、对手行、清算组织、境外银行等多个机构和非常繁冗的处理流程。而且，整个过程中每一个机构都有自己的账务系统，彼此之间需要建立代理关系，每笔交易都需要在本银行记账，与交易对手进行清算和对账等，导致整个过程花费时间较长、使用成本较高。而有了区块链，交易双方就可以实现点对点支付，而无需这么多中间机构，从而<strong>简化流程、提高效率</strong>。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>最后，总结一下，我分别从微观和宏观两个层面简单聊了下区块链，微观上，其实就是区块链最底层的数据结构，本质就是一种<strong>不可篡改且可追踪溯源的哈希链条</strong>；宏观上，区块链还具备了另外三个基本特征：<strong>分布式存储、P2P 网络和共识机制</strong>，从这几个基本特征可以看出，区块链是<strong>分布式</strong>的，但分布式只是手段，而不是目的，区块链的核心目的是构建一个<strong>自信任系统</strong>，相比依赖中间机构的信任机制，可以<strong>简化流程、提高效率</strong>，这才是区块链之所以能被称为革命性技术的本质原因。</p>
-<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>智能合约为区块链带来了什么？区块链是否必须有数字代币？公有链、联盟链、私有链本质上有什么区别？</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/blockchain/20180224/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2683,7 +2696,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">24</span>
+                    <span class="site-state-item-count">25</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
