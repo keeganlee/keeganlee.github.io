@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.2">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.2" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191204微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-04  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta name="keywords" content="个人成长 全栈 区块链">
+<meta property="og:type" content="article">
+<meta property="og:title" content="撮合引擎开发:完结篇">
+<meta property="og:url" content="https://keeganlee.me/post/default/20191204/index.html">
+<meta property="og:site_name" content="Keegan小钢">
+<meta property="og:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191204微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-04  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://keeganlee.me/post/default/20191204/orderQueue-addOrder.png">
+<meta property="og:image" content="https://keeganlee.me/post/default/20191204/limit.png">
+<meta property="og:image" content="https://keeganlee.me/post/default/20191204/limit-ioc.png">
+<meta property="og:image" content="https://keeganlee.me/post/default/20191204/market.png">
+<meta property="og:image" content="https://keeganlee.me/post/default/20191204/qrcode_keegan.jpg">
+<meta property="og:updated_time" content="2019-12-04T08:44:32.764Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="撮合引擎开发:完结篇">
+<meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191204微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-12-04  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
+<meta name="twitter:image" content="https://keeganlee.me/post/default/20191204/orderQueue-addOrder.png">
+
+
+
+
+
+  
+  
+  <link rel="canonical" href="https://keeganlee.me/post/default/20191204/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>撮合引擎开发:完结篇 | Keegan小钢</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Keegan小钢</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">钢哥的个人博客</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+
+    
+    
+      
+    
+
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/default/20191204/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">撮合引擎开发:完结篇
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-04 12:23:09 / 修改时间：16:44:32" itemprop="dateCreated datePublished" datetime="2019-12-04T12:23:09+08:00">2019-12-04</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191204"><strong>http://keeganlee.me/post/matching/20191204</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-04</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
+<hr>
+<p>本小节是该系列文章的最后一篇了，将讲解剩下的一些东西，包括交易委托账本中订单队列的实现逻辑、更多订单类型的实现逻辑。另外，不少朋友在问，完结后所有代码是否会开源放上 Github？我只能说，长期大概率会开源，但短期内还没打算开源。</p>
+<h2 id="订单队列"><a href="#订单队列" class="headerlink" title="订单队列"></a>订单队列</h2><p>交易委托账本其实就是由两个订单队列组成的，一个买单队列，一个卖单队列。任何对交易委托账本的查询和操作，实际上都是查询和操作这两个队列。订单队列的设计也直接影响了撮合的性能，前面文章讲数据结构设计时也有简单聊了订单队列的设计，我们主要是用二维链接结合 Map 来保存所有订单的，依赖的是 <strong>container/list</strong> 包。</p>
+<p>订单队列的结构体如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> orderQueue <span class="keyword">struct</span> &#123;</span><br><span class="line">	sortBy     enum.SortDirection</span><br><span class="line">	parentList *list.List</span><br><span class="line">	elementMap <span class="keyword">map</span>[<span class="keyword">string</span>]*list.Element</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>sortBy</strong> 指定价格排序的方向，买单队列是降序的，而卖单队列则是升序的。<strong>parentList</strong> 保存整个二维链表的所有订单，第一维以价格排序，第二维以时间排序。<strong>elementMap</strong> 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<p>初始化函数就比较简单了，对几个字段赋值而已，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *orderQueue)</span> <span class="title">init</span><span class="params">(sortBy enum.SortDirection)</span></span> &#123;</span><br><span class="line">	q.sortBy = sortBy</span><br><span class="line">	q.parentList = list.New()</span><br><span class="line">	q.elementMap = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*list.Element)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了初始化函数，还提供了另外五个函数：</p>
+<ul>
+<li><strong>addOrder(order)</strong>：添加订单</li>
+<li><strong>getHeadOrder()</strong>：读取头部订单</li>
+<li><strong>popHeadOrder()</strong>：读取并删除头部订单</li>
+<li><strong>removeOrder(order)</strong>：移除订单</li>
+<li><strong>getDepthPrice(depth)</strong>：读取深度价格</li>
+</ul>
+<p>以上五个函数就只有第一个函数会比较复杂，为了让处理流程更容易理解，我就不贴代码了，画一个完整的流程图给大家看看：</p>
+<img src="/post/default/20191204/orderQueue-addOrder.png">
+
+<p>这个流程确实有一点复杂，可以多看几遍好好消化，最好自己动手将其转为代码实现。</p>
+<p>其他几个函数就简单了，关于最后一个函数需要补充说明一下。读取深度价格是为了方便处理 market-opponent、market-top5、market-top10 等类型的订单时判断上限价格。请看该函数的代码以理解该函数的逻辑和用法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *orderQueue)</span> <span class="title">getDepthPrice</span><span class="params">(depth <span class="keyword">int</span>)</span> <span class="params">(<span class="keyword">string</span>, <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> q.parentList.Len() == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, <span class="number">0</span></span><br><span class="line">	&#125;</span><br><span class="line">	p := q.parentList.Front()</span><br><span class="line">	i := <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> ; i &lt; depth; i++ &#123;</span><br><span class="line">		t := p.Next()</span><br><span class="line">		<span class="keyword">if</span> t != <span class="literal">nil</span> &#123;</span><br><span class="line">			p = t</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	o := p.Value.(*list.List).Front().Value.(*Order)</span><br><span class="line">	<span class="keyword">return</span> o.Price.String(), i</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="多种订单类型"><a href="#多种订单类型" class="headerlink" title="多种订单类型"></a>多种订单类型</h2><p>我们引擎总共支持了六种订单类型，之前的文章有简单介绍过，但没有深入讲解这几种不同类型的具体业务逻辑应该是怎样的，因此，在此将这部分内容补充上。</p>
+<h3 id="1-limit"><a href="#1-limit" class="headerlink" title="1. limit"></a>1. limit</h3><p>普通限价是最简单的，前文也已经展示过代码实现，为了加深理解，我再给大家画一张图：</p>
+<img src="/post/default/20191204/limit.png">
+
+<p>处理逻辑就是：</p>
+<ol>
+<li>判断新订单是买单还是卖单。</li>
+<li>如果是买单，那从 OrderBook 中读取出头部卖单，即卖单队列中的头部订单；如果是卖单，那从 OrderBook 中读取出头部买单，即买单队列中的头部订单。</li>
+<li>新订单为买单时，如果头部订单为空，或者新订单小于头部订单，即无法成交，那就把新订单添加到买单队列中，处理结束；新订单为卖单时，如果头部订单为空，或者新订单大于头部订单，即无法成交，那就把新订单添加到卖单队列中，处理结束。</li>
+<li>否则，符合匹配条件，新订单和头部订单进行撮合成交。</li>
+<li>撮合完成后，如果新订单剩余数量为零则结束，如果还大于零，则回到第2步继续取下一个头部订单，如此循环。</li>
+</ol>
+<h3 id="2-limit-ioc"><a href="#2-limit-ioc" class="headerlink" title="2. limit-ioc"></a>2. limit-ioc</h3><p>IOC 限价与普通限价不同的地方只有一个，如果新订单和头部订单不匹配时，普通限价单会被添加到订单队列中，而 IOC 限价则是作撤单处理，请看下图：</p>
+<img src="/post/default/20191204/limit-ioc.png">
+
+<h3 id="3-market"><a href="#3-market" class="headerlink" title="3. market"></a>3. market</h3><p>默认市价单的逻辑也比较简单，它不需要判断价格，只要头部订单不为空，就直接和头部订单匹配成交，其处理逻辑如下图：</p>
+<img src="/post/default/20191204/market.png">
+
+<h3 id="4-market-top5-market-top10"><a href="#4-market-top5-market-top10" class="headerlink" title="4. market-top5/market-top10"></a>4. market-top5/market-top10</h3><p>最优五档/十档市价单与默认市价单的逻辑也是类似的，不同点在于：默认市价的成交价格没有上限或下限，但最优五档/十档市价则存在价格上限或下限，超过上下限的委托单不会成交。画图太累，还是直接贴代码吧，以下是处理买单的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyMarketTop</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal, depth <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	priceStr, _ := book.getSellDepthPrice(depth)</span><br><span class="line">	<span class="keyword">if</span> priceStr == <span class="string">""</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	limitPrice, _ := decimal.NewFromString(priceStr)</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder != <span class="literal">nil</span> &amp;&amp; limitPrice.GreaterThanOrEqual(headOrder.Price) &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-market-opponent"><a href="#5-market-opponent" class="headerlink" title="5. market-opponent"></a>5. market-opponent</h3><p>最后一种类型，对手方最优价，该类型只与对手方一档的价位成交，但与最优五档/十档还有一点不一样：最优五档/十档未成交的部分是作撤单处理的，而对手方最优价最后未成交的部分则是转为限价单。请看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyMarketOpponent</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal)</span></span> &#123;</span><br><span class="line">	priceStr, _ := book.getSellDepthPrice(<span class="number">1</span>)</span><br><span class="line">	<span class="keyword">if</span> priceStr == <span class="string">""</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	limitPrice, _ := decimal.NewFromString(priceStr)</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder != <span class="literal">nil</span> &amp;&amp; limitPrice.GreaterThanOrEqual(headOrder.Price) &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		order.Price = limitPrice</span><br><span class="line">		order.Type = enum.TypeLimit</span><br><span class="line">		book.addBuyOrder(order)</span><br><span class="line">		cache.UpdateOrder(order.ToMap())</span><br><span class="line">		log.Info(<span class="string">"engine %s, a order has added to the orderbook: %s"</span>, order.Symbol, order.ToJson())</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="完结"><a href="#完结" class="headerlink" title="完结"></a>完结</h2><p>至此，整个系列就此完结。不过，我的撮合程序依然会继续迭代升级，另外，也将开始开发其他组件，将会和当前这个撮合引擎结合来用。欢迎关注后续动态。</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/default/20191204/qrcode_keegan.jpg">
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/post/matching/20191203/" rel="next" title="撮合引擎开发:日志输出">
+                <i class="fa fa-chevron-left"></i> 撮合引擎开发:日志输出
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Keegan小钢</p>
+              <div class="site-description motion-element" itemprop="description">分享钢哥人生路上的点点滴滴</div>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">26</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+
+          
+
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#订单队列"><span class="nav-number">1.</span> <span class="nav-text">订单队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多种订单类型"><span class="nav-number">2.</span> <span class="nav-text">多种订单类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-limit"><span class="nav-number">2.1.</span> <span class="nav-text">1. limit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-limit-ioc"><span class="nav-number">2.2.</span> <span class="nav-text">2. limit-ioc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-market"><span class="nav-number">2.3.</span> <span class="nav-text">3. market</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-market-top5-market-top10"><span class="nav-number">2.4.</span> <span class="nav-text">4. market-top5/market-top10</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-market-opponent"><span class="nav-number">2.5.</span> <span class="nav-text">5. market-opponent</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#完结"><span class="nav-number">3.</span> <span class="nav-text">完结</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Keegan小钢</span>
+
+  
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.1.2</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=3.4.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.2"></script>
+
+  <script src="/js/motion.js?v=7.1.2"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.2"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.2"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.2"></script>
+<script src="/js/post-details.js?v=7.1.2"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.2"></script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

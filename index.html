@@ -322,6 +322,206 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/default/20191204/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/default/20191204/" class="post-title-link" itemprop="url">撮合引擎开发:完结篇</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-04 12:23:09 / 修改时间：16:44:32" itemprop="dateCreated datePublished" datetime="2019-12-04T12:23:09+08:00">2019-12-04</time>
+            </span>
+          
+
+          
+            
+
+            
+          
+
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191204"><strong>http://keeganlee.me/post/matching/20191204</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-04</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
+<hr>
+<p>本小节是该系列文章的最后一篇了，将讲解剩下的一些东西，包括交易委托账本中订单队列的实现逻辑、更多订单类型的实现逻辑。另外，不少朋友在问，完结后所有代码是否会开源放上 Github？我只能说，长期大概率会开源，但短期内还没打算开源。</p>
+<h2 id="订单队列"><a href="#订单队列" class="headerlink" title="订单队列"></a>订单队列</h2><p>交易委托账本其实就是由两个订单队列组成的，一个买单队列，一个卖单队列。任何对交易委托账本的查询和操作，实际上都是查询和操作这两个队列。订单队列的设计也直接影响了撮合的性能，前面文章讲数据结构设计时也有简单聊了订单队列的设计，我们主要是用二维链接结合 Map 来保存所有订单的，依赖的是 <strong>container/list</strong> 包。</p>
+<p>订单队列的结构体如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> orderQueue <span class="keyword">struct</span> &#123;</span><br><span class="line">	sortBy     enum.SortDirection</span><br><span class="line">	parentList *list.List</span><br><span class="line">	elementMap <span class="keyword">map</span>[<span class="keyword">string</span>]*list.Element</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>sortBy</strong> 指定价格排序的方向，买单队列是降序的，而卖单队列则是升序的。<strong>parentList</strong> 保存整个二维链表的所有订单，第一维以价格排序，第二维以时间排序。<strong>elementMap</strong> 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<p>初始化函数就比较简单了，对几个字段赋值而已，代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *orderQueue)</span> <span class="title">init</span><span class="params">(sortBy enum.SortDirection)</span></span> &#123;</span><br><span class="line">	q.sortBy = sortBy</span><br><span class="line">	q.parentList = list.New()</span><br><span class="line">	q.elementMap = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*list.Element)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了初始化函数，还提供了另外五个函数：</p>
+<ul>
+<li><strong>addOrder(order)</strong>：添加订单</li>
+<li><strong>getHeadOrder()</strong>：读取头部订单</li>
+<li><strong>popHeadOrder()</strong>：读取并删除头部订单</li>
+<li><strong>removeOrder(order)</strong>：移除订单</li>
+<li><strong>getDepthPrice(depth)</strong>：读取深度价格</li>
+</ul>
+<p>以上五个函数就只有第一个函数会比较复杂，为了让处理流程更容易理解，我就不贴代码了，画一个完整的流程图给大家看看：</p>
+<img src="/post/default/20191204/orderQueue-addOrder.png">
+
+<p>这个流程确实有一点复杂，可以多看几遍好好消化，最好自己动手将其转为代码实现。</p>
+<p>其他几个函数就简单了，关于最后一个函数需要补充说明一下。读取深度价格是为了方便处理 market-opponent、market-top5、market-top10 等类型的订单时判断上限价格。请看该函数的代码以理解该函数的逻辑和用法：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(q *orderQueue)</span> <span class="title">getDepthPrice</span><span class="params">(depth <span class="keyword">int</span>)</span> <span class="params">(<span class="keyword">string</span>, <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> q.parentList.Len() == <span class="number">0</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">""</span>, <span class="number">0</span></span><br><span class="line">	&#125;</span><br><span class="line">	p := q.parentList.Front()</span><br><span class="line">	i := <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> ; i &lt; depth; i++ &#123;</span><br><span class="line">		t := p.Next()</span><br><span class="line">		<span class="keyword">if</span> t != <span class="literal">nil</span> &#123;</span><br><span class="line">			p = t</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	o := p.Value.(*list.List).Front().Value.(*Order)</span><br><span class="line">	<span class="keyword">return</span> o.Price.String(), i</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="多种订单类型"><a href="#多种订单类型" class="headerlink" title="多种订单类型"></a>多种订单类型</h2><p>我们引擎总共支持了六种订单类型，之前的文章有简单介绍过，但没有深入讲解这几种不同类型的具体业务逻辑应该是怎样的，因此，在此将这部分内容补充上。</p>
+<h3 id="1-limit"><a href="#1-limit" class="headerlink" title="1. limit"></a>1. limit</h3><p>普通限价是最简单的，前文也已经展示过代码实现，为了加深理解，我再给大家画一张图：</p>
+<img src="/post/default/20191204/limit.png">
+
+<p>处理逻辑就是：</p>
+<ol>
+<li>判断新订单是买单还是卖单。</li>
+<li>如果是买单，那从 OrderBook 中读取出头部卖单，即卖单队列中的头部订单；如果是卖单，那从 OrderBook 中读取出头部买单，即买单队列中的头部订单。</li>
+<li>新订单为买单时，如果头部订单为空，或者新订单小于头部订单，即无法成交，那就把新订单添加到买单队列中，处理结束；新订单为卖单时，如果头部订单为空，或者新订单大于头部订单，即无法成交，那就把新订单添加到卖单队列中，处理结束。</li>
+<li>否则，符合匹配条件，新订单和头部订单进行撮合成交。</li>
+<li>撮合完成后，如果新订单剩余数量为零则结束，如果还大于零，则回到第2步继续取下一个头部订单，如此循环。</li>
+</ol>
+<h3 id="2-limit-ioc"><a href="#2-limit-ioc" class="headerlink" title="2. limit-ioc"></a>2. limit-ioc</h3><p>IOC 限价与普通限价不同的地方只有一个，如果新订单和头部订单不匹配时，普通限价单会被添加到订单队列中，而 IOC 限价则是作撤单处理，请看下图：</p>
+<img src="/post/default/20191204/limit-ioc.png">
+
+<h3 id="3-market"><a href="#3-market" class="headerlink" title="3. market"></a>3. market</h3><p>默认市价单的逻辑也比较简单，它不需要判断价格，只要头部订单不为空，就直接和头部订单匹配成交，其处理逻辑如下图：</p>
+<img src="/post/default/20191204/market.png">
+
+<h3 id="4-market-top5-market-top10"><a href="#4-market-top5-market-top10" class="headerlink" title="4. market-top5/market-top10"></a>4. market-top5/market-top10</h3><p>最优五档/十档市价单与默认市价单的逻辑也是类似的，不同点在于：默认市价的成交价格没有上限或下限，但最优五档/十档市价则存在价格上限或下限，超过上下限的委托单不会成交。画图太累，还是直接贴代码吧，以下是处理买单的：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyMarketTop</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal, depth <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	priceStr, _ := book.getSellDepthPrice(depth)</span><br><span class="line">	<span class="keyword">if</span> priceStr == <span class="string">""</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	limitPrice, _ := decimal.NewFromString(priceStr)</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder != <span class="literal">nil</span> &amp;&amp; limitPrice.GreaterThanOrEqual(headOrder.Price) &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-market-opponent"><a href="#5-market-opponent" class="headerlink" title="5. market-opponent"></a>5. market-opponent</h3><p>最后一种类型，对手方最优价，该类型只与对手方一档的价位成交，但与最优五档/十档还有一点不一样：最优五档/十档未成交的部分是作撤单处理的，而对手方最优价最后未成交的部分则是转为限价单。请看代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyMarketOpponent</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal)</span></span> &#123;</span><br><span class="line">	priceStr, _ := book.getSellDepthPrice(<span class="number">1</span>)</span><br><span class="line">	<span class="keyword">if</span> priceStr == <span class="string">""</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	limitPrice, _ := decimal.NewFromString(priceStr)</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder != <span class="literal">nil</span> &amp;&amp; limitPrice.GreaterThanOrEqual(headOrder.Price) &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		order.Price = limitPrice</span><br><span class="line">		order.Type = enum.TypeLimit</span><br><span class="line">		book.addBuyOrder(order)</span><br><span class="line">		cache.UpdateOrder(order.ToMap())</span><br><span class="line">		log.Info(<span class="string">"engine %s, a order has added to the orderbook: %s"</span>, order.Symbol, order.ToJson())</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="完结"><a href="#完结" class="headerlink" title="完结"></a>完结</h2><p>至此，整个系列就此完结。不过，我的撮合程序依然会继续迭代升级，另外，也将开始开发其他组件，将会和当前这个撮合引擎结合来用。欢迎关注后续动态。</p>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/default/20191204/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191203/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -367,13 +567,23 @@
                 
               
 
-              <time title="创建时间：2019-12-03 10:32:34 / 修改时间：16:43:59" itemprop="dateCreated datePublished" datetime="2019-12-03T10:32:34+08:00">2019-12-03</time>
+              <time title="创建时间：2019-12-03 10:32:34" itemprop="dateCreated datePublished" datetime="2019-12-03T10:32:34+08:00">2019-12-03</time>
             </span>
           
 
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-12-04 16:46:25" itemprop="dateModified" datetime="2019-12-04T16:46:25+08:00">2019-12-04</time>
+              </span>
             
           
 
@@ -428,7 +638,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191203"><strong>http://keeganlee.me/post/matching/20191203</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-03</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="日志需求"><a href="#日志需求" class="headerlink" title="日志需求"></a>日志需求</h2><p>我们都知道日志在一个程序中有着重要的作用，撮合引擎也同样需要一个完善的日志输出功能，以方便调试和查询数据。</p>
 <p>对一个撮合引擎来说，需要输出的日志主要有以下几类：</p>
@@ -451,7 +661,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> LEVEL <span class="keyword">byte</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	DEBUG LEVEL = <span class="literal">iota</span></span><br><span class="line">	INFO</span><br><span class="line">	WARN</span><br><span class="line">	ERROR</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 
 <p>第二步，定义日志的结构体，其包含的字段比较多，如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FileLogger <span class="keyword">struct</span> &#123;</span><br><span class="line">	fileDir        <span class="keyword">string</span>         <span class="comment">// 日志文件保存的目录</span></span><br><span class="line">  	fileName       <span class="keyword">string</span>         <span class="comment">// 日志文件名（无需包含日期和扩展名）</span></span><br><span class="line">  	prefix         <span class="keyword">string</span>         <span class="comment">// 日志消息的前缀</span></span><br><span class="line">  	logLevel       LEVEL          <span class="comment">// 日志等级</span></span><br><span class="line">  	logFile        *os.File       <span class="comment">// 日志文件</span></span><br><span class="line">  	date           *time.Time     <span class="comment">// 日志当前日期</span></span><br><span class="line">  	lg             *log.Logger    <span class="comment">// 系统日志对象</span></span><br><span class="line">  	mu             *sync.RWMutex  <span class="comment">// 读写锁，在进行日志分割和日志写入时需要锁住</span></span><br><span class="line">  	logChan        <span class="keyword">chan</span> <span class="keyword">string</span>    <span class="comment">// 日志消息通道，以实现异步写日志</span></span><br><span class="line">  	stopTickerChan <span class="keyword">chan</span> <span class="keyword">bool</span>      <span class="comment">// 停止定时器的通道</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FileLogger <span class="keyword">struct</span> &#123;</span><br><span class="line">	fileDir        <span class="keyword">string</span>         <span class="comment">// 日志文件保存的目录</span></span><br><span class="line">	fileName       <span class="keyword">string</span>         <span class="comment">// 日志文件名（无需包含日期和扩展名）</span></span><br><span class="line">	prefix         <span class="keyword">string</span>         <span class="comment">// 日志消息的前缀</span></span><br><span class="line">	logLevel       LEVEL          <span class="comment">// 日志等级</span></span><br><span class="line">	logFile        *os.File       <span class="comment">// 日志文件</span></span><br><span class="line">	date           *time.Time     <span class="comment">// 日志当前日期</span></span><br><span class="line">	lg             *log.Logger    <span class="comment">// 系统日志对象</span></span><br><span class="line">	mu             *sync.RWMutex  <span class="comment">// 读写锁，在进行日志分割和日志写入时需要锁住</span></span><br><span class="line">	logChan        <span class="keyword">chan</span> <span class="keyword">string</span>    <span class="comment">// 日志消息通道，以实现异步写日志</span></span><br><span class="line">	stopTickerChan <span class="keyword">chan</span> <span class="keyword">bool</span>      <span class="comment">// 停止定时器的通道</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>第三步，为了能将日志应用到程序中任何地方，就需要定义一个全局的日志对象，并要对该日志对象进行初始化。初始化操作有一点复杂，我们先来看代码：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> DATE_FORMAT = <span class="string">"2006-01-02"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> fileLog *FileLogger</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Init</span><span class="params">(fileDir, fileName, prefix, level <span class="keyword">string</span>)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	CloseLogger()</span><br><span class="line"></span><br><span class="line">	f := &amp;FileLogger&#123;</span><br><span class="line">		fileDir:       fileDir,</span><br><span class="line">		fileName:      fileName,</span><br><span class="line">		prefix:        prefix,</span><br><span class="line">		mu:            <span class="built_in">new</span>(sync.RWMutex),</span><br><span class="line">		logChan:       <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">string</span>, <span class="number">5000</span>),</span><br><span class="line">		stopTikerChan: <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>, <span class="number">1</span>),</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> strings.ToUpper(level) &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"DEBUG"</span>:</span><br><span class="line">		f.logLevel = DEBUG</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"WARN"</span>:</span><br><span class="line">		f.logLevel = WARN</span><br><span class="line">	<span class="keyword">case</span> <span class="string">"ERROR"</span>:</span><br><span class="line">		f.logLevel = ERROR</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		f.logLevel = INFO</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	t, _ := time.Parse(DATE_FORMAT, time.Now().Format(DATE_FORMAT))</span><br><span class="line">	f.date = &amp;t</span><br><span class="line"></span><br><span class="line">	f.isExistOrCreateFileDir()</span><br><span class="line"></span><br><span class="line">	fullFileName := filepath.Join(f.fileDir, f.fileName+<span class="string">".log"</span>)</span><br><span class="line">	file, err := os.OpenFile(fullFileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, <span class="number">0666</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	f.logFile = file</span><br><span class="line"></span><br><span class="line">	f.lg = log.New(f.logFile, prefix, log.LstdFlags|log.Lmicroseconds)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">go</span> f.logWriter()</span><br><span class="line">	<span class="keyword">go</span> f.fileMonitor()</span><br><span class="line"></span><br><span class="line">	fileLogger = f</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -595,7 +805,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:40:58" itemprop="dateModified" datetime="2019-12-03T10:40:58+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:45:31" itemprop="dateModified" datetime="2019-12-04T16:45:31+08:00">2019-12-04</time>
               </span>
             
           
@@ -651,7 +861,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191202"><strong>http://keeganlee.me/post/matching/20191202</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-12-02</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="中间件"><a href="#中间件" class="headerlink" title="中间件"></a>中间件</h2><p>先来回顾下我们撮合程序项目中关于中间件的目录结构：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">├── middleware               # 中间件的包</span><br><span class="line">│   ├── cache                # 缓存包</span><br><span class="line">│   │   └── cache.go         # 缓存操作</span><br><span class="line">│   ├── mq                   # 消息队列包</span><br><span class="line">│   │   └── mq.go            # MQ操作</span><br><span class="line">│   └── redis.go             # 主要做Redis初始化操作</span><br></pre></td></tr></table></figure>
@@ -830,7 +1040,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:42:18" itemprop="dateModified" datetime="2019-12-03T10:42:18+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:46:10" itemprop="dateModified" datetime="2019-12-04T16:46:10+08:00">2019-12-04</time>
               </span>
             
           
@@ -886,7 +1096,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191130"><strong>http://keeganlee.me/post/matching/20191130</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-30</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="程序入口"><a href="#程序入口" class="headerlink" title="程序入口"></a>程序入口</h2><p>我们要开始聊代码实现逻辑了，如果不记得之前讲的目录结构，请回去翻看<a href="http://keeganlee.me/post/matching/20191121">前文</a>。聊代码实现的第一步自然从程序入口开始，核心就两个函数：<strong>init()</strong> 和 <strong>main()</strong>，其代码如下：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line">... <span class="comment">//other codes</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	initViper()</span><br><span class="line">	initLog()</span><br><span class="line"></span><br><span class="line">	engine.Init()</span><br><span class="line">	middleware.Init()</span><br><span class="line">	process.Init()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mux := http.NewServeMux()</span><br><span class="line">	mux.HandleFunc(<span class="string">"/openMatching"</span>, handler.OpenMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/closeMatching"</span>, handler.CloseMatching)</span><br><span class="line">	mux.HandleFunc(<span class="string">"/handleOrder"</span>, handler.HandleOrder)</span><br><span class="line"></span><br><span class="line">	log.Printf(<span class="string">"HTTP ListenAndServe at port %s"</span>, viper.GetString(<span class="string">"server.port"</span>))</span><br><span class="line">	<span class="keyword">if</span> err := http.ListenAndServe(viper.GetString(<span class="string">"server.port"</span>), mux); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -1112,7 +1322,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:41:11" itemprop="dateModified" datetime="2019-12-03T10:41:11+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:45:45" itemprop="dateModified" datetime="2019-12-04T16:45:45+08:00">2019-12-04</time>
               </span>
             
           
@@ -1168,7 +1378,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191127"><strong>http://keeganlee.me/post/matching/20191127</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-27</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="业务流程"><a href="#业务流程" class="headerlink" title="业务流程"></a>业务流程</h2><p>前面的几篇文章已经陆续讲到了黑箱内部的一些设计，包括核心的软件结构、数据结构、目录结构等。而从本小节开始，我们将会更加深入，来解密黑箱内部的更多设计和实现细节。</p>
 <p>解密黑箱的第一步就是要清楚其内部对数据的处理流程是怎样的。当我们要设计一个新系统的时候，也是一样的，第一步要梳理清楚业务流程和数据流向。对撮合引擎来说，就是要了解：<strong>从输入到输出，中间都经过了哪些处理流程</strong>。</p>
@@ -1333,7 +1543,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:40:45" itemprop="dateModified" datetime="2019-12-03T10:40:45+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:45:18" itemprop="dateModified" datetime="2019-12-04T16:45:18+08:00">2019-12-04</time>
               </span>
             
           
@@ -1389,7 +1599,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191121"><strong>http://keeganlee.me/post/matching/20191121</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-21</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="黑箱引擎"><a href="#黑箱引擎" class="headerlink" title="黑箱引擎"></a>黑箱引擎</h2><p>我们的撮合引擎作为一个相对通用的组件，其实就是一个黑箱，如果想将它应用到各种不同的交易系统，只要有标准的输入和输出，对接是很容易的。</p>
 <p>写作此文时的撮合引擎为 1.3 版本，我将其编译构建成可在 Linux amd64 环境运行的可执行文件，并与依赖的配置文件一起压缩成一个压缩包 <strong>matching.zip</strong>。这就成为一个黑箱引擎了。</p>
@@ -1628,7 +1838,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:42:39" itemprop="dateModified" datetime="2019-12-03T10:42:39+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:46:38" itemprop="dateModified" datetime="2019-12-04T16:46:38+08:00">2019-12-04</time>
               </span>
             
           
@@ -1684,7 +1894,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191119"><strong>http://keeganlee.me/post/matching/20191119</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-19</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="交易委托账本"><a href="#交易委托账本" class="headerlink" title="交易委托账本"></a>交易委托账本</h2><p><strong>交易委托账本(OrderBook)</strong>是整个撮合引擎里最核心也是最复杂的数据结构，每个交易对都需要维护一份交易委托账本，账本里保存着指定交易对所有待撮合的委托单。每份账本都有两个队列，一个卖单队列和一个买单队列，两个队列都需要按照<strong>价格优先、时间优先</strong>的原则进行排序。</p>
 <p>所谓价格优先、时间优先，即是说：卖单队列的委托单是按价格由低到高排序，买单队列则相反，按价格由高到低排序；相同价格的委托单，则是按下单时间的先后来排序。</p>
@@ -1702,16 +1912,16 @@
 <p>订单队列可支持的操作方法也很简单，包括初始化、新增订单、移除订单、获取头部订单等。其类图大概如下：</p>
 <img src="/post/matching/20191119/class-orderqueue.png">
 
-<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList **保存整个二维链表，第一维以价格排序，第二维以时间排序，</strong>elementMap** 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList</strong> 保存整个二维链表，第一维以价格排序，第二维以时间排序，<strong>elementMap</strong> 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
 <h2 id="委托单"><a href="#委托单" class="headerlink" title="委托单"></a>委托单</h2><p>委托单则是撮合引擎里最基本的数据结构了，其数据主要是从上游服务传输过来的，其类图大概如下：</p>
 <img src="/post/matching/20191119/class-order.png">
 
-<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type **表示交易类型，即</strong>限价交易(limit)<strong>或</strong>市价交易(market)<strong>等，我们的 MVP 版本只支持限价交易。</strong>amount <strong>是购买数量，</strong>price** 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
-<p><strong>toJson() *<em>和 *</em>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
+<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type</strong> 表示交易类型，即<strong>限价交易(limit)</strong>或<strong>市价交易(market)</strong>等，我们的 MVP 版本只支持限价交易。<strong>amount</strong> 是购买数量，<strong>price</strong> 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
+<p><strong>toJson()</strong> 和 <strong>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
 <h2 id="成交记录"><a href="#成交记录" class="headerlink" title="成交记录"></a>成交记录</h2><p>撮合成交的委托单就会生成对应的成交记录，成交记录需要发布到 MQ 给下游服务消费。成交记录的数据结构如下图：</p>
 <img src="/post/matching/20191119/class-trade.png">
 
-<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId *<em>和 *</em>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount **就是成交数量，</strong>price** 指成交价格，*<em>timestamp *</em>是成交时间。</p>
+<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId</strong> 和 <strong>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount</strong> 就是成交数量，<strong>price</strong> 指成交价格，<strong>timestamp</strong> 是成交时间。</p>
 <h2 id="Redis缓存"><a href="#Redis缓存" class="headerlink" title="Redis缓存"></a>Redis缓存</h2><p>我们需要用 Redis 缓存委托单数据和撮合中的交易对数据，主要有两个作用，一是可以对请求做去重处理，二是程序重启后可以恢复数据。</p>
 <p>由于网络中断或延迟，或其他异常情况，上游服务有可能会重复发送相同请求给到撮合引擎，因此，程序是需要做去重处理的，有了数据缓存就可以解决去重问题了。另外，由于我们采用的是内存撮合，撮合时的数据都是直接保存在程序内存里的，一旦程序退出了，那所有数据也都消失了，重启后就需要从其他地方重新加载数据，采用Redis缓存就可以很快速地缓存数据和加载数据。</p>
 <p>开启一个交易对引擎时需要将交易对缓存，关闭时则从缓存中删除，保证缓存的都是运行中的交易对，当重启时，就可以重新启动这些交易对的撮合引擎了。需要缓存的交易对数据包括两个：<strong>symbol</strong> 和 <strong>price</strong>，即标识和价格。关于价格，每次产生新的成交记录时，价格也需要同步更新，因此价格的更新会非常频繁。而标识基本无需更新，因此两者最好分开缓存。</p>
@@ -1838,7 +2048,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:42:51" itemprop="dateModified" datetime="2019-12-03T10:42:51+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:46:50" itemprop="dateModified" datetime="2019-12-04T16:46:50+08:00">2019-12-04</time>
               </span>
             
           
@@ -1894,7 +2104,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191118"><strong>http://keeganlee.me/post/matching/20191118</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-18</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <p>开篇文章发出去之后，我的撮合引擎被一位超级大佬（曾担任上交所的首席架构师）定位为玩具，直接将我的撮合引擎和国家级撮合引擎作对比了。如果我的撮合引擎达到上交所级别，那就不止值5万了，估计至少值500万了。不过，我的撮合引擎随着不断升级迭代，以后能达到国家级别也说不定。为了避免再次出现这种尴尬，我还是先说明清楚对此撮合引擎的定位。</p>
 <h2 id="MVP版本需求"><a href="#MVP版本需求" class="headerlink" title="MVP版本需求"></a>MVP版本需求</h2><p>《精益创业》有个核心概念叫 <strong>MVP</strong>(Minimum Viable Product)，即<strong>最小可行性产品</strong>。我的撮合引擎第一个版本也是一个 MVP，只实现最基础的功能。所谓最基础的功能，即是说，如果移除了该功能，整个系统都无法完成工作。当然，我们还要加上应用场景，应用于一个初创的小交易平台和应用于像火币、币安甚至深交所、上交所这样庞大的交易平台，对基础功能的定义范围是有很大区别的。我所要做的 MVP 版本，只要适用于小交易平台即可。</p>
@@ -2059,7 +2269,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:41:22" itemprop="dateModified" datetime="2019-12-03T10:41:22+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:45:58" itemprop="dateModified" datetime="2019-12-04T16:45:58+08:00">2019-12-04</time>
               </span>
             
           
@@ -2115,7 +2325,7 @@
           
             <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191117"><strong>http://keeganlee.me/post/matching/20191117</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-17</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自从有人在微信群里开价5万求购Golang版的撮合引擎之后，我就想自己开发一款，毕竟，以我的经验来说，开发个高性能的撮合引擎并没什么难度。</p>
 <p>说干就干，于是，利用业余时间慢慢开发出了一款<strong>Golang</strong>版的高性能撮合引擎，前前后后花了大概一个月的时间。再想想自己好久没更新文章了，我的个人IP都已经生锈了，也应该发大招磨一磨了。因此决定，干脆就以连载的方式，分享下我是如何设计与实现这款价值超5万的撮合引擎的。</p>
@@ -2426,230 +2636,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180313/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/blockchain/20180313/" class="post-title-link" itemprop="url">详解区块链P2P网络</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2018-03-13 16:48:12" itemprop="dateCreated datePublished" datetime="2018-03-13T16:48:12+08:00">2018-03-13</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:30" itemprop="dateModified" datetime="2019-07-02T11:18:30+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/blockchain/" itemprop="url" rel="index"><span itemprop="name">blockchain</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180313"><strong>http://keeganlee.me/post/blockchain/20180313</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-03-13</p>
-<hr>
-<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
-<hr>
-<p>根据前一篇文章《<a href="http://keeganlee.me/post/blockchain/20180224">从微观到宏观理解区块链</a>》我们已经了解到，微观上，区块链本质就是一种<strong>不可篡改且可追踪溯源的哈希链条</strong>；宏观上，还具备了另外三个基本特征：<strong>分布式存储、P2P 网络和共识机制</strong>。分布式存储无非就是网络上大部分节点都保存了整条区块链，这容易理解也不复杂，所以就没必要再展开细讲了。但区块链的 P2P 网络和共识机制相对则复杂得多，因此我将用两篇文章分别展开讲讲这两部分内容，本篇文章就先来了解区块链的 P2P 网络。</p>
-<h2 id="P2P-网络"><a href="#P2P-网络" class="headerlink" title="P2P 网络"></a>P2P 网络</h2><p>由于大部分人对 P2P 网络了解甚少，因此有必要先聊聊 P2P 网络的一些基本原理。这个章节的内容主要来自<strong>《P2P对等网络原理与应用》</strong>这本书，这本书较为系统地介绍了 P2P 的理论基础，非常适合希望全面掌握 P2P 知识的初级读者，建议大伙都可以看看。</p>
-<p>P2P 网络不同于传统的<strong>客户端/服务端(client/server,C/S)结构</strong>，P2P 网络中的每个节点都可以既是客户端也是服务端，因此也不适合使用 HTTP 协议进行节点之间的通信，一般都是直接使用 Socket 进行网络编程。</p>
-<p>P2P 主要存在四种不同的网络模型，也代表着 P2P 技术的四个发展阶段：<strong>集中式、纯分布式、混合式和结构化模型</strong>。不过需要指出的是，这里所说的网络模型主要是指路由查询结构，即不同节点之间如何建立连接通道，两个节点之间一旦建立连接，具体传输什么数据则是两个节点之间的事情了。</p>
-<p>最简单的路由方式就是<strong>集中式</strong>，即存在一个中心节点保存了其他所有节点的索引信息，索引信息一般包括节点 IP 地址、端口、节点资源等。集中式路由的优点就是结构简单、实现容易。但缺点也很明显，由于中心节点需要存储所有节点的路由信息，当节点规模扩展时，就很容易出现性能瓶颈；而且也存在单点故障问题。</p>
-<img src="/post/blockchain/20180313/2018-03-06-22-25-08.jpg">
-
-<p>那第二种路由结构则是<strong>纯分布式</strong>的，移除了中心节点，在 P2P 节点之间建立随机网络，就是在一个新加入节点和 P2P 网络中的某个节点间随机建立连接通道，从而形成一个随机拓扑结构。新节点加入该网络的实现方法也有很多种，最简单的就是随机选择一个已经存在的节点并建立邻居关系。像比特币的话，则是使用 DNS 的方式来查询其他节点，DNS 一般是硬编码到代码里的，这些 DNS 服务器就会提供比特币节点的 IP 地址列表，从而新节点就可以找到其他节点建立连接通道。新节点与邻居节点建立连接后，还需要进行全网广播，让整个网络知道该节点的存在。全网广播的方式就是，该节点首先向邻居节点广播，邻居节点收到广播消息后，再继续向自己的邻居节点广播，以此类推，从而广播到整个网络。这种广播方法也称为<strong>泛洪机制</strong>。纯分布式结构不存在集中式结构的单点性能瓶颈问题和单点故障问题，具有较好的可扩展性，但泛洪机制引入了新的问题，主要是可控性差的问题，包括两个较大的问题，一是容易形成泛洪循环，比如节点 A 发出的消息经过节点 B 到 节点 C，节点 C 再广播到节点 A，这就形成了一个循环；另一个棘手问题则是响应消息风暴问题，如果节点 A 想请求的资源被很多节点所拥有，那么在很短时间内，会出现大量节点同时向节点 A 发送响应消息，这就可能会让节点 A 瞬间瘫痪。</p>
-<img src="/post/blockchain/20180313/2018-03-07-10-54-06.jpg">
-
-<p>再来看看第三种路由结构：<strong>混合式</strong>。混合式其实就是混合了集中式和分布式结构，如下图所示，网络中存在多个<strong>超级节点</strong>组成分布式网络，而每个超级节点则有多个<strong>普通节点</strong>与它组成局部的集中式网络。一个新的普通节点加入，则先选择一个超级节点进行通信，该超级节点再推送其他超级节点列表给新加入节点，加入节点再根据列表中的超级节点状态决定选择哪个具体的超级节点作为父节点。这种结构的泛洪广播就只是发生在超级节点之间，就可以避免大规模泛洪存在的问题。在实际应用中，混合式结构是相对灵活并且比较有效的组网架构，实现难度也相对较小，因此目前较多系统基于混合式结构进行开发实现。其实，比特币网络如今也是这种结构，后面再细说。</p>
-<img src="/post/blockchain/20180313/2018-03-06-22-27-23.jpg">
-
-<p>最后一种网络则是<strong>结构化 P2P 网络</strong>，它也是一种分布式网络结构，但与纯分布式结构不同。纯分布式网络就是一个随机网络，而结构化网络则将所有节点按照某种结构进行有序组织，比如形成一个环状网络或树状网络。而结构化网络的具体实现上，普遍都是基于 <strong>DHT(Distributed Hash Table，分布式哈希表) *<em>算法思想。DHT 只是提出一种网络模型，并不涉及具体实现，主要想解决如何在分布式环境下快速而又准确地路由、定位数据的问题。具体的实现方案有 Chord、Pastry、CAN、Kademlia 等算法，其中 *</em>Kademlia</strong> 也是以太坊网络的实现算法，很多常用的 P2P 应用如 BitTorrent、电驴等也是使用 Kademlia。因为篇幅有限，就不展开讲这些算法的具体原理了。目前，我们主要理解 DHT 的核心思想即可。</p>
-<p>在 P2P 网络中，可以抽象出两种空间：<strong>资源空间</strong>和<strong>节点空间</strong>。资源空间就是所有节点保存的资源集合，节点空间就是所有节点的集合。对所有资源和节点分别进行编号，如把资源名称或内容用 Hash 函数变成一个数值（这也是 DHT 常用的一种方法），这样，每个资源就有对应的一个 ID，每个节点也有一个 ID，资源 ID 和节点 ID 之间建立起一种映射关系，比如，将资源 n 的所有索引信息存放到节点 n 上，那要搜索资源 n 时，只要找到节点 n 即可，从而就可以避免泛洪广播，能更快速而又准确地路由和定位数据。当然，在实际应用中，资源 ID 和节点 ID 之间是无法做到一一对应的，但因为 ID 都是数字，就存在大小关系或偏序关系等，基于这些关系就能建立两者的映射关系。这就是 DHT 的核心思想。DHT 算法在资源编号和节点编号上就是使用了分布式哈希表，使得资源空间和节点空间的编号有唯一性、均匀分布式等较好的性质，能够适合结构化分布式网络的要求。</p>
-<p>综上，这就是 P2P 网络的一点理论基础，不同的区块链可能会使用不一样的网络模型，但基本原理是一样的。后面分别讲解下最有代表性的两个区块链的网络：比特币网络和以太坊网络。</p>
-<h2 id="比特币网络"><a href="#比特币网络" class="headerlink" title="比特币网络"></a>比特币网络</h2><p>首先，比特币网络中的节点主要有四大功能：<strong>钱包、挖矿、区块链数据库、网络路由</strong>。每个节点都会具备路由功能，但其他功能不一定都具备，不同类型的节点可能只包含部分功能，一般只有<strong>比特币核心(bitcoin core)</strong>节点才会包含所有四大功能。</p>
-<img src="/post/blockchain/20180313/2018-03-09-16-35-26.jpg">
-
-<p>所有节点都会参与校验和广播交易及区块信息，且会发现和维持与其他节点的连接。有些节点会包含完整的区块链数据库，包括所有交易数据，这种节点也称为<strong>全节点(Full Node)</strong>。另外一些节点只存储了区块链数据库的一部分，一般只存储区块头而不存储交易数据，它们会通过“<strong>简化交易验证(SPV)</strong>”的方式完成交易校验，这样的节点也称为 <strong>SPV节点</strong>或<strong>轻节点(Lightweight Node)</strong>。钱包一般是 PC 或手机客户端的功能，用户通过钱包查看自己的账户金额、管理钱包地址和私钥、发起交易等。除了比特币核心钱包是全节点之外，大部分钱包都是<strong>轻节点</strong>。挖矿节点则通过解决<strong>工作量证明(PoW)</strong>算法问题，与其他挖矿节点相互竞争创建新区块。有些挖矿节点同时也是<strong>全节点</strong>，即也存储了完整的区块链数据库，这种节点一般都是<strong>独立矿工(Solo Miner)</strong>。还有一些挖矿节点不是独立挖矿的，而是和其他节点一起连接到<strong>矿池</strong>，参与集体挖矿，这种节点一般也称为<strong>矿池矿工(Pool Miner)</strong>。这会形成一个局部的集中式矿池网络，中心节点是一个<strong>矿池服务器</strong>，其他挖矿节点全部连接到矿池服务器。<strong>矿池矿工</strong>和<strong>矿池服务器</strong>之间的通信也不是采用标准的<strong>比特币协议</strong>，而是使用<strong>矿池挖矿协议</strong>，而矿池服务器作为一个<strong>全节点</strong>再与其他比特币节点使用主网络的<strong>比特币协议</strong>进行通信。</p>
-<p>在整个比特币网络中，除了不同节点间使用<strong>比特币协议</strong>作为通信协议的主网络，也存在很多扩展网络，包括上面提到的<strong>矿池网络</strong>。不同的矿池网络可能还会使用不同的矿池挖矿协议，目前主流的具体矿池协议应该是 <strong>Stratum协议</strong>，该协议除了支持挖矿节点，也支持<strong>瘦客户端钱包</strong>。一个包含了比特币协议主网络各种节点和 Stratum 网络，以及其他矿池网络的扩展比特币网络大概如下图所示：</p>
-<img src="/post/blockchain/20180313/bitcoin-network.jpeg">
-
-<p>另外，挖矿这块还有特殊需求。我们知道，矿工创建新区块后，是需要广播给全网所有节点的，当全网都接受了该区块，给矿工的挖矿奖励才算是有效的，这之后才好开始下一个区块 Hash 的计算。所以矿工必须最大限度缩短新区块的广播和下一个区块 Hash 计算之间的时间。如果矿工之间传播区块只采用上图所示的比特币协议网络，那无疑会有很高的网络延迟，所以，需要一个专门的传播网络用来加快新区块在矿工之间的同步传播，这个专门网络也叫<strong>比特币传播网络</strong>或<strong>比特币中继网络(Bitcoin Relay Network)</strong>。</p>
-<h2 id="以太坊网络"><a href="#以太坊网络" class="headerlink" title="以太坊网络"></a>以太坊网络</h2><p>和比特币一样，以太坊的节点也具备<strong>钱包、挖矿、区块链数据库、网络路由</strong>四大功能，也同样存在很多不同类型的节点，除了主网络之外也同样存在很多扩展网络。但与比特币不同的，比特币主网的 P2P 网络是无结构的，但以太坊的 P2P 网络是有结构的。前面我们已经提过，以太坊的 P2P 网络主要采用了 <strong>Kademlia(简称 Kad)</strong> 算法实现，Kad 是一种<strong>分布式哈希表(DHT)</strong>技术，使用该技术，可以实现在分布式环境下快速而又准确地路由、定位数据的问题。所以，下面主要讲解下以太坊的 Kad 网络。</p>
-<p>在 Kad 网络中，每个节点都具有一个唯一的节点 ID。另外，也会计算不同节点之间的距离，但这个距离不是物理上的距离，而是逻辑上的距离，是通过对两个节点 ID 进行 <strong>异或(符号为^)</strong> 计算得到的，即 A、B 两节点之间的距离的计算公式为：<strong>D(A,B) = A.ID^B.ID</strong>。异或有一个重要的性质：假设 a、b、c 为任意三个数，如果 a^b = a^c 成立，那就一定 b = c。因此，如果给定一个结点 a 和距离 L，那就有且仅有一个结点 b, 会使得 D(a,b) = L。通过这种方式，就能有效度量 Kad 网络中不同节点之间的逻辑距离。</p>
-<p>在异或距离度量的基础上，Kad 还可以将整个网络拓扑组织成如下图所示的一个<strong>二叉前缀树</strong>，每个 NodeID 会映射到二叉树上的某个叶子。</p>
-<img src="/post/blockchain/20180313/2018-03-13-12-31-47.png">
-
-<p>映射规则主要是：</p>
-<ol>
-<li>将 NodeID 以二进制形式表示，然后从高到低对每一位的 0 或 1 依次处理；</li>
-<li>二进制的第 n 位就对应了二叉树的第 n 层；</li>
-<li>如果该位是 0，进入左子树，是 1 则进入右子树（反过来也可以）；</li>
-<li>全部位都处理完后，这个 NodeID 就对应了二叉树上的某个叶子。</li>
-</ol>
-<p>在这种二叉树结构下，对每个节点来说，离它越近的节点异或距离也是越近的。接着，可以按照离自己异或距离的远近，对整颗二叉树进行拆分。拆分规则是：从根节点开始，将不包括自己的那颗子树拆分出来，然后在包含自己的子树中，把不包括自己的下一层子树再拆分出来，以此类推，直到只剩下自己。以上图的 110 节点为例，从根节点开始，由于 110 节点在右子树，所以将左边的整颗子树拆分出来，即包含 000、001、010 这三个节点的这颗子树；接着，到第二层子树，将不包含 110 节点的左子树再拆分出来，即包含 100 和 101 这两个节点的子树；最后，再将 111 拆分出来。这样，就将 110 节点之外的整个二叉树拆分出了三颗子树。</p>
-<p>完成子树拆分后，只要知道每个子树里面的其中一个节点，就可以进行递归路由实现整颗二叉树所有节点的遍历。但在实际场景下，由于节点是动态变化的，所以一般不会只知道每个子树的一个节点，而是需要知道多个节点。因此，Kad 中有一个叫 <strong>K-桶(K-bucket)</strong>的概念，每个桶会记录每颗子树里所知道的多个节点。其实，一个<strong>K-桶</strong>就是一张<strong>路由表</strong>，如果拆分出来有 m 颗子树，那对应节点就需要维护 m 个路由表。每个节点都会各自维护自己的 m 个 K-桶，每个 K-桶里记录的节点信息一般会包括 NodeID、IP、Endpoint、与 Target 节点（即维护该 K-桶的节点）的异或距离等信息。以太坊中，每个节点维护的 K-桶数量为 256 个，这 256 个 K-桶会根据与 Target 节点的异或距离进行排序，每个 K-桶保存的节点数量上限是 16。</p>
-<p>在以太坊的 Kad 网络中，节点之间的通信是基于 UDP 的，另外设置了 4 个主要的通信协议：</p>
-<ol>
-<li><strong>Ping</strong>：用于探测一个节点是否在线</li>
-<li><strong>Pong</strong>：用于响应 Ping 命令</li>
-<li><strong>FindNode</strong>：用于查找与 Target 节点异或距离最近的其他节点</li>
-<li><strong>Neighbours</strong>：用于响应 FindNode 命令，会返回一或多个节点</li>
-</ol>
-<p>通过以上 4 个命令，就可以实现新节点的加入、K-桶的刷新等机制。具体的实现流程就不细讲了，留给大伙自己去思考。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>不同结构的 P2P 网络，会有不同的优点和缺点。比特币网络的结构明显容易理解，实现起来也相对容易得多，而以太坊网络引入了异或距离、二叉前缀树、K-桶等，结构上复杂不少，但在节点路由上的确会比比特币快很多。另外，不管是比特币还是以太坊，其实都只是一种或多种协议的集合，不同节点其实可以用不同的具体实现，比如，比特币就有用 C++ 实现的 Bitcoin Core，还有用 Java 实现的 BitcoinJ；以太坊也有用 Go 语言实现的 go-ethereum，也有用 C++ 实现的 go-ethereum，还有用 Java 实现的 Ethereum(J)。</p>
-<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>在以太坊的 Kad 网络中，新节点的加入和 K-桶的刷新流程是怎样的？比特币的新节点加入流程又是怎样的？哈希表有哪些实现方式？</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/blockchain/20180313/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2696,7 +2682,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">25</span>
+                    <span class="site-state-item-count">26</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>

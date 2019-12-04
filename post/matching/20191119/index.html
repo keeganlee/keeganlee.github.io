@@ -108,7 +108,7 @@
 <meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-order.png">
 <meta property="og:image" content="https://keeganlee.me/post/matching/20191119/class-trade.png">
 <meta property="og:image" content="https://keeganlee.me/post/matching/20191119/qrcode_keegan.jpg">
-<meta property="og:updated_time" content="2019-12-03T02:42:39.191Z">
+<meta property="og:updated_time" content="2019-12-04T08:46:38.013Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="撮合引擎开发:数据结构设计">
 <meta name="twitter:description" content="原创文章，转载请注明：转载自Keegan小钢并标明原文链接：http://keeganlee.me/post/matching/20191119微信公众号：名称：Keegan小钢；微信号：keeganlee_me写于2019-11-19  撮合引擎开发：开篇撮合引擎开发：MVP版本撮合引擎开发：数据结构设计撮合引擎开发：对接黑箱撮合引擎开发：解密黑箱流程撮合引擎开发：流程的代码实现撮合引擎开发：缓">
@@ -387,7 +387,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-03 10:42:39" itemprop="dateModified" datetime="2019-12-03T10:42:39+08:00">2019-12-03</time>
+                <time title="修改时间：2019-12-04 16:46:38" itemprop="dateModified" datetime="2019-12-04T16:46:38+08:00">2019-12-04</time>
               </span>
             
           
@@ -441,7 +441,7 @@
       
         <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191119"><strong>http://keeganlee.me/post/matching/20191119</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-19</p>
 <hr>
-<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a></p>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
 <hr>
 <h2 id="交易委托账本"><a href="#交易委托账本" class="headerlink" title="交易委托账本"></a>交易委托账本</h2><p><strong>交易委托账本(OrderBook)</strong>是整个撮合引擎里最核心也是最复杂的数据结构，每个交易对都需要维护一份交易委托账本，账本里保存着指定交易对所有待撮合的委托单。每份账本都有两个队列，一个卖单队列和一个买单队列，两个队列都需要按照<strong>价格优先、时间优先</strong>的原则进行排序。</p>
 <p>所谓价格优先、时间优先，即是说：卖单队列的委托单是按价格由低到高排序，买单队列则相反，按价格由高到低排序；相同价格的委托单，则是按下单时间的先后来排序。</p>
@@ -459,16 +459,16 @@
 <p>订单队列可支持的操作方法也很简单，包括初始化、新增订单、移除订单、获取头部订单等。其类图大概如下：</p>
 <img src="/post/matching/20191119/class-orderqueue.png">
 
-<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList **保存整个二维链表，第一维以价格排序，第二维以时间排序，</strong>elementMap** 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
+<p><strong>sortBy</strong> 指定价格排序的方向，<strong>parentList</strong> 保存整个二维链表，第一维以价格排序，第二维以时间排序，<strong>elementMap</strong> 则是 Key 为价格、Value 为第二维订单链表的键值对。</p>
 <h2 id="委托单"><a href="#委托单" class="headerlink" title="委托单"></a>委托单</h2><p>委托单则是撮合引擎里最基本的数据结构了，其数据主要是从上游服务传输过来的，其类图大概如下：</p>
 <img src="/post/matching/20191119/class-order.png">
 
-<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type **表示交易类型，即</strong>限价交易(limit)<strong>或</strong>市价交易(market)<strong>等，我们的 MVP 版本只支持限价交易。</strong>amount <strong>是购买数量，</strong>price** 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
-<p><strong>toJson() *<em>和 *</em>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
+<p><strong>action</strong> 声明对委托单要进行哪种操作，我们只需支持两种操作：<strong>下单(create)</strong>和<strong>撤单(cancel)</strong>。<strong>symbol</strong> 指定该委托单所属的交易对，<strong>orderId</strong> 是该委托单的唯一标识，<strong>side</strong> 指明是<strong>买入(buy)</strong>还是<strong>卖出(sell)</strong>。<strong>type</strong> 表示交易类型，即<strong>限价交易(limit)</strong>或<strong>市价交易(market)</strong>等，我们的 MVP 版本只支持限价交易。<strong>amount</strong> 是购买数量，<strong>price</strong> 是购买价格，<strong>timestamp</strong> 则是订单时间。</p>
+<p><strong>toJson()</strong> 和 <strong>fromJson()</strong> 方法是为了支持订单数据传输时的序列化和反序列化。</p>
 <h2 id="成交记录"><a href="#成交记录" class="headerlink" title="成交记录"></a>成交记录</h2><p>撮合成交的委托单就会生成对应的成交记录，成交记录需要发布到 MQ 给下游服务消费。成交记录的数据结构如下图：</p>
 <img src="/post/matching/20191119/class-trade.png">
 
-<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId *<em>和 *</em>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount **就是成交数量，</strong>price** 指成交价格，*<em>timestamp *</em>是成交时间。</p>
+<p><strong>maker</strong> 指挂单，是本来挂在交易委托账本里的订单，而 <strong>taker</strong> 则是吃单，是指吃掉 maker 的订单。<strong>makerId</strong> 和 <strong>takerId</strong> 就是挂单和吃单的订单 ID。<strong>takerSide</strong> 就是吃单的买卖方向，我们在行情软件里看到的成交记录会有不同颜色，就是由这个 takerSide 决定的。<strong>amount</strong> 就是成交数量，<strong>price</strong> 指成交价格，<strong>timestamp</strong> 是成交时间。</p>
 <h2 id="Redis缓存"><a href="#Redis缓存" class="headerlink" title="Redis缓存"></a>Redis缓存</h2><p>我们需要用 Redis 缓存委托单数据和撮合中的交易对数据，主要有两个作用，一是可以对请求做去重处理，二是程序重启后可以恢复数据。</p>
 <p>由于网络中断或延迟，或其他异常情况，上游服务有可能会重复发送相同请求给到撮合引擎，因此，程序是需要做去重处理的，有了数据缓存就可以解决去重问题了。另外，由于我们采用的是内存撮合，撮合时的数据都是直接保存在程序内存里的，一旦程序退出了，那所有数据也都消失了，重启后就需要从其他地方重新加载数据，采用Redis缓存就可以很快速地缓存数据和加载数据。</p>
 <p>开启一个交易对引擎时需要将交易对缓存，关闭时则从缓存中删除，保证缓存的都是运行中的交易对，当重启时，就可以重新启动这些交易对的撮合引擎了。需要缓存的交易对数据包括两个：<strong>symbol</strong> 和 <strong>price</strong>，即标识和价格。关于价格，每次产生新的成交记录时，价格也需要同步更新，因此价格的更新会非常频繁。而标识基本无需更新，因此两者最好分开缓存。</p>
@@ -599,7 +599,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">25</span>
+                    <span class="site-state-item-count">26</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
