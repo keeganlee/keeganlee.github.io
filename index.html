@@ -322,7 +322,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/default/20191204/">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191204/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Keegan小钢">
@@ -342,7 +342,7 @@
           <h1 class="post-title" itemprop="name headline">
                 
                 
-                <a href="/post/default/20191204/" class="post-title-link" itemprop="url">撮合引擎开发:完结篇</a>
+                <a href="/post/matching/20191204/" class="post-title-link" itemprop="url">撮合引擎开发:完结篇</a>
               
             
           </h1>
@@ -367,7 +367,7 @@
                 
               
 
-              <time title="创建时间：2019-12-04 12:23:09 / 修改时间：16:44:32" itemprop="dateCreated datePublished" datetime="2019-12-04T12:23:09+08:00">2019-12-04</time>
+              <time title="创建时间：2019-12-04 12:23:09" itemprop="dateCreated datePublished" datetime="2019-12-04T12:23:09+08:00">2019-12-04</time>
             </span>
           
 
@@ -375,8 +375,33 @@
             
 
             
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-12-16 09:52:21" itemprop="dateModified" datetime="2019-12-16T09:52:21+08:00">2019-12-16</time>
+              </span>
+            
           
 
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -433,7 +458,7 @@
 <li><strong>getDepthPrice(depth)</strong>：读取深度价格</li>
 </ul>
 <p>以上五个函数就只有第一个函数会比较复杂，为了让处理流程更容易理解，我就不贴代码了，画一个完整的流程图给大家看看：</p>
-<img src="/post/default/20191204/orderQueue-addOrder.png">
+<img src="/post/matching/20191204/orderQueue-addOrder.png">
 
 <p>这个流程确实有一点复杂，可以多看几遍好好消化，最好自己动手将其转为代码实现。</p>
 <p>其他几个函数就简单了，关于最后一个函数需要补充说明一下。读取深度价格是为了方便处理 market-opponent、market-top5、market-top10 等类型的订单时判断上限价格。请看该函数的代码以理解该函数的逻辑和用法：</p>
@@ -441,7 +466,7 @@
 
 <h2 id="多种订单类型"><a href="#多种订单类型" class="headerlink" title="多种订单类型"></a>多种订单类型</h2><p>我们引擎总共支持了六种订单类型，之前的文章有简单介绍过，但没有深入讲解这几种不同类型的具体业务逻辑应该是怎样的，因此，在此将这部分内容补充上。</p>
 <h3 id="1-limit"><a href="#1-limit" class="headerlink" title="1. limit"></a>1. limit</h3><p>普通限价是最简单的，前文也已经展示过代码实现，为了加深理解，我再给大家画一张图：</p>
-<img src="/post/default/20191204/limit.png">
+<img src="/post/matching/20191204/limit.png">
 
 <p>处理逻辑就是：</p>
 <ol>
@@ -452,10 +477,10 @@
 <li>撮合完成后，如果新订单剩余数量为零则结束，如果还大于零，则回到第2步继续取下一个头部订单，如此循环。</li>
 </ol>
 <h3 id="2-limit-ioc"><a href="#2-limit-ioc" class="headerlink" title="2. limit-ioc"></a>2. limit-ioc</h3><p>IOC 限价与普通限价不同的地方只有一个，如果新订单和头部订单不匹配时，普通限价单会被添加到订单队列中，而 IOC 限价则是作撤单处理，请看下图：</p>
-<img src="/post/default/20191204/limit-ioc.png">
+<img src="/post/matching/20191204/limit-ioc.png">
 
 <h3 id="3-market"><a href="#3-market" class="headerlink" title="3. market"></a>3. market</h3><p>默认市价单的逻辑也比较简单，它不需要判断价格，只要头部订单不为空，就直接和头部订单匹配成交，其处理逻辑如下图：</p>
-<img src="/post/default/20191204/market.png">
+<img src="/post/matching/20191204/market.png">
 
 <h3 id="4-market-top5-market-top10"><a href="#4-market-top5-market-top10" class="headerlink" title="4. market-top5/market-top10"></a>4. market-top5/market-top10</h3><p>最优五档/十档市价单与默认市价单的逻辑也是类似的，不同点在于：默认市价的成交价格没有上限或下限，但最优五档/十档市价则存在价格上限或下限，超过上下限的委托单不会成交。画图太累，还是直接贴代码吧，以下是处理买单的：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">dealBuyMarketTop</span><span class="params">(order *Order, book *orderBook, lastTradePrice *decimal.Decimal, depth <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	priceStr, _ := book.getSellDepthPrice(depth)</span><br><span class="line">	<span class="keyword">if</span> priceStr == <span class="string">""</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line">	limitPrice, _ := decimal.NewFromString(priceStr)</span><br><span class="line">LOOP:</span><br><span class="line">	headOrder := book.getHeadSellOrder()</span><br><span class="line">	<span class="keyword">if</span> headOrder != <span class="literal">nil</span> &amp;&amp; limitPrice.GreaterThanOrEqual(headOrder.Price) &#123;</span><br><span class="line">		matchTrade(headOrder, order, book, lastTradePrice)</span><br><span class="line">		<span class="keyword">if</span> order.Amount.IsPositive() &#123;</span><br><span class="line">			<span class="keyword">goto</span> LOOP</span><br><span class="line">		&#125;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		cancelOrder(order)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -466,7 +491,7 @@
 <h2 id="完结"><a href="#完结" class="headerlink" title="完结"></a>完结</h2><p>至此，整个系列就此完结。不过，我的撮合程序依然会继续迭代升级，另外，也将开始开发其他组件，将会和当前这个撮合引擎结合来用。欢迎关注后续动态。</p>
 <hr>
 <p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
-<img src="/post/default/20191204/qrcode_keegan.jpg">
+<img src="/post/matching/20191204/qrcode_keegan.jpg">
           
         
       
@@ -582,7 +607,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2019-12-04 16:46:25" itemprop="dateModified" datetime="2019-12-04T16:46:25+08:00">2019-12-04</time>
+                <time title="修改时间：2019-12-16 09:44:59" itemprop="dateModified" datetime="2019-12-16T09:44:59+08:00">2019-12-16</time>
               </span>
             
           
