@@ -322,6 +322,217 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180425/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/blockchain/20180425/" class="post-title-link" itemprop="url">漫谈区块链共识机制</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-04-25 16:00:00" itemprop="dateCreated datePublished" datetime="2018-04-25T16:00:00+08:00">2018-04-25</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-07-02 11:18:29" itemprop="dateModified" datetime="2019-07-02T11:18:29+08:00">2019-07-02</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/blockchain/" itemprop="url" rel="index"><span itemprop="name">blockchain</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/blockchain/20180425"><strong>http://keeganlee.me/post/blockchain/20180425</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2018-04-25</p>
+<hr>
+<p>专栏地址：<a href="https://xiaozhuanlan.com/fullstack" target="_blank" rel="noopener">https://xiaozhuanlan.com/fullstack</a></p>
+<hr>
+<p>共识机制是区块链的一个核心特征，是保证区块链系统在分布式架构下的一致性方案。目前主流的也有好多种共识算法：POW、POS、DPOS、RCP、PBFT、DBFT 等等。网上已经充斥了很多对这些共识算法的简单介绍，但基本流于表面而缺少深入的讲解，从而读者们也很难理解到这些共识机制背后的核心原理。而本文将以深入浅出的方式讲解区块链共识机制，但由于篇幅有限，因此，只会讲解最重要的两种区块链的共识机制，即比特币和以太坊的共识机制。</p>
+<h2 id="比特币共识机制"><a href="#比特币共识机制" class="headerlink" title="比特币共识机制"></a>比特币共识机制</h2><p>比特币是区块链的第一个应用，也是第一个实现了共识机制的，因此，要理解区块链共识机制，自然也要先从比特币共识机制开始。另外，虽然很多文章都提到比特币的共识机制为 <strong>POW（Proof of Work，工作量证明）</strong>，但实际上，POW 只是整个比特币共识机制中的一部分，虽然是核心的那部分，但却不是全部。其实，比特币的分布式共识是由网络节点的 4 种独立过程相互作用而达成的：</p>
+<ul>
+<li><strong>每个全节点基于一份长长的判断标准清单对每个交易进行独立验证</strong></li>
+<li><strong>每个挖矿节点独立将多个交易打包进新区块，通过完成 POW 算法的验算</strong></li>
+<li><strong>每个节点独立验证新区块并组装进区块链</strong></li>
+<li><strong>每个节点独立选择最长链，即在 POW 机制下累计工作量最多的那条链</strong></li>
+</ul>
+<p>先说第一种过程，对交易的独立验证。每个节点收到每一个交易之后，都会先根据一份很长的判断标准清单对该交易进行有效性校验，包括但不限于校验交易的语法和数据结构是否正确、输入和输出是否为空、输入总额是否小于输出总额、每一个输入所引用的输出是否已经被消费，等等。如果该交易通过所有验证，则可以说明该交易是有效的，那么，该节点就会将该交易放入本地的<strong>交易池</strong>（或称<strong>内存池</strong>），并将该交易广播给其他相临的节点。如果没通过验证，则会废弃该交易，也不会将其广播出去。其他节点接收到该交易后，也各自做同样的独立校验，校验为交易有效之后，同样也放入各节点自己的<strong>交易池</strong>，并继续广播给其他节点。所以，理论上来说，无效的交易一开始就会被废弃，而有效的交易最终会到达整个网络所有节点，并被每个全节点所保存，即全网达成了“该交易有效”的共识。</p>
+<p>接着，再来聊聊第二种过程，了解有效的交易是如何被打包进区块的。经过一段时间后，一般是 10 分钟左右，每个节点的交易池里会收集到很多有效但还未确认的交易，这些交易会组装成一颗 <strong>Merkle Tree</strong>。关于 <strong>Merkle Tree</strong> 的结构，我们在之前的文章<a href="https://xiaozhuanlan.com/topic/2394807516" target="_blank" rel="noopener">《014|从微观到宏观理解区块链》</a>已经讲过，这里就不赘述了。不过，组装进 <strong>Merkle Tree</strong> 的第一笔交易是比较特殊的，这是一笔<strong>创币交易</strong>，也叫 <strong>Coinbase 交易</strong>，新的比特币就是从该笔交易产生的。这笔交易是由节点自己创建的，并将挖矿奖励支付到矿工自己的地址，挖矿奖励包括新创建的比特币和打包进该区块所有交易的手续费总额。组装好 <strong>Merkle Tree</strong> 之后，就得到 <strong>Merkle Root</strong>，再结合区块头的其他 5 个字段——<strong>Version、Pre Block、Times、Difficulty、Nonce</strong>，总共 6 个字段合在一起经过<strong>两次 SHA256 计算</strong>得到区块哈希值。一个有效的区块要求其哈希值必须小于 Difficulty 难度值，写作本文时的难度要求哈希值至少已经有 18 个 0 开头。挖矿其实就是通过修改参数的值而不断计算区块哈希值，直到计算出符合难度要求的哈希值。一般是通过修改 Nonce 值来计算区块哈希值，其他 5 个字段基本是不变的。而由于哈希函数的特性，难度值越大，理论上计算出符合要求的哈希值所需的计算量就越大。举个简单例子，比如你扔三个骰子，如果难度要求总和小于18，那是非常容易达到的，基本扔个一两次就能满足要求了；而如果加大难度，要求总和小于9，那从概率上来说相对就没那么容易了，可能要扔个十几次甚至几十次才能达到；而如果要求总和等于 3，那只能扔出三个 1 才行，这谁都知道要达到的概率是很低的，也许扔个一两百次才可能出现。因此，从统计学来说，一定的难度值可以推算出概率上对应所需的计算次数，也就是“工作量”，所以，只要你达到了难度要求，也就间接证明你付出了对应的工作量，这就是<strong>工作量证明</strong>。</p>
+<p>当某个节点计算出符合难度要求的区块哈希时，即说明该矿工挖矿成功了，该节点就会将此区块组装到本地的区块链，同时也将此区块广播给其他节点。然后，就进入第三种过程了。当其他节点收到此区块时，也会各自独立验证该区块是否有效。和独立验证交易一样，也存在一份验证标准清单，包括但不限于校验引用的上一个区块是否是否正确、难度值是否符合标准、区块哈希是否真的符合难度要求、Coinbase 交易中的挖矿奖励是否多于应得的、整个区块的每笔交易是否都是有效的，等等。其中，难度值是有标准的计算公式的，每个节点都会根据标准公式独立计算实际的难度值，所以，矿工如果不按照标准而自己设置一个较低的难度，在其他节点是无法通过的。同样，挖矿奖励也是有标准公式的，所以，如果矿工给自己奖励过多的比特币，在其他节点也是同样无法通过的。每个节点验证该区块为有效之后，也会各自将该区块组装进它们本地的区块链，并继续将该区块广播给其他节点。</p>
+<p>由于所有节点同时在挖同一个区块，就有可能会出现多个节点同时挖出了同个区块，并都将各自挖到的区块广播到其他节点。假设有两个节点同时挖出了新区块，分别为区块 N1 和 N2，它们的上一个区块都是 P。有些节点会先收到 N1，它们会将 N1 先组装进它们本地的区块链，也称为主链。但之后不久，这些节点也会收到 N2，这时候，它们会将 N2 放入备选链。而其他节点则先收到 N2 再收到 N1，则 N2 在它们的主链上，而 N1 在它们的备选链上。这时候，整个区块链暂时就分成了两个分叉，而要打破这种局面，就要看下一个生成的区块是基于 N1 还是 N2 了。如果下一个区块是基于 N1，自然，N1 的这条链就变成了最长链，也是累计工作量最多的链。那么，那些将 N2 链设为主链的节点就会根据实际情况自己选择将 N1 链改为主链，而 N2 将成为<strong>孤块</strong>而被废弃。</p>
+<p>以上就是比特币共识机制的核心内容了，说白了其实就是根据一些所有节点都认可的标准对每个交易和区块的创建和校验进行独立验证，当大多数节点都认可并写入自己的区块链的时候，就自动形成了分布式共识。所有区块链基本都是这个逻辑，不同区块链主要在于制定的标准不同，比特币主要就是基于 POW 机制，这种机制实现简单，但它会造成大量的能源浪费，由于所有节点同时竞争挖矿同一个区块，而基本只有一个节点能胜出，那其他未胜出的节点所消耗的算力能源就白费了。另外，每次交易确认（即出块时间）大概 10 分钟，一笔交易一般要有 6 次确认才算安全，那基本就要 1 个小时了，这共识达成的时间太长了。</p>
+<h2 id="以太坊共识机制"><a href="#以太坊共识机制" class="headerlink" title="以太坊共识机制"></a>以太坊共识机制</h2><p>以太坊的共识机制也是基于 POW 的，但与比特币相比，主要有两点不同：一是挖矿时间控制在 10 ~ 19 秒之间，出块时间比比特币快了很多；二是对于<strong>孤块</strong>也有挖矿奖励。在比特币中，<strong>孤块</strong>（即上文的 N2 区块）是会被丢弃的，挖出了孤块的矿工是得不到任何奖励的。但在以太坊中，孤块是能被打包进区块里的，如果后续的区块将前面产生的孤块也打包进区块里，那这个孤块就变成了<strong>叔块</strong>，那么，挖到这个叔块的矿工就能得到奖励，而将叔块打包进区块的矿工也能得到额外的奖励，但每个区块最多只能包含两个叔块，而且也不能包含太久的孤块，最多只支持到 7 层的祖先孤块。由于以太坊的出块时间短很多，那自然更容易出现临时分叉而产生孤块，而且这么短的时间内，每个区块也很难能够在全网充分传播，那对于网速慢的矿工来说，就非常吃亏了。所以，为了平衡各方利益，以太坊才设计了叔块机制。写作本文时，叔块率在 16.9% 左右。</p>
+<p>不过，以太坊正在计划从 POW 机制切换为 <strong>POS（Proof of Stack，权益证明）</strong>机制，其新的共识机制名为 <strong>Casper</strong>，其存在两个不同实现的版本，分别是：</p>
+<ul>
+<li>Casper the Friendly Finality Gadget（FFG）</li>
+<li>Casper the Friendly GHOST: Correct-by-Construction（CBC）</li>
+</ul>
+<p>Casper FFG 是由 Vitalik 主导的，侧重于通过逐步迭代实现，慢慢过渡到 POS 机制。而 Casper CBC 则是由 Vlad Zamfir 主导的，不同于传统的协议设计方式，即先定义完整的协议，CBC 协议在开始阶段只是部分确定的，其余部分协议以证明能够满足所需/必需属性的方式得到。不过，也只是两种不同的方法，关于 POS 的核心理念还是一致的。相对来说，FFG 比较容易理解，也很大可能是即将第一个部署到以太坊的 Casper 版本，所以下面的篇幅主要讲解 FFG。</p>
+<p>FFG 版本的 Casper 是一种混合 POW / POS 的共识机制，该机制下的每次出块依然还是采用 POW 挖矿机制，但每 100 个区块会增加一个 POS <strong>检查点（checkpoint）</strong>，通过<strong>验证人（validator）</strong>来评估区块的最终有效性。创世区块是一个检查点，区块高度为 100 的倍数的区块也是检查点，将这些检查点连起来就组成了一条<strong>检查点链（checkpoint chain）</strong>。检查点一般会有两种状态：<strong>justified</strong> 和 <strong>finalized</strong>，<strong>finalized</strong> 则表示已经确定为最终有效的，该状态的检查点至少已经存在一个子检查点，<strong>justified</strong> 则表示该检查点是已经被证明合理的，<strong>finalized</strong> 的检查点一定是 <strong>justified</strong> 的，但反过来则不一定。而一个检查点是否有效，是通过多个验证人投票得出的结果。下面，我们就来简单聊聊这个过程。</p>
+<p>首先，要成为验证人，是需要投入<strong>保证金</strong>的，即抵押一定量的以太币作为权益证明，才有资格成为验证人。投入保证金是通过广播一条 <strong>deposit</strong> 消息进行操作的，只要这条消息是有效的并被打包进区块中，那就能加入<strong>验证人集合（validator set）</strong>，成为其中一个验证人。另外，如果要退出<strong>验证人集合</strong>，则可以再广播一条 <strong>withdraw</strong> 消息。不过，需要注意，一旦退出后，该验证人的公钥将被永久禁止再次加入验证人集合。</p>
+<p>接着，成为验证人之后，就可以开始投票选举检查点了，通过广播一条 <strong>vote</strong> 消息到网络中。vote 消息主要包含五个信息：两个检查点 <strong>s</strong> 和 <strong>t</strong>，以及这两个检查点的高度 <strong>h(s)</strong> 和 <strong>h(t)</strong>，以及验证人的公钥 <strong>ν</strong>。要求 s 必须是 t 的祖先，一般来说，t 就是最新的检查点，而 s 是上一个已经确定为最终有效的检查点。另外，还要求验证人的公钥 v 必须在验证人集合中找得到，否则都认为该投票是无效的。当超过 2/3 的验证人（实际上是 2/3 的总保证金）都投给了 (s, t) 这对检查点时，那 s 就是 <strong>finalized</strong> 的，t 则是 <strong>justified</strong> 的。而且，那些投注了 (s, t) 的验证人还会得到货币奖励，得到的奖励是和抵押的保证金成比例的，就是说抵押的保证金越多，得到的奖励越多。这个奖励也可以理解为抵押保证金的利息。</p>
+<p>另外，Casper 设置了两条戒律：</p>
+<ol>
+<li>验证人不能发布两个 h(t) 相同的投票，即如果存在两个投票：&lt;ν, s1, t1, h(s1), h(t1)&gt; 和 &lt;ν,s2,t2,h(s2),h(t2)&gt;，那么 h(t1) = h(t2) 是不允许的；</li>
+<li>如果 h(s1) &lt; h(s2) &lt; h(t2) &lt; h(t1)，则第一个投票的跨度已经涵盖了第二个投票，这也是不允许的。</li>
+</ol>
+<p>如果验证人违反了上面的戒律，则会对验证人进行惩罚，没收他抵押的保证金。</p>
+<p>最后，Casper 对分叉链的选择不同于 POW 机制下选择累计工作量最多的那条链，Casper 对分叉链选择的规则就是选择 justified 检查点高度最大的链，原文是：</p>
+<ul>
+<li><strong>FOLLOW THE CHAIN CONTAINING THE JUSTIFIED CHECKPOINT OF THE GREATEST HEIGHT.</strong></li>
+</ul>
+<p>很明显，以太坊的共识机制和比特币相比复杂得多，主要在于两点引起的：一是大大缩短了出块时间，二是引入了 POS 机制。在 POW 机制下将出块时间缩短到十几秒，虽然加快了性能，但其实减低了安全性，因为会引入很多其他问题，比如新区块难以在这么短的时间内扩散到全网，比如分叉链出现的概率更大，为了解决这些问题，就需要设计更多共识协议来提高安全性。引入 POS 机制变成 POW + POS 的混合机制，那这种复杂度不是 1 + 1 = 2 这么简单的。</p>
+<h2 id="思考和实践"><a href="#思考和实践" class="headerlink" title="思考和实践"></a>思考和实践</h2><p>EOS 的共识机制是怎样的？其安全性和性能又如何呢？</p>
+<hr>
+<p>扫描以下二维码即可关注订阅号。</p>
+<img src="/post/blockchain/20180425/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180313/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2813,238 +3024,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160329/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160329/" class="post-title-link" itemprop="url">App环境分离的实现:Android篇</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-03-29 10:00:00" itemprop="dateCreated datePublished" datetime="2016-03-29T10:00:00+08:00">2016-03-29</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:35" itemprop="dateModified" datetime="2019-07-02T11:18:35+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160329"><strong>http://keeganlee.me/post/architecture/20160329</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-03-29</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160329">App环境分离的实现:Android篇</a><br><a href="http://keeganlee.me/post/architecture/20160404">App环境分离的实现:iOS篇</a></p>
-<hr>
-<p>我在<a href="http://keeganlee.me/post/architecture/20160303">App架构经验总结</a>中有简单提到环境分离的实现方案，但没有深入讲实现细节。本系列则打算用两篇文章分别详细讲讲Android和iOS环境分离的具体实现，本篇则先讲Android的实现。</p>
-<h2 id="概念解析"><a href="#概念解析" class="headerlink" title="概念解析"></a>概念解析</h2><p>本文的实现方案是基于Gradle的，因此，有几个概念需要先了解清楚。</p>
-<blockquote>
-<h3 id="applicationId"><a href="#applicationId" class="headerlink" title="applicationId"></a>applicationId</h3></blockquote>
-<p>没有Gradle之前，我们都知道，包名是Android程序的唯一标识，通过在AndroidManifest.xml文件中定义package属性。同时，这个包名也是引用资源的路径名，即R资源文件的包名。</p>
-<p>引入Gradle之后，就多了一个applicationId的概念。官方解释是：applicationId是程序的唯一标识，而package则用来引用R类以及解析相关的activity/service注册操作。因此，可以设置多个不同的applicationId，对应多个不同版本的apk，而package则保持一致。新建的项目默认applicationId和package是一样的。</p>
-<blockquote>
-<h3 id="Product-Flavors"><a href="#Product-Flavors" class="headerlink" title="Product Flavors"></a>Product Flavors</h3></blockquote>
-<p>通过Product Flavors可以创建不同的产品渠道版本，网上流行的多渠道打包方案大部分都是通过添加多个渠道的Flavors来实现的。Flavors一般设置的属性如下图，当然，实际上不只是这些，例如manifestPlaceholders就不在此设置界面里。默认有defaultConfig这个Flavors。</p>
-<img src="/post/architecture/20160329/18-38-04.jpg">
-
-<blockquote>
-<h3 id="Build-Types"><a href="#Build-Types" class="headerlink" title="Build Types"></a>Build Types</h3></blockquote>
-<p>Build Types则是构建类型。默认提供debug和release两种类型，如下图所示。主要提供是否可调试、是否混淆等构建打包时的相关配置。</p>
-<img src="/post/architecture/20160329/16-00-40.jpg">
-
-<blockquote>
-<h3 id="Build-Variants"><a href="#Build-Variants" class="headerlink" title="Build Variants"></a>Build Variants</h3></blockquote>
-<p>Product Flavors和Build Types的组合形成了多个Build Variant，例如，如果有两个Product Flavors版本：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    free &#123; ... &#125;</span><br><span class="line">    enterprise &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>而Build Types也有两种类型：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">buildTypes &#123;</span><br><span class="line">    debug &#123; ... &#125;</span><br><span class="line">    release &#123; ... &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>那么，组合出来的Build Variant就有四个版本了：</p>
-<ul>
-<li>freeDebug</li>
-<li>freeRelease</li>
-<li>enterpriseDebug</li>
-<li>enterpriseRelease</li>
-</ul>
-<h2 id="环境分离实现"><a href="#环境分离实现" class="headerlink" title="环境分离实现"></a>环境分离实现</h2><p>相关概念都了解清楚了，那么，环境分离具体如何实现呢？其实，实现方案不止一个，这里，我提供两个方案，一个可以使用Product Flavors实现，一个可以使用Build Types来实现。</p>
-<blockquote>
-<h3 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h3></blockquote>
-<p>Product Flavors用来定义产品渠道，假如我们有两个环境：测试环境和生产环境。那么，定义两个Flavors分别对应测试环境和生产环境，并且applicationId不同，可以如下定义：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    beta &#123; </span><br><span class="line">        applicationId <span class="string">'com.domain.productname.beta'</span></span><br><span class="line">    &#125;</span><br><span class="line">    production &#123;</span><br><span class="line">        applicationId <span class="string">'com.domain.productname'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这样，测试环境和生产环境实际上等于是已经分开的两个app了，已经可以在同一个设备里同时安装测试版本和生产版本了。但这样是不够的，两个app将会一模一样，很难区分。因此，我们也要修改两个环境版本的应用名称，同时还要使用不同的应用图标。怎么做呢？</p>
-<p>在app模块，src目录下，新建一个与main目录同级的beta目录，beta目录的结构如下图：</p>
-<img src="/post/architecture/20160329/16-17-55.jpg">
-<p>新建的beta目录对应于productFlavors的beta版本，beta版本目录下的图片资源ic_launcher.png对应于beta版本的应用图标，这要与main目录的ic_launcher.png保持一致的位置和名称，只是图片不同。而beta版本的strings.xml则只需要包含一个属性，如下：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">string</span> <span class="attr">name</span>=<span class="string">"app_name"</span>&gt;</span>appNameBeta<span class="tag">&lt;/<span class="name">string</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p>至此，当运行beta版的Build Variant时，则会看到beta版的应用图标和应用名称也与生产版的不同了。</p>
-<p>这里要说明一下原理。首先，productFlavors定义的每个渠道是会继承自defaultConfig的，就是说上面定义的beta和production都继承了defaultConfig。然后，productFlavors每个渠道里自定义的属性会覆盖defaultConfig相应的属性，beta和production定义了applicationId，则会覆盖了defaultConfig的applicationId。这里，因为production自定义的applicationId和defaultConfig的applicationId是一样的，所以其实也可以取消applicationId的自定义。</p>
-<p>而对于源代码部分，当运行beta版的Build Variant时，默认会引用main目录的资源文件，而beta目录下的资源会覆盖main目录相应位置的资源，例如上面beta目录下的mipmap目录的ic_launcher.png就会覆盖main目录下相应位置的ic_launcher.png；同样的，beta下的strings.xml里定义的app_name就会覆盖main目录下的strings.xml定义的app_name。</p>
-<p>但对于java类则不同，beta里定义的java类并不会覆盖main目录里相应的java类。事实上，两个目录的java类只能有一份，否则会出现类重复的错误。如果beta和production版本需要有同个页面不同的实现，例如有一个Activity需要不同的实现，那么，只能新建一个production版本目录，然后该Activity类在beta和production都有一份拷贝，代码实现可以不同，但main目录下则不能有该Activity类。</p>
-<blockquote>
-<h3 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h3></blockquote>
-<p>前面就已经说过，Build Types默认提供了debug和release两种类型，其实也可以分别对应于测试和生产环境。在Build Types的设置界面中，可以看到有个<strong>Application Id Suffix</strong>的设置选择，这个可以用来设置applicationId的后缀。这个后缀是相对于Flavors来说的，比如我们定义了一个如下的productFlavors：</p>
-<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">productFlavors &#123;</span><br><span class="line">    free &#123; </span><br><span class="line">        applicationId <span class="string">'com.domain.productname.free'</span></span><br><span class="line">    &#125;</span><br><span class="line">    enterprise &#123;</span><br><span class="line">        applicationId <span class="string">'com.domain.productname'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>而debug类型的<strong>Application Id Suffix</strong>设置为“.debug”，那么对应的freeDebug版本的applicationId就是’com.domain.productname.free.debug’，而enterpriseDebug版本的applicationId则是’com.domain.productname.debug’。</p>
-<p>对于本方案二来说，并不需要再定义额外的productFlavors，使用默认的即可。那么，debug类型的<strong>Application Id Suffix</strong>可设置为”.debug”，release类型则无需设置。</p>
-<p>接着，src目录下新建一个debug目录，和方案一的beta目录完全一样，只是目录名称不同。另外，如果两个版本需要有同个页面不同的实现，那么，也和方案一一样，需要新建个release目录，和production目录一样。</p>
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>如果只是从环境分离来说的话，我更倾向于方案二，因为系统默认就提供了debug和release两个版本，而对应的Build Variant也只有两个。如果采用方案一，那么将产生四个Build Variant，这显得有点多余。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160329/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3091,7 +3070,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">26</span>
+                    <span class="site-state-item-count">27</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -3116,7 +3095,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">4</span>
+                      
+                    
+                    <span class="site-state-item-count">5</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -3145,7 +3126,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">6</span>
+                      
+                    
+                    <span class="site-state-item-count">7</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>
@@ -3187,7 +3170,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
   <span class="with-love" id="animate">
     <i class="fa fa-user"></i>
   </span>
