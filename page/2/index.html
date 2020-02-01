@@ -322,6 +322,237 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/matching/20191117/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Keegan小钢">
+      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Keegan小钢">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                
+                <a href="/post/matching/20191117/" class="post-title-link" itemprop="url">撮合引擎开发:开篇</a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+
+          
+          
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-17 20:21:14" itemprop="dateCreated datePublished" datetime="2019-11-17T20:21:14+08:00">2019-11-17</time>
+            </span>
+          
+
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-12-04 16:45:58" itemprop="dateModified" datetime="2019-12-04T16:45:58+08:00">2019-12-04</time>
+              </span>
+            
+          
+
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/matching/" itemprop="url" rel="index"><span itemprop="name">matching</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+          
+
+          
+          
+
+          
+
+          <br>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/matching/20191117"><strong>http://keeganlee.me/post/matching/20191117</strong></a><br>微信公众号：名称：Keegan小钢；微信号：keeganlee_me<br>写于2019-11-17</p>
+<hr>
+<p><a href="http://keeganlee.me/post/matching/20191117">撮合引擎开发：开篇</a><br><a href="http://keeganlee.me/post/matching/20191118">撮合引擎开发：MVP版本</a><br><a href="http://keeganlee.me/post/matching/20191119">撮合引擎开发：数据结构设计</a><br><a href="http://keeganlee.me/post/matching/20191121">撮合引擎开发：对接黑箱</a><br><a href="http://keeganlee.me/post/matching/20191127">撮合引擎开发：解密黑箱流程</a><br><a href="http://keeganlee.me/post/matching/20191130">撮合引擎开发：流程的代码实现</a><br><a href="http://keeganlee.me/post/matching/20191202">撮合引擎开发：缓存和MQ</a><br><a href="http://keeganlee.me/post/matching/20191203">撮合引擎开发：日志输出</a><br><a href="http://keeganlee.me/post/matching/20191204">撮合引擎开发：完结篇</a></p>
+<hr>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自从有人在微信群里开价5万求购Golang版的撮合引擎之后，我就想自己开发一款，毕竟，以我的经验来说，开发个高性能的撮合引擎并没什么难度。</p>
+<p>说干就干，于是，利用业余时间慢慢开发出了一款<strong>Golang</strong>版的高性能撮合引擎，前前后后花了大概一个月的时间。再想想自己好久没更新文章了，我的个人IP都已经生锈了，也应该发大招磨一磨了。因此决定，干脆就以连载的方式，分享下我是如何设计与实现这款价值超5万的撮合引擎的。</p>
+<p>本来，想发成掘金小册，收点稿费，毕竟这是个具有很大商业价值的软件，但问了掘金的人员，他们目前不接收这类主题。最终决定免费发布，还可以多发几个渠道，说不定还能给我多带来些关注量。</p>
+<p>好了，下面开始进入撮合引擎系列的正题。</p>
+<h2 id="撮合引擎简介"><a href="#撮合引擎简介" class="headerlink" title="撮合引擎简介"></a>撮合引擎简介</h2><p>撮合引擎是所有撮合交易系统的核心组件，不管是股票交易系统——包括现货交易、期货交易、期权交易等，还是数字货币交易系统——包括币币交易、合约交易、杠杆交易等，以及各种不同的贵金属交易系统、大宗商品交易系统等，虽然各种不同交易系统的交易标的不同，但只要都是采用撮合交易模式，都离不开撮合引擎。</p>
+<p>撮合引擎是可以具有通用性的，一套具有通用性的撮合引擎实现理论上可以应用到任何撮合交易系统中，而无需做任何代码上的调整。即是说，同一套撮合引擎实现，既可以应用在股票交易系统，也可以应用在数字货币交易系统，可以用于现货交易，也可以用于合约交易等。</p>
+<p>那么，一套具有通用性的撮合引擎应该具备哪些功能呢？确定该问题的答案之前，我们先简单梳理一下一个完整的交易流程是怎样的？一般会包括以下步骤：</p>
+<ol>
+<li>系统开放某个交易标的的交易功能。</li>
+<li>用户提交该交易标的的买卖申报，即<strong>委托单</strong>。</li>
+<li>系统验证委托单是否有效，包括交易标的是否处于可交易的状态、订单的价格和数量是否符合要求等。</li>
+<li>确定该委托单的<strong>挂单(Maker)</strong>费率和<strong>吃单(Taker)</strong>费率。</li>
+<li>检查用户的资产账户情况，包括账户状态是否交易受限，是否有足够资金用于下单等。</li>
+<li>将详细的委托单数据持久化到数据库，并冻结用户账户中相应数量的资金。</li>
+<li>将委托单进行撮合处理，即在<strong>交易委托账本(OrderBook)</strong>中寻找能与该委托单匹配成交的订单，匹配的结果可能是：全部成交、部分成交或无匹配。全部成交或部分成交时，可能在交易委托账本中存在一个或多个匹配的订单，即会产生一条或多条成交记录。当无匹配或部分成交时，委托单的部分数据包括剩余未成交的数量会暂时保存到交易委托账本中，等待与后续的委托单匹配撮合。</li>
+<li>将撮合产生的成交记录持久化到数据库，并根据历史成交记录生成市场数据，如K线数据、今日涨跌幅等。</li>
+<li>更新数据库中所有成交订单的委托单数据，以及更新订单用户的资产账户余额。</li>
+<li>将更新的订单数据、市场数据等发送给到前台。</li>
+</ol>
+<p>整个交易流程中涉及到多个服务，包括用户服务、账户服务、订单服务、撮合服务、市场数据服务等。其中，只有第7步是撮合引擎处理的。从单一职责原则来说，撮合引擎就应该只做一件事，那就是<strong>负责撮合订单</strong>。撮合之前的委托单持久化、冻结资金等，以及撮合之后生成K线数据等，都不应该属于撮合引擎的职责。</p>
+<h2 id="撮合竞价方式"><a href="#撮合竞价方式" class="headerlink" title="撮合竞价方式"></a>撮合竞价方式</h2><p>撮合竞价方式一般有两种，一是<strong>集合竞价</strong>，二是<strong>连续竞价</strong>。股票交易系统一般会在不同交易时间段采用不同的竞价方式，比如在开盘或收盘时采用集合竞价，从而产生<strong>开盘价</strong>或<strong>收盘价</strong>，其余时间采用连续竞价。而大多数字货币交易系统则没有集合竞价，只有连续竞价，开盘价一般是在开始交易之前就设定好的。</p>
+<h3 id="集合竞价"><a href="#集合竞价" class="headerlink" title="集合竞价"></a>集合竞价</h3><p>所谓集合竞价，是指对一段时间内接收的买卖委托单一次性集中撮合的竞价方式。以深沪的股票交易系统为例，在每个交易日的 9:15~9:25 期间是集合竞价时间。在该时间段内，系统陆续接收到的委托单不会即时成交，而是先将所有委托单按照<strong>价格优先、时间优先</strong>的原则排序，并在此基础上，找出一个基准价格，使它能同时满足以下三个条件：</p>
+<ol>
+<li>可实现<strong>最大成交量</strong>的价格；</li>
+<li>高于该价格的买单与低于该价格的卖单能全部成交的价格；</li>
+<li>与该价格相同的买方或卖方至少有一方全部成交的价格。</li>
+</ol>
+<p>在 9:25 分结束的时候，该基准价格就被确定为<strong>成交价格</strong>，所有高于该价格的买单与低于该价格的卖单都将以该价格成交。未能成交的委托单，则自动转入连续竞价。</p>
+<p>不过，如果满足以上三个条件的价格存在两个或两个以上呢？对此，深交所和上交所的处理方案有所不同，深交所会取距<strong>前收盘价</strong>最近的价格为成交价，而上交所则取使<strong>未成交量</strong>最小的价格为成交价，如果未成交量最小的价格仍不止一个，则取<strong>中间价</strong>为成交价。</p>
+<p>集合竞价的主要目的就是为了确定开盘价或收盘价。</p>
+<h3 id="连续竞价"><a href="#连续竞价" class="headerlink" title="连续竞价"></a>连续竞价</h3><p>所谓连续竞价，也是我们所熟悉的竞价方式，是指对买卖委托单逐笔连续撮合的竞价方式。用户的挂单，只要满足成交条件，就能即时成交。而集合竞价，则要等到最后一刻才会成交。</p>
+<p>连续竞价时，依然要满足价格优先、时间优先的成交原则：</p>
+<ol>
+<li><strong>价格优先</strong>：买单则价格较高者能优先成交，卖单则是价格较低者能优先成交。</li>
+<li><strong>时间优先</strong>：买卖方向和价格相同的委托单，先申报的委托单会比后申报的委托单优先成交。</li>
+</ol>
+<p>另外，买入价必须大于或等于卖出价才能撮合成交。当买入价等于卖出价时，成交价就是买入价或卖出价。当买入价大于卖出价时，则还要参考前一笔成交价来确定最新成交价。假设买入价为 B，卖出价为 S，前一笔成交价为 P，最新成交价为 N，那么：</p>
+<ul>
+<li>如果 P &gt;= B，则 N = B</li>
+<li>如果 P &lt;= S，则 N = S</li>
+<li>如果 B &gt; P &gt; S，则 N = P </li>
+</ul>
+<p>一套通用的撮合引擎应该两种竞价方式都支持，但对于同一交易标的来说，两种竞价方式不能同时进行，因此设计上需要考虑如何在两种竞价方式之间切换，具体的实现思路在后续章节我们再展开来讲。</p>
+<h2 id="质量需求"><a href="#质量需求" class="headerlink" title="质量需求"></a>质量需求</h2><p>我们的撮合引擎除了要满足以上所说的功能需求，还应该满足一些质量需求，尤其对<strong>可用性</strong>、<strong>可伸缩性</strong>和<strong>性能</strong>的要求较高。另外，为了达到通用，也要满足<strong>可复用性</strong>的需求。</p>
+<p>先说下可复用性，我们期望的是该撮合引擎既能用于股票交易系统，也能用于数字货币交易系统，既能用于币币交易，也能用于合约交易。因此，该撮合引擎要避免引入与具体系统强相关的业务逻辑，以加强它的可复用性。</p>
+<p>再看看性能，要衡量一个撮合引擎的性能，就看它处理每个交易对的 <strong>TPS</strong> 有多高，即每秒钟能处理多少笔相同交易对的委托单。以前，基于数据库的撮合技术，TPS 一般只有10笔/秒。而现在基本都是采用内存撮合技术，TPS 很容易就能达到1000笔/秒，如果使用独占的高性能服务器，1万笔/秒甚至更高的 TPS 都不难达到。</p>
+<p>接着谈谈可伸缩性，我们的每一个撮合引擎既可以同时处理多个交易标的，也可以只处理单个交易标的。当交易标的和并发量增多的时候，可以增加服务器，部署成撮合引擎集群，分别用来处理不同的交易标的，从而能够实现负载均衡。</p>
+<p>最后聊聊可用性，高可用主要体现在两点，一是故障率要低，二是对故障维修的时间要短。要降低故障率，那撮合引擎就需要有较高的健壮性，对于可能导致引擎出故障的各种异常情况要考虑好并设计好解决方案。另外，还可以采用多机热备份技术来提高可用性，而且要保证互备服务器之间的数据一致，那就需要引入内存状态机复制方案，实现上会复杂很多。</p>
+<p>不过，我们并非一下子就要达到很高的质量要求，因为要求越高，其架构和实现会越复杂。我们可以先从简单的版本开始，然后不断升级迭代。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>我们目的是实现一套通用的撮合引擎，要支持集合竞价和连续竞价，还要实现一些质量需求，提高系统的可复用性、性能、可伸缩性、可用性等。后续章节会对这些需求不断深入探讨其设计与实现。另外，我们将采用不断升级迭代的方式来设计和实现多个版本的撮合引擎。</p>
+<p>留两个思考题：</p>
+<ol>
+<li>集合竞价结束的时候，如果不存在符合那三个条件的基准价格，那开盘价又将如何确定？</li>
+<li>对于单个交易对，是否可通过横向增加服务器的方式提高其性能？</li>
+</ol>
+<hr>
+<p>扫描以下二维码即可关注公众号（公众号名称：Keegan小钢）</p>
+<img src="/post/matching/20191117/qrcode_keegan.jpg">
+          
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      
+    
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/blockchain/20180425/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2819,211 +3050,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://keeganlee.me/post/architecture/20160404/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Keegan小钢">
-      <meta itemprop="description" content="分享钢哥人生路上的点点滴滴">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Keegan小钢">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                
-                <a href="/post/architecture/20160404/" class="post-title-link" itemprop="url">App环境分离的实现:iOS篇</a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-
-          
-          
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-
-              
-                
-              
-
-              <time title="创建时间：2016-04-04 09:00:00" itemprop="dateCreated datePublished" datetime="2016-04-04T09:00:00+08:00">2016-04-04</time>
-            </span>
-          
-
-          
-            
-
-            
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                
-                  <span class="post-meta-item-text">更新于</span>
-                
-                <time title="修改时间：2019-07-02 11:18:37" itemprop="dateModified" datetime="2019-07-02T11:18:37+08:00">2019-07-02</time>
-              </span>
-            
-          
-
-          
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/architecture/" itemprop="url" rel="index"><span itemprop="name">architecture</span></a></span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-            
-          
-
-          
-          
-
-          
-
-          <br>
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>原创文章，转载请注明：转载自<a href="http://keeganlee.me/">Keegan小钢</a><br>并标明原文链接：<a href="http://keeganlee.me/post/architecture/20160404"><strong>http://keeganlee.me/post/architecture/20160404</strong></a><br>微信订阅号：<strong>keeganlee_me</strong><br>写于2016-04-04</p>
-<hr>
-<p><a href="http://keeganlee.me/post/architecture/20160329">App环境分离的实现:Android篇</a><br><a href="http://keeganlee.me/post/architecture/20160404">App环境分离的实现:iOS篇</a></p>
-<hr>
-<p>说到App环境分离在iOS的实现，我曾在iOS技术群里问过：如何实现在同一台手机能同时安装同个应用的测试和生产版本？应用名称要有区分，图标也要有所区别。不要手动修改Bundle id和应用名称，也不要手动替换图标，更不要维护两个项目。如何才能简单地实现？</p>
-<p>结果发现很多人都不知道该怎么实现。其实，实现方案很简单，只要建立多个Target即可。当然，有些细节问题要注意，不然会出错。接下来，看如何一步步地实现环境分离。</p>
-<h2 id="复制Target"><a href="#复制Target" class="headerlink" title="复制Target"></a>复制Target</h2><p>关于Xcode中Target的概念，文档中有这么一段说明：</p>
-<blockquote>
-<p>A target specifies a product to build and contains the instructions for building the product from a set of files in a project or workspace. A target defines a single product; it organizes the inputs into the build system—the source files and instructions for processing those source files—required to build that product. Projects can contain one or more targets, each of which produces one product.</p>
-</blockquote>
-<p>即是说，每个Target代表一个编译的产品。每个Target，可以有不同的编译源文件和资源文件。那么，实现环境分离的方案，就是分别建立测试环境和生产环境的两个Target。默认的Target作为生产环境的Target，在此基础上复制多一个Target作为测试环境的Target。</p>
-<p>如下图，选择默认的Target，从右键菜单中选择Duplicate，就可以复制出一个新的Target了。</p>
-<img src="/post/architecture/20160404/21-33-15.jpg">
-
-<p>新Target默认名称为<strong>productname copy</strong>。复制完成后，不只是TARGETS列表中多出了名为<strong>productname copy</strong>的新Target，同时也会为该新Target生成名为<strong>productname copy</strong>的新的scheme，以及在项目的根目录下生成<strong>productname copy-Info.plist</strong>文件。</p>
-<h2 id="更名Target"><a href="#更名Target" class="headerlink" title="更名Target"></a>更名Target</h2><p>不喜欢<strong>productname copy</strong>这样的名字，<strong>productnameBeta</strong>这样的名字才是测试版本该有的名字。那么，需要改名的地方有三处：target名称、scheme名称、plist文件名称。</p>
-<p>修改target名称很简单，只要在TARGETS列表中选中后，再点击一下即可编辑修改名称。修改scheme则可以在Xcode左上角的Run\Stop按钮右边的scheme列表菜单中选择Manage Schemes，打开弹出框，如下图，则可将<strong>productname copy</strong>修改为<strong>productnameBeta</strong></p>
-<img src="/post/architecture/20160404/21-40-10.jpg">
-<img src="/post/architecture/20160404/21-38-25.jpg">
-<p>plist文件则修改为<strong>productnameBeta-Info.plist</strong>，同时，我还将其移到与默认的Info.plist文件在同个目录下。不只是在同一个分组下，也是在同一个物理目录下。改完plist文件后，还需要修改<strong>productnameBeta</strong>的Target的<strong>Info.plist File</strong>设置，该属性设置了相应Target绑定的plist文件是哪个。该属性值本来为<strong>productname copy-Info.plist</strong>，现需要更改为<strong>productname/productnameBeta-Info.plist</strong>。</p>
-<h2 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h2><p>接下来，就要修改Target的配置，实现真正的环境分离了。默认的<strong>productname</strong>的Target，作为生产版本，基本不需要改动，需要改的是作为测试版的<strong>productnameBeta</strong>。</p>
-<p>首先，修改<strong>productnameBeta</strong>的Bundle id，在原有的基础上添加后缀“.beta”，以实现能和生产版同时安装在同一台设备上。</p>
-<p>接着，修改<strong>Bundle display name</strong>，可在原有名称的基础上添加后缀“Beta”，以实现和生产版应用名称上的区分。</p>
-<p>然后，需要更换图标了。默认会使用<strong>AppIcon</strong>这一项Assets，但AppIcon是给生产版设置的图标，既然测试版要使用不同图标，那就需要新建一套新的App Icon，如下图：</p>
-<img src="/post/architecture/20160404/22-32-51.jpg">
-<p>新建的App Icon将其命名为<strong>AppIcon-Beta</strong>，放置测试版的图标。并将<strong>productnameBeta</strong>的App Icons Source指定为新建的<strong>AppIcon-Beta</strong>。至此，图标也与生产版的有所区别了。</p>
-<h2 id="判别Target"><a href="#判别Target" class="headerlink" title="判别Target"></a>判别Target</h2><p>那么，设置了不同Target后，代码上可能需要根据不同Target做不同处理，因此，需要在代码上能判断当前编译的是哪个Target。这可以通过预编译宏来区分。例如，我们在<strong>productnameBeta</strong>的Build Settings中，将<strong>Preprocessor Macros</strong>属性值设置为BETA，也就是为<strong>productnameBeta</strong>定义了一个预编译宏，宏名称为BETA。</p>
-<img src="/post/architecture/20160404/08-42-13.jpg">
-
-<p>然后，在代码中可以通过如下预编译指令判断当前是在哪个Target下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#ifdef BETA</span><br><span class="line">    // 测试版需要执行的代码</span><br><span class="line">#else</span><br><span class="line">    // 默认生产版需要执行的代码</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
-
-<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>通过多个Target可以实现环境的分离，本文的实现很简单。而关于Target的用法也不只限于此，若想了解Target更多高级用法，可查询相关资料，在此就不展开了。</p>
-<hr>
-<p>扫描以下二维码即可关注订阅号。</p>
-<img src="/post/architecture/20160404/qrcode_keegan.jpg">
-          
-        
-      
-    </div>
-
-    
-
-    
-    
-    
-
-    
-
-    
-      
-    
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -3070,7 +3096,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">27</span>
+                    <span class="site-state-item-count">28</span>
                     <span class="site-state-item-name">日志</span>
                   </a>
                 </div>
@@ -3097,7 +3123,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">5</span>
+                      
+                    
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">分类</span>
                   </a>
                 </div>
@@ -3128,7 +3156,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">7</span>
+                      
+                    
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">标签</span>
                   </a>
                 </div>
